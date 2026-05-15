@@ -1,0 +1,1072 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pionier — Portal de Solicitudes TI & Datos</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,sans-serif;font-size:14px;color:#1a1a1a;background:#f5f5f0;min-height:100vh}
+.header{background:#111;display:flex;align-items:stretch;border-bottom:4px solid #F5C400;position:sticky;top:0;z-index:50;box-shadow:0 4px 20px #00000050}
+.h-stripe{width:8px;background:#F5C400;flex-shrink:0}
+.h-body{padding:12px 20px;flex:1}
+.h-body h1{font-size:19px;font-weight:800;color:#fff;text-transform:uppercase;letter-spacing:1.5px}
+.h-body p{font-size:11px;color:#F5C400;margin-top:4px;font-weight:600}
+.h-right{display:flex;align-items:center;gap:8px;padding:0 20px}
+.emp-badge{background:#F5C400;color:#111;padding:5px 14px;border-radius:6px;font-size:11px;font-weight:800}
+.nav{background:#1a1a1a;display:flex;padding:0 20px;border-bottom:3px solid #F5C400}
+.nav-btn{padding:11px 20px;border:none;background:none;cursor:pointer;font-size:13px;color:#888;border-bottom:3px solid transparent;margin-bottom:-3px;transition:.15s;font-family:inherit;font-weight:500;display:flex;align-items:center;gap:6px}
+.nav-btn.active{color:#F5C400;border-bottom-color:#F5C400;font-weight:700}
+.nav-btn:hover:not(.active){color:#fff;background:#252525}
+.lock-tag{font-size:10px;background:#F5C400;color:#111;padding:1px 5px;border-radius:3px;font-weight:800}
+.hidden{display:none!important}
+.main{max-width:860px;margin:0 auto;padding:28px 16px}
+.form-hero{background:#111;border-radius:16px 16px 0 0;padding:28px 32px;position:relative;overflow:hidden}
+.form-hero::before{content:'';position:absolute;top:0;left:0;width:6px;height:100%;background:#F5C400}
+.form-hero::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;background:#F5C400}
+.form-hero h2{font-size:22px;font-weight:800;color:#fff;margin-bottom:8px}
+.form-hero p{font-size:13px;color:#aaa;line-height:1.6;max-width:560px}
+.sol-tag{position:absolute;top:20px;right:28px;background:#F5C400;color:#111;padding:4px 14px;border-radius:6px;font-size:12px;font-weight:800}
+.form-body{background:#fff;border-radius:0 0 16px 16px;padding:28px 32px;box-shadow:0 8px 32px #00000012;margin-bottom:24px}
+.sec-lbl{display:flex;align-items:center;gap:10px;margin:24px 0 16px}
+.sec-lbl .n{background:#111;color:#F5C400;width:26px;height:26px;border-radius:50%;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sec-lbl .t{font-size:12px;font-weight:700;color:#111;text-transform:uppercase;letter-spacing:.6px}
+.sec-lbl::after{content:'';flex:1;height:1px;background:#F5C40025;margin-left:6px}
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:640px){.fg{grid-template-columns:1fr}}
+.fl{display:block;font-size:11px;font-weight:700;color:#6b7280;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px}
+.fl .r{color:#F5C400;margin-left:3px}
+.fi{width:100%;padding:11px 14px;border:1.5px solid #e5e0d0;border-radius:10px;font-size:13px;font-family:inherit;outline:none;transition:.2s;background:#fff}
+.fi:focus{border-color:#F5C400;box-shadow:0 0 0 4px #F5C40015;background:#fffdf0}
+.fi::placeholder{color:#bbb}
+select.fi{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23999' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:36px}
+textarea.fi{resize:vertical;min-height:120px;line-height:1.6}
+.cc{font-size:10px;color:#bbb;text-align:right;margin-top:4px}
+.ug{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+@media(max-width:580px){.ug{grid-template-columns:1fr 1fr}}
+.uc{border:2px solid #e5e0d0;border-radius:12px;padding:16px 10px;cursor:pointer;text-align:center;transition:.2s;background:#fff;position:relative}
+.uc:hover{border-color:#F5C400;background:#fffdf0;transform:translateY(-2px);box-shadow:0 4px 12px #F5C40020}
+.uc .ud{font-size:24px;margin-bottom:8px;display:block}
+.uc .un{font-size:13px;font-weight:700;display:block;margin-bottom:4px}
+.uc .ut{font-size:10px;color:#999;display:block}
+.uc .ck{position:absolute;top:8px;right:10px;font-size:14px;display:none}
+.uc.sb{border-color:#16a34a;background:#f0fdf4}.uc.sb .un{color:#14532d}.uc.sb .ck{display:block;color:#16a34a}
+.uc.sm{border-color:#d97706;background:#fffbeb}.uc.sm .un{color:#92400e}.uc.sm .ck{display:block;color:#d97706}
+.uc.sa{border-color:#dc2626;background:#fff5f5}.uc.sa .un{color:#7f1d1d}.uc.sa .ck{display:block;color:#dc2626}
+.uc.sc{border-color:#F5C400;background:#111}.uc.sc .un{color:#F5C400}.uc.sc .ut{color:#888}.uc.sc .ck{display:block;color:#F5C400}
+.dz{border:2px dashed #e5e0d0;border-radius:12px;padding:30px;text-align:center;cursor:pointer;transition:.2s;background:#fafaf5}
+.dz:hover,.dz.ov{border-color:#F5C400;background:#fffdf0}
+.di{font-size:36px;margin-bottom:8px}
+.dt{font-size:13px;color:#6b7280}.dt strong{color:#111}
+.dh{font-size:11px;color:#bbb;margin-top:4px}
+.fl-list{margin-top:12px;display:flex;flex-direction:column;gap:6px}
+.fc{background:#fffdf0;border:1px solid #F5C40040;border-radius:8px;padding:8px 14px;font-size:12px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.fc .fn{color:#111;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fc .fs{color:#999;flex-shrink:0}
+.fc button{background:none;border:none;cursor:pointer;color:#dc2626;font-size:16px;flex-shrink:0;padding:0}
+.bsend{width:100%;padding:16px;background:#F5C400;color:#111;border:none;border-radius:12px;font-size:16px;font-weight:800;cursor:pointer;font-family:inherit;transition:.2s;margin-top:10px;display:flex;align-items:center;justify-content:center;gap:10px}
+.bsend:hover{background:#d4a900;transform:translateY(-1px);box-shadow:0 6px 24px #F5C40050}
+.eb{background:#fff5f5;border:1px solid #fca5a5;border-left:4px solid #dc2626;border-radius:8px;padding:12px 14px;font-size:13px;color:#7f1d1d;margin-bottom:14px;display:none}
+.sw{display:none;text-align:center;padding:20px 0}
+.sc{background:#111;border-radius:20px;padding:48px 32px;display:inline-block;max-width:500px;width:100%}
+.si{font-size:60px;margin-bottom:16px}
+.sc h2{font-size:24px;font-weight:800;color:#F5C400;margin-bottom:10px}
+.sc p{font-size:13px;color:#aaa;line-height:1.7}
+.sid{background:#F5C400;color:#111;padding:10px 28px;border-radius:8px;font-size:22px;font-weight:800;display:inline-block;margin:16px 0;letter-spacing:2px}
+.bn{background:transparent;border:2px solid #F5C400;color:#F5C400;padding:10px 24px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:14px;transition:.2s}
+.bn:hover{background:#F5C400;color:#111}
+/* password */
+.pws{display:flex;align-items:center;justify-content:center;min-height:65vh;padding:32px 16px}
+.pwc{background:#111;border-radius:20px;padding:48px 40px;text-align:center;max-width:400px;width:100%;box-shadow:0 20px 60px #00000050;border:1px solid #222}
+.pwc .pwi{font-size:54px;margin-bottom:16px}
+.pwc h3{font-size:20px;font-weight:800;color:#F5C400;margin-bottom:8px}
+.pwc p{font-size:13px;color:#888;margin-bottom:24px;line-height:1.6}
+.pwin{width:100%;padding:14px 16px;background:#1a1a1a;border:2px solid #333;border-radius:10px;color:#fff;font-size:18px;font-family:inherit;outline:none;text-align:center;letter-spacing:6px;transition:.2s}
+.pwin:focus{border-color:#F5C400;box-shadow:0 0 0 4px #F5C40020}
+.pwin::placeholder{letter-spacing:2px;color:#444;font-size:14px}
+.pwb{width:100%;padding:14px;background:#F5C400;color:#111;border:none;border-radius:10px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;margin-top:12px;transition:.2s}
+.pwb:hover{background:#d4a900}
+.pwe{color:#dc2626;font-size:12px;margin-top:10px;display:none;font-weight:600}
+.pwu{margin-top:20px;font-size:12px;color:#444;line-height:2;border-top:1px solid #222;padding-top:16px}
+/* admin */
+.as{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px}
+.ak{background:#111;border-radius:12px;padding:16px;text-align:center;border-bottom:3px solid #F5C400}
+.ak .av{font-size:30px;font-weight:800;color:#F5C400}
+.ak .al{font-size:10px;color:#777;margin-top:4px;text-transform:uppercase;letter-spacing:.5px}
+.atb{background:#fff;border-radius:12px;padding:14px 16px;margin-bottom:16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;border:1px solid #e5e0d0;box-shadow:0 1px 4px #00000006}
+.asel{padding:7px 12px;border:1.5px solid #e5e0d0;border-radius:8px;font-size:12px;font-family:inherit;outline:none;background:#fff;cursor:pointer;transition:.15s}
+.asel:focus{border-color:#F5C400}
+.ab{padding:7px 14px;border-radius:8px;border:1.5px solid #e5e0d0;background:#fff;cursor:pointer;font-size:12px;font-family:inherit;font-weight:600;transition:.15s;color:#374151}
+.ab:hover{border-color:#F5C400;color:#111;background:#fffdf0}
+.ab.y{background:#F5C400;color:#111;border-color:#F5C400}.ab.y:hover{background:#d4a900}
+.ab.r{color:#dc2626;border-color:#fca5a5}.ab.r:hover{background:#fff5f5}
+.scard{background:#fff;border-radius:12px;border:1px solid #e5e0d0;margin-bottom:10px;overflow:hidden;box-shadow:0 1px 4px #00000006;transition:.2s;display:flex}
+.scard:hover{box-shadow:0 4px 20px #00000012;transform:translateY(-1px)}
+.sbar{width:5px;flex-shrink:0}
+.sbar.bj{background:#16a34a}.sbar.md{background:#d97706}.sbar.al{background:#dc2626}.sbar.cr{background:#F5C400}.sbar.hd{background:#7c3aed}
+.sin{flex:1;min-width:0}
+.stop{padding:14px 16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.sid2{font-family:monospace;font-size:10px;color:#999;background:#f5f5f0;padding:2px 8px;border-radius:4px;font-weight:700}
+.stit{font-weight:700;font-size:14px;flex:1;color:#111}
+.sbody{padding:0 16px 14px}
+.smeta{display:flex;gap:12px;flex-wrap:wrap;font-size:11px;color:#999;padding:8px 0}
+.sdesc{font-size:12px;color:#374151;background:#f9f8f5;border-radius:8px;padding:10px 12px;line-height:1.6;margin-bottom:10px}
+.snotes{font-size:12px;color:#374151;background:#fffdf0;border-left:3px solid #F5C400;padding:10px 12px;border-radius:0 8px 8px 0;margin-bottom:10px;line-height:1.6}
+.sact{display:flex;gap:6px;flex-wrap:wrap}
+.bdg{display:inline-flex;align-items:center;padding:2px 10px;border-radius:20px;font-size:10px;font-weight:700}
+.bbj{background:#dcfce7;color:#14532d}.bmd{background:#fff3cd;color:#92400e}.bal{background:#fee2e2;color:#7f1d1d}.bcr{background:#111;color:#F5C400}
+.bnw{background:#ede9fe;color:#4f46e5}.brv{background:#fff3cd;color:#92400e}.bap{background:#dcfce7;color:#14532d}.brj{background:#fee2e2;color:#7f1d1d}.bhd{background:#ede9fe;color:#4c1d95}
+/* modal */
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:200;backdrop-filter:blur(4px)}
+.md{background:#fff;border-radius:16px;padding:28px;width:520px;max-width:95vw;max-height:88vh;overflow-y:auto;box-shadow:0 24px 80px #00000060;border-top:4px solid #F5C400}
+.md h3{font-size:16px;font-weight:700;margin-bottom:16px;color:#111}
+.ma{display:flex;gap:8px;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:1px solid #f0ede0}
+.mi{width:100%;padding:10px 12px;border:1.5px solid #e5e0d0;border-radius:8px;font-size:13px;font-family:inherit;outline:none;transition:.2s;margin-bottom:10px}
+.mi:focus{border-color:#F5C400;box-shadow:0 0 0 3px #F5C40015}
+.spch{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.spc{padding:10px 18px;border-radius:8px;border:2px solid #e5e0d0;cursor:pointer;font-size:15px;font-weight:800;transition:.15s;background:#fff}
+.spc:hover{border-color:#F5C400;background:#fffdf0}
+.spc.sl{background:#F5C400;color:#111;border-color:#F5C400}
+/* ayuda */
+.hg{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:600px){.hg{grid-template-columns:1fr}}
+.hcard{border-radius:14px;padding:22px;border-left:4px solid #F5C400}
+.hstep{display:flex;gap:12px;align-items:flex-start;margin-bottom:14px}
+.hstep .hn{background:#F5C400;color:#111;width:24px;height:24px;border-radius:50%;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-thumb{background:#d4c990;border-radius:3px}
+.footer{background:#111;border-top:3px solid #F5C400;padding:10px 20px;text-align:center;font-size:11px;color:#555}
+/* commitment section */
+.commit-sec{background:linear-gradient(135deg,#fffdf0 0%,#fff8d6 100%);border:2px solid #F5C400;border-radius:14px;padding:20px 24px;margin-top:4px}
+.commit-sec .commit-hd{display:flex;align-items:center;gap:10px;margin-bottom:16px}
+.commit-sec .commit-hd .ci{font-size:24px}
+.commit-sec .commit-hd h3{font-size:13px;font-weight:800;color:#111;text-transform:uppercase;letter-spacing:.5px}
+.commit-sec .commit-hd p{font-size:11px;color:#92400e;margin-top:2px}
+.commit-check{display:flex;align-items:flex-start;gap:12px;margin-top:14px;background:#fff;border-radius:8px;border:1.5px solid #F5C40040;transition:.2s;overflow:hidden}
+.commit-check:hover{border-color:#F5C40080;background:#fefdf8}
+.commit-check label{display:flex;align-items:flex-start;gap:12px;cursor:pointer;width:100%;padding:14px}
+.commit-check input[type=checkbox]{width:22px;height:22px;min-width:22px;accent-color:#F5C400;flex-shrink:0;margin-top:2px;cursor:pointer}
+.commit-check .cc-text{font-size:12px;color:#374151;line-height:1.6;word-break:break-word}
+.commit-check .cc-text strong{color:#111;font-size:13px;display:block;margin-bottom:2px}
+/* tipo grid */
+.type-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:8px}
+@media(max-width:580px){.type-grid{grid-template-columns:1fr 1fr}}
+.tcard{border:2px solid #e5e0d0;border-radius:14px;padding:18px 12px;cursor:pointer;text-align:center;transition:.2s;background:#fff;position:relative}
+.tcard:hover{border-color:#F5C400;background:#fffdf0;transform:translateY(-2px);box-shadow:0 4px 14px #F5C40022}
+.tcard.sel{border-color:#F5C400;background:#fffbea;box-shadow:0 0 0 3px #F5C40030}
+.tcard.sel::after{content:'✓';position:absolute;top:8px;right:10px;font-size:13px;color:#F5C400;font-weight:800}
+.tc-icon{font-size:28px;display:block;margin-bottom:8px}
+.tc-name{font-size:13px;font-weight:700;display:block;color:#111;margin-bottom:3px}
+.tc-name.c-dev{color:#4f46e5}.tc-name.c-bug{color:#dc2626}.tc-name.c-imp{color:#d97706}
+.tc-name.c-sup{color:#7c3aed}.tc-name.c-acc{color:#d97706}.tc-name.c-rep{color:#d97706}
+.tc-desc{font-size:11px;color:#999;display:block}
+/* print constancia */
+@media print {
+  body * { visibility: hidden; }
+  #constancia-print, #constancia-print * { visibility: visible; }
+  #constancia-print { position: fixed; left:0; top:0; width:100%; padding:0; }
+  .no-print { display: none !important; }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="h-stripe"></div>
+  <div class="h-body">
+    <h1>Pionier — Portal de Solicitudes</h1>
+    <p>Registro de requerimientos para el equipo de TI &amp; Datos</p>
+  </div>
+  <div class="h-right">
+    <span class="emp-badge">Pionier</span>
+  </div>
+</div>
+
+<div class="nav">
+  <button class="nav-btn active" onclick="switchTab('sol',this)">📝 Nueva Solicitud</button>
+  <button class="nav-btn" onclick="tryAdmin(this)">📋 Gestión <span class="lock-tag">🔒</span></button>
+  <button class="nav-btn" onclick="switchTab('ayuda',this)">❓ ¿Cómo funciona?</button>
+</div>
+
+<!-- ══ SOLICITUD ══════════════════════════════════════════════ -->
+<div id="tab-sol">
+<div class="main">
+  <div class="form-hero">
+    <div class="sol-tag">SOL-<span id="nn">001</span></div>
+    <h2>📝 Registrar nueva solicitud</h2>
+    <p>Completa el formulario con el mayor detalle posible. <strong style="color:#F5C400">Keiko Palomino</strong> revisará tu solicitud y se contactará contigo en 1-2 días hábiles.</p>
+  </div>
+  <div class="form-body" id="fw">
+    <div class="sec-lbl"><div class="n">1</div><div class="t">Tus datos</div></div>
+    <div class="fg">
+      <div><label class="fl">Nombre completo <span class="r">★</span></label><input class="fi" id="fn" placeholder="Ej: Juan Pérez García"></div>
+      <div><label class="fl">Área / Empresa <span class="r">★</span></label>
+        <select class="fi" id="fa">
+          <option value="">— Selecciona tu área —</option>
+          <optgroup label="MODIPSA">
+            <option>MODIPSA — Administración y Finanzas</option>
+            <option>MODIPSA — Logística</option>
+            <option>MODIPSA — Operaciones</option>
+            <option>MODIPSA — Mantenimiento</option>
+            <option>MODIPSA — Comercial y Marketing</option>
+            <option>MODIPSA — Recursos Humanos</option>
+          </optgroup>
+          <optgroup label="MASISAC">
+            <option>MASISAC — Administración y Finanzas</option>
+            <option>MASISAC — Logística</option>
+            <option>MASISAC — Operaciones</option>
+            <option>MASISAC — Mantenimiento</option>
+            <option>MASISAC — Comercial y Marketing</option>
+            <option>MASISAC — Recursos Humanos</option>
+          </optgroup>
+          <option>TI / Datos</option>
+          <option>Otra área</option>
+        </select>
+      </div>
+    </div>
+    <div class="fg" style="margin-top:14px">
+      <div><label class="fl">Correo <span style="font-weight:400;text-transform:none;letter-spacing:0;color:#bbb">(opcional)</span></label><input class="fi" id="fc" type="email" placeholder="tucorreo@pioner.com.pe"></div>
+    </div>
+
+    <div class="sec-lbl" style="margin-top:4px"><div class="n" style="background:#F5C400;color:#111">🏷</div><div class="t">Tipo de solicitud <span style="color:#dc2626;font-size:13px">★</span></div></div>
+    <input type="hidden" id="ft">
+    <div class="type-grid" id="type-grid">
+      <div class="tcard" data-val="🆕 Nuevo desarrollo" onclick="selTipo(this)">
+        <span class="tc-icon">🚀</span>
+        <span class="tc-name c-dev">Nuevo desarrollo</span>
+        <span class="tc-desc">Nueva funcionalidad o sistema</span>
+      </div>
+      <div class="tcard" data-val="🐛 Corrección de error" onclick="selTipo(this)">
+        <span class="tc-icon">🐛</span>
+        <span class="tc-name c-bug">Corrección de error</span>
+        <span class="tc-desc">Algo que no funciona bien</span>
+      </div>
+      <div class="tcard" data-val="⭐ Mejora de proceso" onclick="selTipo(this)">
+        <span class="tc-icon">⭐</span>
+        <span class="tc-name c-imp">Mejora de proceso</span>
+        <span class="tc-desc">Optimizar algo existente</span>
+      </div>
+      <div class="tcard" data-val="🎧 Soporte técnico" onclick="selTipo(this)">
+        <span class="tc-icon">🎧</span>
+        <span class="tc-name c-sup">Soporte técnico</span>
+        <span class="tc-desc">Ayuda con equipos o sistemas</span>
+      </div>
+      <div class="tcard" data-val="🔑 Acceso / Permisos" onclick="selTipo(this)">
+        <span class="tc-icon">🔑</span>
+        <span class="tc-name c-acc">Acceso / Permisos</span>
+        <span class="tc-desc">Solicitar acceso a sistema</span>
+      </div>
+      <div class="tcard" data-val="📊 Reporte / Consulta" onclick="selTipo(this)">
+        <span class="tc-icon">📊</span>
+        <span class="tc-name c-rep">Reporte / Consulta</span>
+        <span class="tc-desc">Necesito datos o análisis</span>
+      </div>
+    </div>
+
+    <div class="sec-lbl" style="margin-top:28px"><div class="n">2</div><div class="t">Describe tu requerimiento</div></div>
+    <div style="margin-bottom:14px">
+      <label class="fl">Título de la solicitud <span class="r">★</span></label>
+      <input class="fi" id="fti" placeholder="Ej: Reporte de ventas mensuales por canal de distribución" maxlength="120" oninput="document.getElementById('tc').textContent=this.value.length">
+      <div class="cc"><span id="tc">0</span> / 120</div>
+    </div>
+    <div>
+      <label class="fl">Descripción detallada <span class="r">★</span></label>
+      <textarea class="fi" id="fd" placeholder="Describe con el mayor detalle posible:
+• ¿Qué necesitas exactamente?
+• ¿Para qué lo vas a usar?
+• ¿Qué sistema o área impacta?
+• ¿Tienes algún ejemplo o referencia?"></textarea>
+    </div>
+
+    <div class="sec-lbl" style="margin-top:28px"><div class="n">3</div><div class="t">Urgencia <span class="r">★</span></div></div>
+    <div class="ug">
+      <div class="uc" data-v="Baja" onclick="selU(this,'sb')"><span class="ck">✓</span><span class="ud">🟢</span><span class="un">Baja</span><span class="ut">Puede esperar 2-4 semanas</span></div>
+      <div class="uc" data-v="Media" onclick="selU(this,'sm')"><span class="ck">✓</span><span class="ud">🟡</span><span class="un">Media</span><span class="ut">Necesario en 1-2 semanas</span></div>
+      <div class="uc" data-v="Alta" onclick="selU(this,'sa')"><span class="ck">✓</span><span class="ud">🔴</span><span class="un">Alta</span><span class="ut">Urgente — esta semana</span></div>
+      <div class="uc" data-v="Crítica" onclick="selU(this,'sc')"><span class="ck">✓</span><span class="ud">⚫</span><span class="un">Crítica</span><span class="ut">Bloquea operaciones HOY</span></div>
+    </div>
+
+    <div class="sec-lbl" style="margin-top:28px"><div class="n">4</div><div class="t">Compromiso del solicitante <span class="r">★</span></div></div>
+    <div class="commit-sec">
+      <div class="commit-hd">
+        <span class="ci">🤝</span>
+        <div>
+          <h3>Tu compromiso con este proyecto</h3>
+          <p>Para reducir la resistencia al cambio y asegurar el éxito, necesitamos tu compromiso activo</p>
+        </div>
+      </div>
+      <div class="fg">
+        <div>
+          <label class="fl">Objetivo del usuario <span class="r">★</span></label>
+          <textarea class="fi" id="fobj" rows="3" placeholder="¿Qué resultado esperas lograr con esta solicitud? Ej: Reducir el tiempo de reporte semanal de 3 horas a 30 minutos, eliminando errores manuales." style="min-height:90px"></textarea>
+        </div>
+        <div>
+          <label class="fl">Valor del proyecto para tu área <span class="r">★</span></label>
+          <textarea class="fi" id="fval" rows="3" placeholder="¿Cuál es el impacto esperado? Ej: Ahorro de 10 horas/semana del equipo, mejor toma de decisiones, reducción de reclamos de clientes en 40%." style="min-height:90px"></textarea>
+        </div>
+      </div>
+      <label class="fl" style="margin-top:16px">Compromisos que asumo como solicitante <span class="r">★</span></label>
+      <div class="commit-check"><label><input type="checkbox" id="chk1"><div class="cc-text"><strong>📋 Brindaré información correcta y completa</strong>Proporcionaré datos precisos, acceso a los sistemas necesarios y responderé consultas del equipo TI en un plazo máximo de 24 horas.</div></label></div>
+      <div class="commit-check"><label><input type="checkbox" id="chk2"><div class="cc-text"><strong>🧪 Participaré activamente en las pruebas</strong>Me comprometo a validar los entregables, asistir a las reuniones de revisión y proporcionar feedback oportuno durante el desarrollo.</div></label></div>
+      <div class="commit-check"><label><input type="checkbox" id="chk3"><div class="cc-text"><strong>📣 Promoveré la adopción del cambio en mi área</strong>Apoyaré la implementación, capacitaré a mi equipo en el uso de la nueva herramienta y reportaré incidencias en lugar de ignorarlas.</div></label></div>
+    </div>
+
+    <div class="sec-lbl" style="margin-top:28px"><div class="n">5</div><div class="t">Archivos adjuntos <span style="font-weight:400;text-transform:none;color:#bbb;font-size:11px">(opcional)</span></div></div>
+    <div class="dz" id="dz" onclick="document.getElementById('ff').click()" ondragover="event.preventDefault();this.classList.add('ov')" ondragleave="this.classList.remove('ov')" ondrop="dropF(event)">
+      <div class="di">📎</div>
+      <div class="dt"><strong>Haz clic aquí</strong> o arrastra los archivos</div>
+      <div class="dh">PNG, JPG, PDF, Excel, Word — máx. 5 MB por archivo</div>
+    </div>
+    <input type="file" id="ff" multiple accept=".png,.jpg,.jpeg,.pdf,.xlsx,.docx,.csv,.txt" style="display:none" onchange="addF(this.files)">
+    <div class="fl-list" id="flist"></div>
+
+    <div style="margin-top:24px">
+      <div class="eb" id="eb"></div>
+      <button class="bsend" onclick="enviar()"><span>📤</span><span>Enviar solicitud</span></button>
+      <div style="font-size:11px;color:#bbb;text-align:center;margin-top:8px">Tiempo de respuesta estimado: 1-2 días hábiles</div>
+    </div>
+  </div>
+  <div class="sw" id="sw">
+    <div class="sc">
+      <div class="si">🎉</div>
+      <h2>¡Solicitud enviada!</h2>
+      <div class="sid" id="sucid">SOL-001</div>
+      <p>Keiko Palomino revisará tu solicitud y se contactará contigo para coordinar los detalles.</p>
+      <p style="margin-top:8px"><strong style="color:#F5C400">Tiempo de respuesta: 1-2 días hábiles</strong></p>
+      <div style="background:#F5C40015;border:1px solid #F5C40050;border-radius:10px;padding:14px;margin-top:16px;text-align:left">
+        <div style="font-size:12px;color:#F5C400;font-weight:700;margin-bottom:8px">📄 Descarga tu Constancia de Compromiso</div>
+        <div style="font-size:11px;color:#888;margin-bottom:12px;line-height:1.6">Este documento formaliza tu compromiso con el proyecto. Imprímelo, fírmalo y entrégalo a Keiko Palomino o escanéalo como adjunto.</div>
+        <button class="bn" onclick="exportarConstancia()" style="width:100%;margin-top:0;display:flex;align-items:center;justify-content:center;gap:8px"><span>🖨️</span><span>Descargar / Imprimir Constancia</span></button>
+      </div>
+      <br><button class="bn" onclick="nuevaSol()">📝 Registrar otra solicitud</button>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ══ ADMIN ══════════════════════════════════════════════════ -->
+<div id="tab-admin" class="hidden">
+  <div class="pws" id="pws">
+    <div class="pwc">
+      <div class="pwi">🔐</div>
+      <h3>Acceso Restringido</h3>
+      <p>Esta sección es exclusiva para el equipo de gestión de proyectos.<br>Ingresa la contraseña para continuar.</p>
+      <input class="pwin" type="password" id="pwi" placeholder="Contraseña" onkeydown="if(event.key==='Enter')chkPw()">
+      <button class="pwb" onclick="chkPw()">Ingresar →</button>
+      <div class="pwe" id="pwe">❌ Contraseña incorrecta. Intenta nuevamente.</div>
+      <div class="pwu">
+        Acceso autorizado para:<br>
+        <strong style="color:#F5C400">Keiko Palomino</strong> — Jefe de Proyectos / Scrum Master<br>
+        <strong style="color:#F5C400">Kelly Barrientos</strong> — Ing. de Datos / Arquitectura de Datos
+      </div>
+    </div>
+  </div>
+  <div class="main hidden" id="ap">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+      <div>
+        <div style="font-size:20px;font-weight:800;color:#111">📋 Panel de Gestión</div>
+        <div style="font-size:12px;color:#999;margin-top:2px">Solo visible para Keiko Palomino y Kelly Barrientos</div>
+      </div>
+      <button class="ab r" onclick="logout()">🔒 Cerrar sesión</button>
+    </div>
+    <div class="as" id="ast"></div>
+    <div class="atb">
+      <select class="asel" id="fest" onchange="renderA()"><option value="">Todos los estados</option><option>Nueva</option><option>En revisión</option><option>Aprobada</option><option>Rechazada</option></select>
+      <select class="asel" id="fdest" onchange="renderA()"><option value="">Todos los destinos</option><option value="helpdesk">🎧 Helpdesk</option><option value="backlog">📋 Backlog</option></select>
+      <select class="asel" id="furg" onchange="renderA()"><option value="">Todas las urgencias</option><option>Crítica</option><option>Alta</option><option>Media</option><option>Baja</option></select>
+      <button class="ab y" onclick="expAll()">📥 Exportar Excel</button>
+      <button class="ab r" onclick="limpiar()">🗑 Limpiar aprobadas</button>
+    </div>
+    <div id="alist"></div>
+  </div>
+</div>
+
+<!-- ══ AYUDA ══════════════════════════════════════════════════ -->
+<div id="tab-ayuda" class="hidden">
+<div class="main">
+  <div style="background:#111;border-radius:16px;padding:28px 32px;margin-bottom:20px;border-left:6px solid #F5C400">
+    <h2 style="font-size:20px;font-weight:800;color:#F5C400;margin-bottom:6px">❓ ¿Cómo funciona este portal?</h2>
+    <p style="color:#aaa;font-size:13px">Guía rápida para todo el equipo Pioner</p>
+  </div>
+  <div class="hg">
+    <div class="hcard" style="background:#fff">
+      <div style="font-size:16px;font-weight:800;margin-bottom:16px">👤 Para cualquier persona</div>
+      <div class="hstep"><div class="hn">1</div><div><strong>Nueva Solicitud</strong><br><span style="font-size:12px;color:#666">Haz clic en la primera pestaña del menú</span></div></div>
+      <div class="hstep"><div class="hn">2</div><div><strong>Completa el formulario</strong><br><span style="font-size:12px;color:#666">Nombre, área, tipo, descripción y urgencia</span></div></div>
+      <div class="hstep"><div class="hn">3</div><div><strong>Adjunta archivos si tienes</strong><br><span style="font-size:12px;color:#666">Capturas, documentos, referencias útiles</span></div></div>
+      <div class="hstep"><div class="hn">4</div><div><strong>Haz clic en Enviar</strong><br><span style="font-size:12px;color:#666">Recibes tu número de solicitud (SOL-XXX)</span></div></div>
+      <div style="background:#fffdf0;border-radius:8px;padding:10px 12px;font-size:12px;color:#92400e;border-left:3px solid #F5C400">⏱ Keiko te contactará en 1-2 días hábiles</div>
+    </div>
+    <div class="hcard" style="background:#111">
+      <div style="font-size:16px;font-weight:800;margin-bottom:16px;color:#F5C400">🔐 Para Keiko y Kelly</div>
+      <div class="hstep"><div class="hn">1</div><div style="color:#aaa"><strong style="color:#F5C400">Pestaña "Gestión 🔒"</strong><br><span style="font-size:12px">Ingresar la contraseña de acceso</span></div></div>
+      <div class="hstep"><div class="hn">2</div><div style="color:#aaa"><strong style="color:#F5C400">Revisar solicitudes</strong><br><span style="font-size:12px">Ver todas las solicitudes del equipo Pioner</span></div></div>
+      <div class="hstep"><div class="hn">3</div><div style="color:#aaa"><strong style="color:#F5C400">Conversar y aprobar</strong><br><span style="font-size:12px">Agregar notas, estimar SP, elegir proyecto</span></div></div>
+      <div class="hstep"><div class="hn">4</div><div style="color:#aaa"><strong style="color:#F5C400">Importar al ScrumBoard</strong><br><span style="font-size:12px">El ticket pasa al Backlog automáticamente</span></div></div>
+      <div style="background:#F5C40015;border-radius:8px;padding:10px 12px;font-size:12px;color:#F5C400;border-left:3px solid #F5C400">🔒 La contraseña la manejan solo Keiko y Kelly</div>
+    </div>
+  </div>
+  <div style="background:#fff;border-radius:12px;padding:20px;margin-top:16px;border:1px solid #e5e0d0">
+    <div style="font-size:14px;font-weight:700;margin-bottom:14px">📊 Niveles de urgencia</div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;text-align:center">
+      <div style="background:#f0fdf4;border-radius:10px;padding:14px;border-top:3px solid #16a34a"><div style="font-size:22px">🟢</div><div style="font-size:11px;font-weight:700;color:#14532d;margin-top:6px">BAJA</div><div style="font-size:10px;color:#16a34a;margin-top:2px">2-4 semanas</div></div>
+      <div style="background:#fffbeb;border-radius:10px;padding:14px;border-top:3px solid #d97706"><div style="font-size:22px">🟡</div><div style="font-size:11px;font-weight:700;color:#92400e;margin-top:6px">MEDIA</div><div style="font-size:10px;color:#d97706;margin-top:2px">1-2 semanas</div></div>
+      <div style="background:#fff5f5;border-radius:10px;padding:14px;border-top:3px solid #dc2626"><div style="font-size:22px">🔴</div><div style="font-size:11px;font-weight:700;color:#7f1d1d;margin-top:6px">ALTA</div><div style="font-size:10px;color:#dc2626;margin-top:2px">Esta semana</div></div>
+      <div style="background:#111;border-radius:10px;padding:14px;border-top:3px solid #F5C400"><div style="font-size:22px">⚫</div><div style="font-size:11px;font-weight:700;color:#F5C400;margin-top:6px">CRÍTICA</div><div style="font-size:10px;color:#888;margin-top:2px">Hoy mismo</div></div>
+    </div>
+  </div>
+  <div style="background:#fff3cd;border-radius:10px;padding:14px 16px;margin-top:16px;border-left:4px solid #d97706;font-size:12px;color:#92400e">
+    <strong>⚠️ Sobre el almacenamiento:</strong> Las solicitudes se guardan en el navegador local (localStorage). Para que Keiko las vea, debe abrir el mismo archivo HTML en la misma PC. Se recomienda exportar el Excel periódicamente como respaldo.
+  </div>
+</div>
+</div>
+
+<!-- MODAL -->
+<div class="ov hidden" id="mov" onclick="if(event.target===this)closeMd()">
+  <div class="md" id="mbd"></div>
+</div>
+
+<div class="footer">Pionier — Portal de Solicitudes TI &amp; Datos · 2025</div>
+
+<script>
+// ─── CONTRASEÑA ──────────────────────────────────────────────
+const PASS = ['pioner2026','scrum2026'];
+const SK   = 'pioner_admin_ok';
+
+// ─── SUPABASE CONFIG ─────────────────────────────────────────
+const SB_URL = 'https://jsmryefxbjyxviopesgt.supabase.co';
+const SB_KEY = 'sb_publishable_1sxgjIf_jVz30FKBPjpMrQ_c8T0hyEu';
+
+async function sbFetch(method, path, body){
+  const opts={method,headers:{'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Prefer':'return=representation'}};
+  if(body) opts.body=JSON.stringify(body);
+  const r=await fetch(SB_URL+'/rest/v1/'+path,opts);
+  if(!r.ok){const t=await r.text();throw new Error(t);}
+  const txt=await r.text(); return txt?JSON.parse(txt):[];
+}
+
+async function sbGuardar(sol){
+  try{
+    const row={codigo:sol.id,nombre:sol.nombre,area:sol.area,tipo:sol.tipo,titulo:sol.titulo,
+      descripcion:sol.desc,correo:sol.correo||'',urgencia:sol.urgencia,objetivo:sol.objetivo||'',
+      valor_proyecto:sol.valorProyecto||'',fecha:sol.fecha,hora:sol.hora,estado:sol.estado,
+      notas:sol.notas||'',sp_estimado:sol.spEstimado||'',proyecto:sol.proyecto||''};
+    await sbFetch('POST','solicitudes',row);
+  }catch(e){console.warn('SB save:',e.message);}
+}
+
+async function sbCargar(){
+  try{
+    const rows=await sbFetch('GET','solicitudes?order=created_at.desc&limit=500');
+    if(rows&&rows.length>0){
+      sols=rows.map(r=>({id:r.codigo,nombre:r.nombre,area:r.area,tipo:r.tipo,titulo:r.titulo,
+        desc:r.descripcion,correo:r.correo||'',urgencia:r.urgencia||'Media',
+        objetivo:r.objetivo||'',valorProyecto:r.valor_proyecto||'',
+        fecha:r.fecha||'',hora:r.hora||'',estado:r.estado||'Nueva',
+        notas:r.notas||'',spEstimado:r.sp_estimado||'',proyecto:r.proyecto||'',
+        archivos:[],importado:false,destino:r.tipo==='Soporte técnico'?'helpdesk':'proyecto',
+        compromisos:['Brindaré información correcta y completa','Participaré activamente en las pruebas','Promoveré la adopción del cambio en mi área']}));
+      const maxId=sols.reduce((mx,s)=>{const n=parseInt((s.id||'SOL-000').split('-')[1]||'0');return n>mx?n:mx;},0);
+      nid=maxId+1; sv();
+    }
+    return true;
+  }catch(e){console.warn('SB load:',e.message);return false;}
+}
+
+async function sbActualizar(codigo,campos){
+  try{
+    const u={};
+    if(campos.estado!==undefined)u.estado=campos.estado;
+    if(campos.notas!==undefined)u.notas=campos.notas;
+    if(campos.spEstimado!==undefined)u.sp_estimado=campos.spEstimado;
+    if(campos.proyecto!==undefined)u.proyecto=campos.proyecto;
+    if(Object.keys(u).length>0)
+      await sbFetch('PATCH','solicitudes?codigo=eq.'+encodeURIComponent(codigo),u);
+  }catch(e){console.warn('SB update:',e.message);}
+}
+
+// ─── DATOS ───────────────────────────────────────────────────
+let sols=[], nid=1, urgSel='', arch=[];
+function sv(){ try{ localStorage.setItem('pioner_s',JSON.stringify(sols)); localStorage.setItem('pioner_n',String(nid)); }catch(e){} }
+function ld(){ try{ const d=localStorage.getItem('pioner_s'),n=localStorage.getItem('pioner_n'); if(d)sols=JSON.parse(d); if(n)nid=parseInt(n); }catch(e){} }
+ld();
+function upNN(){ document.getElementById('nn').textContent=String(nid).padStart(3,'0'); }
+upNN();
+
+// ─── CARGAR DESDE SUPABASE AL INICIO ─────────────────────────
+(async function iniciar(){
+  const ok = await sbCargar();
+  renderA();
+  upNN();
+  if(ok){ console.log('✅ Conectado a Supabase — '+sols.length+' solicitudes cargadas'); }
+  else { console.log('⚠️ Usando datos locales'); }
+})();
+
+// ─── TABS ─────────────────────────────────────────────────────
+function switchTab(t,b){
+  document.querySelectorAll('.nav-btn').forEach(x=>x.classList.remove('active'));
+  if(b)b.classList.add('active');
+  ['sol','admin','ayuda'].forEach(x=>document.getElementById('tab-'+x).classList.toggle('hidden',x!==t));
+}
+function tryAdmin(b){
+  switchTab('admin',b);
+  const ok=sessionStorage.getItem(SK)==='1';
+  document.getElementById('pws').classList.toggle('hidden',ok);
+  document.getElementById('ap').classList.toggle('hidden',!ok);
+  if(ok)renderA();
+}
+function chkPw(){
+  const v=document.getElementById('pwi').value;
+  if(PASS.includes(v)){
+    sessionStorage.setItem(SK,'1');
+    document.getElementById('pws').classList.add('hidden');
+    document.getElementById('ap').classList.remove('hidden');
+    document.getElementById('pwe').style.display='none';
+    document.getElementById('pwi').value='';
+    renderA();
+  } else {
+    document.getElementById('pwe').style.display='block';
+    document.getElementById('pwi').value='';
+    document.getElementById('pwi').focus();
+  }
+}
+function logout(){
+  sessionStorage.removeItem(SK);
+  document.getElementById('ap').classList.add('hidden');
+  document.getElementById('pws').classList.remove('hidden');
+  document.getElementById('pwi').value='';
+  document.getElementById('pwe').style.display='none';
+}
+
+// ─── FORM ─────────────────────────────────────────────────────
+function selU(el,c){
+  document.querySelectorAll('.uc').forEach(x=>x.className='uc');
+  el.classList.add(c); urgSel=el.dataset.v;
+}
+function addF(fs){ for(const f of fs){ if(f.size>5*1024*1024){alert(f.name+' supera 5MB.');continue;} arch.push({name:f.name,size:f.size}); rndF(); } }
+function dropF(e){ e.preventDefault(); document.getElementById('dz').classList.remove('ov'); addF(e.dataTransfer.files); }
+function rndF(){ document.getElementById('flist').innerHTML=arch.map((f,i)=>`<div class="fc"><span class="fn">📄 ${e(f.name)}</span><span class="fs">${(f.size/1024).toFixed(0)}KB</span><button onclick="arch.splice(${i},1);rndF()">✕</button></div>`).join(''); }
+function shErr(m){ const el=document.getElementById('eb'); el.textContent='⚠️ '+m; el.style.display='block'; el.scrollIntoView({behavior:'smooth',block:'center'}); }
+function hdErr(){ document.getElementById('eb').style.display='none'; }
+
+async function enviar(){
+  hdErr();
+  const nm=document.getElementById('fn').value.trim(), ar=document.getElementById('fa').value,
+        ti=document.getElementById('ft').value, tu=document.getElementById('fti').value.trim(),
+        de=document.getElementById('fd').value.trim(), co=document.getElementById('fc').value.trim(),
+        obj=document.getElementById('fobj').value.trim(), val=document.getElementById('fval').value.trim(),
+        chk1=document.getElementById('chk1').checked, chk2=document.getElementById('chk2').checked, chk3=document.getElementById('chk3').checked;
+  if(!nm){shErr('Ingresa tu nombre completo.');return;}
+  if(!ar){shErr('Selecciona tu área / empresa.');return;}
+  if(!ti){shErr('Selecciona el tipo de solicitud.');return;}
+  if(!tu){shErr('El título es obligatorio.');return;}
+  if(de.length<20){shErr('La descripción es muy corta. Agrega más detalle.');return;}
+  if(!urgSel){shErr('Selecciona la urgencia.');return;}
+  if(!obj){shErr('Ingresa el objetivo del usuario — sección Compromiso.');return;}
+  if(!val){shErr('Ingresa el valor del proyecto para tu área — sección Compromiso.');return;}
+  if(!chk1||!chk2||!chk3){shErr('Debes aceptar los tres compromisos del solicitante.');return;}
+  // Obtener el último correlativo desde Supabase para evitar duplicados
+  let nextNum = nid;
+  try {
+    const rows = await sbFetch('GET','solicitudes?select=codigo&order=created_at.desc&limit=1');
+    if(rows && rows.length > 0) {
+      const lastNum = parseInt((rows[0].codigo||'SOL-000').split('-')[1]||'0');
+      nextNum = Math.max(lastNum + 1, nid);
+      nid = nextNum + 1;
+    } else { nid = nextNum + 1; }
+  } catch(e) { nid = nextNum + 1; }
+  const id='SOL-'+String(nextNum).padStart(3,'0');
+  const compromisos=['Brindaré información correcta y completa','Participaré activamente en las pruebas','Promoveré la adopción del cambio en mi área'];
+  sols.unshift({id,nombre:nm,area:ar,tipo:ti,titulo:tu,desc:de,correo:co,urgencia:urgSel,
+    objetivo:obj, valorProyecto:val, compromisos,
+    fecha:new Date().toLocaleDateString('es-PE'),hora:new Date().toLocaleTimeString('es-PE',{hour:'2-digit',minute:'2-digit'}),
+    estado:'Nueva',archivos:[...arch],notas:'',spEstimado:'',proyecto:'',importado:false});
+  sv(); sbGuardar(sols[0]); upNN();
+  document.getElementById('sucid').textContent=id;
+  document.getElementById('fw').style.display='none';
+  document.getElementById('sw').style.display='block';
+  arch=[]; urgSel='';
+  document.querySelectorAll('.tcard').forEach(c=>c.classList.remove('sel'));
+}
+
+// ─── EXPORTAR CONSTANCIA ──────────────────────────────────────
+function exportarConstancia(){
+  const s=sols[0]; if(!s)return;
+  const f=s.fecha+' '+s.hora;
+  const html=`<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Constancia de Compromiso — ${s.id}</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Segoe UI',Arial,sans-serif;font-size:13px;color:#1a1a1a;background:#fff;padding:0}
+  .page{max-width:780px;margin:0 auto;padding:40px 50px}
+  .header-bar{background:#111;padding:18px 28px;border-bottom:5px solid #F5C400;display:flex;justify-content:space-between;align-items:center;border-radius:0}
+  .header-bar h1{font-size:17px;font-weight:800;color:#fff;text-transform:uppercase;letter-spacing:1px}
+  .header-bar .sol-id{background:#F5C400;color:#111;padding:5px 16px;border-radius:6px;font-size:14px;font-weight:800;letter-spacing:1px}
+  .sub-bar{background:#F5C400;padding:6px 28px;font-size:10px;font-weight:700;color:#111;text-transform:uppercase;letter-spacing:.5px;margin-bottom:24px}
+  h2{font-size:20px;font-weight:800;color:#111;margin-bottom:6px;text-align:center}
+  .intro{text-align:center;font-size:12px;color:#666;margin-bottom:28px;line-height:1.7;max-width:540px;margin-left:auto;margin-right:auto}
+  .section{margin-bottom:20px}
+  .section-title{background:#111;color:#F5C400;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;padding:7px 14px;border-radius:6px 6px 0 0}
+  .section-body{border:1.5px solid #e5e0d0;border-top:none;border-radius:0 0 6px 6px;padding:14px}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:10px}
+  .field label{font-size:9px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px}
+  .field .val{font-size:13px;font-weight:600;color:#111}
+  .field .val.multi{font-size:12px;font-weight:400;line-height:1.7;color:#374151;white-space:pre-wrap;word-break:break-word;overflow-wrap:break-word}
+  .commit-list{list-style:none;padding:0}
+  .commit-list li{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid #f0ede0;font-size:12px;color:#374151;line-height:1.5}
+  .commit-list li:last-child{border-bottom:none}
+  .commit-list .chk{width:20px;height:20px;border:2px solid #111;border-radius:4px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:#111;color:#F5C400;font-weight:800;font-size:13px}
+  .sign-section{margin-top:32px;display:grid;grid-template-columns:1fr 1fr;gap:40px}
+  .sign-box{text-align:center}
+  .sign-line{border-top:2px solid #111;margin-bottom:8px;margin-top:60px}
+  .sign-name{font-weight:700;font-size:13px;color:#111}
+  .sign-role{font-size:11px;color:#999;margin-top:2px}
+  .sign-date{font-size:10px;color:#bbb;margin-top:4px}
+  .legal{background:#fffdf0;border:1.5px solid #F5C40050;border-radius:8px;padding:14px 18px;margin-top:24px;font-size:11px;color:#92400e;line-height:1.7;text-align:center}
+  .footer{text-align:center;font-size:10px;color:#bbb;margin-top:24px;padding-top:14px;border-top:1px solid #e5e0d0}
+  .urgencia-badge{display:inline-block;padding:2px 10px;border-radius:4px;font-size:10px;font-weight:700}
+  .ub-Baja{background:#dcfce7;color:#14532d}.ub-Media{background:#fff3cd;color:#92400e}.ub-Alta{background:#fee2e2;color:#7f1d1d}.ub-Crítica{background:#111;color:#F5C400}
+  @media print{body{padding:0}@page{margin:15mm 20mm}}
+  .no-print{display:block;text-align:center;margin:20px 0;padding-bottom:20px}
+  @media print{.no-print{display:none}}
+</style>
+</head>
+<body>
+<div class="no-print" style="background:#111;color:#F5C400;padding:12px;font-size:13px;font-weight:700;text-align:center">
+  📄 Vista previa — <button onclick="window.print()" style="background:#F5C400;color:#111;border:none;padding:6px 18px;border-radius:6px;font-weight:800;cursor:pointer;font-size:13px;margin-left:10px">🖨️ Imprimir / Guardar PDF</button>
+  <button onclick="window.close()" style="background:transparent;color:#888;border:1px solid #444;padding:6px 14px;border-radius:6px;font-size:12px;cursor:pointer;margin-left:8px">✕ Cerrar</button>
+</div>
+<div class="page">
+  <div class="header-bar">
+    <h1>🤝 Constancia de Compromiso</h1>
+    <span class="sol-id">${s.id}</span>
+  </div>
+  <div class="sub-bar">Pionier — Portal de Solicitudes TI &amp; Datos · Emitido: ${f}</div>
+
+  <h2>Carta de Compromiso del Solicitante</h2>
+  <p class="intro">Yo, el/la abajo firmante, mediante el presente documento declaro haber registrado una solicitud en el Portal de Solicitudes Pionier y asumo los compromisos detallados a continuación para garantizar el éxito del proyecto.</p>
+
+  <div class="section">
+    <div class="section-title">📋 Datos del Solicitante</div>
+    <div class="section-body">
+      <div class="row">
+        <div class="field"><label>Nombre completo</label><div class="val">${e(s.nombre)}</div></div>
+        <div class="field"><label>Área / Empresa</label><div class="val">${e(s.area)}</div></div>
+      </div>
+      <div class="row">
+        <div class="field"><label>Correo</label><div class="val">${e(s.correo||'—')}</div></div>
+        <div class="field"><label>Tipo de solicitud</label><div class="val">${e(s.tipo)}</div></div>
+      </div>
+      <div class="row">
+        <div class="field"><label>Fecha de registro</label><div class="val">${f}</div></div>
+        <div class="field"><label>Urgencia</label><div class="val"><span class="urgencia-badge ub-${s.urgencia}">${s.urgencia}</span></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">📝 Descripción de la Solicitud</div>
+    <div class="section-body">
+      <div class="field" style="margin-bottom:10px"><label>Título del requerimiento</label><div class="val">${e(s.titulo)}</div></div>
+      <div class="field"><label>Descripción detallada</label><div class="val multi">${e(s.desc)}</div></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">🎯 Objetivo y Valor del Proyecto</div>
+    <div class="section-body">
+      <div class="field" style="margin-bottom:12px"><label>Objetivo del usuario</label><div class="val multi">${e(s.objetivo||'—')}</div></div>
+      <div class="field"><label>Valor esperado para el área</label><div class="val multi">${e(s.valorProyecto||'—')}</div></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">✅ Compromisos Aceptados</div>
+    <div class="section-body">
+      <ul class="commit-list">
+        <li><div class="chk">✓</div><div><strong>Brindaré información correcta y completa</strong><br>Proporcionaré datos precisos, acceso a los sistemas necesarios y responderé consultas del equipo TI en un plazo máximo de 24 horas.</div></li>
+        <li><div class="chk">✓</div><div><strong>Participaré activamente en las pruebas</strong><br>Me comprometo a validar los entregables, asistir a las reuniones de revisión y proporcionar feedback oportuno durante el desarrollo.</div></li>
+        <li><div class="chk">✓</div><div><strong>Promoveré la adopción del cambio en mi área</strong><br>Apoyaré la implementación, capacitaré a mi equipo en el uso de la nueva herramienta y reportaré incidencias en lugar de ignorarlas.</div></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="sign-section">
+    <div class="sign-box">
+      <div class="sign-line"></div>
+      <div class="sign-name">${e(s.nombre)}</div>
+      <div class="sign-role">Solicitante · ${e(s.area)}</div>
+      <div class="sign-date">Fecha: ______ / ______ / ________</div>
+    </div>
+    <div class="sign-box">
+      <div class="sign-line"></div>
+      <div class="sign-name">Keiko Palomino</div>
+      <div class="sign-role">Jefe de Proyectos / Scrum Master · Pionier</div>
+      <div class="sign-date">Fecha: ______ / ______ / ________</div>
+    </div>
+  </div>
+
+  <div class="legal">
+    <strong>📌 Validez del documento:</strong> Esta constancia tiene valor dentro del marco del proceso de gestión de solicitudes Pionier. Al firmar, el solicitante declara conocer los compromisos asumidos y se compromete a cumplirlos durante todo el ciclo de vida del proyecto. El incumplimiento puede resultar en la suspensión o cancelación de la solicitud.
+  </div>
+
+  <div class="footer">Pionier — Portal de Solicitudes TI &amp; Datos · ${new Date().getFullYear()} · Documento N° ${s.id}</div>
+</div>
+</body></html>`;
+  const w=window.open('','_blank','width=900,height=750');
+  w.document.write(html);
+  w.document.close();
+}
+function nuevaSol(){
+  document.getElementById('fw').style.display='block';
+  document.getElementById('sw').style.display='none';
+  ['fn','fa','ft','fti','fd','fc','fobj','fval'].forEach(i=>{const el=document.getElementById(i);if(el)el.value='';});
+  ['chk1','chk2','chk3'].forEach(i=>{const el=document.getElementById(i);if(el)el.checked=false;});
+  document.querySelectorAll('.uc').forEach(c=>c.className='uc');
+  document.querySelectorAll('.tcard').forEach(c=>c.classList.remove('sel'));
+  document.getElementById('flist').innerHTML='';
+  document.getElementById('tc').textContent='0';
+  hdErr(); window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ─── ADMIN ────────────────────────────────────────────────────
+function renderA(){
+  const fe=document.getElementById('fest')?.value||'', fu=document.getElementById('furg')?.value||'', fd=document.getElementById('fdest')?.value||'';
+  const ls=sols.filter(s=>(!fe||s.estado===fe)&&(!fu||s.urgencia===fu)&&(!fd||(fd==='helpdesk'?s.destino==='helpdesk':fd==='backlog'?s.destino!=='helpdesk':true)));
+  const tot=sols.length, nue=sols.filter(s=>s.estado==='Nueva').length,
+        ap=sols.filter(s=>s.estado==='Aprobada').length, cr=sols.filter(s=>s.urgencia==='Crítica'&&s.estado==='Nueva').length;
+  document.getElementById('ast').innerHTML=`
+    <div class="ak"><div class="av">${tot}</div><div class="al">Total</div></div>
+    <div class="ak"><div class="av">${nue}</div><div class="al">Nuevas</div></div>
+    <div class="ak"><div class="av" style="color:#16a34a">${ap}</div><div class="al">Aprobadas</div></div>
+    <div class="ak"><div class="av" style="color:#dc2626">${cr}</div><div class="al">Críticas</div></div>`;
+  const ub={Baja:'bj',Media:'md',Alta:'al','Crítica':'cr'};
+  const ub2={Baja:'bbj',Media:'bmd',Alta:'bal','Crítica':'bcr'};
+  const eb2={Nueva:'bnw','En revisión':'brv',Aprobada:'bap',Rechazada:'brj',Helpdesk:'bhd'};
+  if(!ls.length){document.getElementById('alist').innerHTML='<div style="text-align:center;padding:40px;color:#999">📭 No hay solicitudes con esos filtros.</div>';return;}
+  document.getElementById('alist').innerHTML=ls.map(s=>`
+    <div class="scard">
+      <div class="sbar ${s.destino==='helpdesk'?'hd':ub[s.urgencia]||''}"></div>
+      <div class="sin">
+        <div class="stop">
+          <span class="sid2">${e(s.id)}</span>
+          <span class="stit">${e(s.titulo)}</span>
+          <span class="bdg ${ub2[s.urgencia]||''}">${s.urgencia}</span>
+          <span class="bdg ${eb2[s.estado]||''}">${s.estado}</span>
+          ${s.destino==='helpdesk'?`<span class="bdg bhd">🎧 Helpdesk</span>`:''}
+          ${s.spEstimado?`<span class="bdg" style="background:#111;color:#F5C400">⚡ ${s.spEstimado} SP</span>`:''}
+        </div>
+        <div class="sbody">
+          <div class="smeta">
+            <span>👤 ${e(s.nombre)}</span><span>🏢 ${e(s.area)}</span>
+            <span>📋 ${e(s.tipo)}</span><span>📅 ${s.fecha} ${s.hora||''}</span>
+            ${s.correo?`<span>✉️ ${e(s.correo)}</span>`:''}
+            ${s.archivos?.length?`<span>📎 ${s.archivos.length} archivo(s)</span>`:''}
+            ${s.proyecto?`<span>📁 ${e(s.proyecto)}</span>`:''}
+          </div>
+          <div class="sdesc">${e(s.desc)}</div>
+          ${s.objetivo?`<div class="snotes" style="background:#fffdf0;border-left:3px solid #F5C400"><strong>🎯 Objetivo:</strong> ${e(s.objetivo)}</div>`:''}
+          ${s.valorProyecto?`<div class="snotes" style="background:#f0fdf4;border-left:3px solid #16a34a"><strong>💎 Valor del proyecto:</strong> ${e(s.valorProyecto)}</div>`:''}
+          ${s.notas?`<div class="snotes"><strong>📝 Notas:</strong> ${e(s.notas)}</div>`:''}
+          <div class="sact">
+            ${s.estado==='Nueva'?`<button class="ab" onclick="marcar('${s.id}','En revisión')">👁 En revisión</button>`:''}
+            ${!['Aprobada','Rechazada'].includes(s.estado)?`<button class="ab y" onclick="shApr('${s.id}')">✅ Aprobar → Backlog</button>`:''}
+            ${!['Rechazada','Aprobada'].includes(s.estado)?`<button class="ab r" onclick="rch('${s.id}')">❌ Rechazar</button>`:''}
+            ${s.estado==='Aprobada'&&s.destino!=='helpdesk'?`<button class="ab" style="color:#7c3aed;border-color:#c4b5fd" onclick="shHelpdesk('${s.id}')">🎧 Derivar a Helpdesk</button>`:''}
+            ${s.destino==='helpdesk'?`<span class="bdg" style="background:#ede9fe;color:#4c1d95;font-size:11px;padding:4px 10px">🎧 → Helpdesk${s.importado?' ✓':' (pendiente)'}</span><button class="ab" style="color:#7c3aed;border-color:#c4b5fd" onclick="shHelpdesk('${s.id}')">✏️ Editar</button>`:''}
+            ${!['Rechazada','Aprobada'].includes(s.estado)?`<button class="ab" style="color:#7c3aed;border-color:#c4b5fd" onclick="shHelpdesk('${s.id}')">🎧 Derivar a Helpdesk</button>`:''}
+            <button class="ab" onclick="shNt('${s.id}')">📝 Notas</button>
+            ${s.estado==='Aprobada'?`<button class="ab" onclick="expT('${s.id}')">📥 Exportar ticket</button><button class="ab" onclick="expConstancia('${s.id}')">🖨️ Constancia</button>`:''}
+            ${s.estado!=='Aprobada'?`<button class="ab" onclick="expConstancia('${s.id}')">🖨️ Constancia</button>`:''}
+          </div>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function selTipo(el){
+  document.querySelectorAll(".tcard").forEach(c=>c.classList.remove("sel"));
+  el.classList.add("sel");
+  document.getElementById("ft").value=el.dataset.val;
+}
+function marcar(id,st){ const s=sols.find(x=>x.id===id); if(s){s.estado=st;sv();sbActualizar(id,{estado:st});renderA();} }
+function rch(id){ if(!confirm('¿Rechazar esta solicitud?'))return; marcar(id,'Rechazada'); }
+
+function shApr(id){
+  const s=sols.find(x=>x.id===id); if(!s)return;
+  showMd(`<h3>✅ Aprobar — ${e(s.id)}</h3>
+    <div style="background:#f9f8f5;border-radius:8px;padding:12px;margin-bottom:16px;font-size:13px">
+      <strong>${e(s.titulo)}</strong><br><span style="color:#666;font-size:11px">👤 ${e(s.nombre)} · 🏢 ${e(s.area)}</span></div>
+    <label style="font-size:11px;font-weight:700;color:#666;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Proyecto destino ★</label>
+    <select class="mi" id="ap-p" style="margin-bottom:14px">
+      <option value="">— Selecciona —</option>
+      <option>Data Pipeline ETL</option><option>Dashboard Analytics</option>
+      <option>API Rest Backend</option><option>Nuevo proyecto</option>
+    </select>
+    <label style="font-size:11px;font-weight:700;color:#666;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:8px">Story Points estimados ★</label>
+    <div class="spch">${[1,2,3,5,8,13].map(n=>`<div class="spc" onclick="selSP(this,${n})">${n}</div>`).join('')}</div>
+    <input type="hidden" id="ap-sp">
+    <label style="font-size:11px;font-weight:700;color:#666;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px;margin-top:4px">Notas del Scrum Master</label>
+    <textarea class="mi" id="ap-nt" rows="3" placeholder="Acuerdos, alcance, limitaciones de la reunión..."></textarea>
+    <div class="ma">
+      <button class="ab" onclick="closeMd()">Cancelar</button>
+      <button class="ab y" onclick="aprobar('${id}')">✅ Confirmar aprobación</button>
+    </div>`);
+}
+function selSP(el,n){ document.querySelectorAll('.spc').forEach(c=>c.classList.remove('sl')); el.classList.add('sl'); document.getElementById('ap-sp').value=n; }
+function aprobar(id){
+  const s=sols.find(x=>x.id===id); if(!s)return;
+  const pj=document.getElementById('ap-p').value, sp=document.getElementById('ap-sp').value;
+  if(!pj){alert('Selecciona el proyecto destino.');return;}
+  if(!sp){alert('Estima los Story Points.');return;}
+  s.estado='Aprobada'; s.proyecto=pj; s.spEstimado=sp;
+  s.notas=document.getElementById('ap-nt').value;
+  s.fechaAprobacion=new Date().toLocaleDateString('es-PE'); s.importado=false;
+  sv();
+  // Guardar en Supabase
+  sbActualizar(id,{estado:'Aprobada',proyecto:pj,sp_estimado:sp,notas:s.notas});
+  closeMd(); renderA();
+  showMd(`<div style="text-align:center;padding:16px 0">
+    <div style="font-size:48px">✅</div>
+    <h3 style="color:#16a34a;margin:12px 0 8px">¡Solicitud aprobada!</h3>
+    <div style="background:#f9f8f5;border-radius:8px;padding:12px;margin-bottom:14px;font-size:13px">
+      <strong>${e(s.id)}</strong> · ${e(s.titulo)}<br>
+      <span style="color:#F5C400;font-weight:700">${pj} · ${sp} SP</span></div>
+    <div style="background:#fffdf0;border:1px solid #F5C400;border-radius:8px;padding:12px;font-size:12px;text-align:left;margin-bottom:14px">
+      🔔 <strong>Siguiente paso:</strong><br>
+      Abre <strong>SCRUM Pionier.html</strong> → pestaña <strong>Backlog</strong><br>
+      → clic en <strong style="background:#F5C400;color:#111;padding:1px 8px;border-radius:4px">📥 Importar Solicitudes</strong><br>
+      El ticket aparecerá en el Product Backlog automáticamente.</div>
+    <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+      <button class="ab" onclick="expT('${id}')">📥 Descargar Excel del ticket</button>
+      <button class="ab y" onclick="closeMd()">Entendido</button>
+    </div></div>`);
+}
+function shNt(id){
+  const s=sols.find(x=>x.id===id); if(!s)return;
+  showMd(`<h3>📝 Notas — ${e(s.id)}</h3>
+    <textarea class="mi" id="nt-txt" rows="5" style="margin-bottom:0" placeholder="Escribe tus notas aquí...">${e(s.notas||'')}</textarea>
+    <div class="ma">
+      <button class="ab" onclick="closeMd()">Cancelar</button>
+      <button class="ab y" onclick="const s=sols.find(x=>x.id==='${id}');if(s){s.notas=document.getElementById('nt-txt').value;sv();closeMd();renderA();}">Guardar</button>
+    </div>`);
+}
+
+function shHelpdesk(id){
+  const s=sols.find(x=>x.id===id); if(!s)return;
+  showMd(`<h3>🎧 Derivar a Helpdesk — ${e(s.id)}</h3>
+    <div style="background:#f9f8f5;border-radius:8px;padding:12px;margin-bottom:16px;font-size:13px">
+      <strong>${e(s.titulo)}</strong><br><span style="color:#666;font-size:11px">👤 ${e(s.nombre)} · 🏢 ${e(s.area)}</span></div>
+    <div style="background:#ede9fe;border-left:4px solid #7c3aed;border-radius:0 8px 8px 0;padding:10px 14px;font-size:12px;color:#4c1d95;margin-bottom:16px;line-height:1.6">
+      <strong>¿Cuándo derivar a Helpdesk?</strong><br>
+      Cuando la solicitud corresponde a soporte técnico, incidencias, accesos, instalaciones u otras tareas operativas que no requieren desarrollo TI/Datos.
+    </div>
+    <label style="font-size:11px;font-weight:700;color:#666;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Categoría Helpdesk <span style="color:#F5C400">★</span></label>
+    <select class="mi" id="hd-motivo" style="margin-bottom:14px">
+      <option value="">— Selecciona la categoría —</option>
+      <option>Soporte técnico / Incidencia</option>
+      <option>Solicitud de accesos / Permisos</option>
+      <option>Instalación de software / Hardware</option>
+      <option>Consulta operativa</option>
+      <option>No corresponde al equipo TI &amp; Datos</option>
+      <option>Otro</option>
+    </select>
+    <label style="font-size:11px;font-weight:700;color:#666;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">SLA estimado (horas)</label>
+    <select class="mi" id="hd-sla" style="margin-bottom:14px">
+      <option value="4">4 horas — Crítico</option>
+      <option value="8" selected>8 horas — Alta</option>
+      <option value="24">24 horas — Media</option>
+      <option value="48">48 horas — Baja</option>
+    </select>
+    <label style="font-size:11px;font-weight:700;color:#666;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Observaciones para Helpdesk</label>
+    <textarea class="mi" id="hd-obs" rows="3" placeholder="Detalle adicional para el equipo de Helpdesk...">${e(s.helpdeskObs||'')}</textarea>
+    <div class="ma">
+      <button class="ab" onclick="closeMd()">Cancelar</button>
+      <button class="ab" style="background:#7c3aed;color:#fff;border-color:#7c3aed" onclick="derivarHelpdesk('${id}')">🎧 Confirmar derivación</button>
+    </div>`);
+}
+
+function derivarHelpdesk(id){
+  const s=sols.find(x=>x.id===id); if(!s)return;
+  const motivo=document.getElementById('hd-motivo').value;
+  if(!motivo){alert('Selecciona la categoría de derivación.');return;}
+  const obs=document.getElementById('hd-obs').value;
+  const sla=document.getElementById('hd-sla').value;
+  // Estado queda 'Aprobada' para que el SCRUM board lo detecte en la importación
+  // El campo 'destino' le indica al SCRUM que va a Helpdesk (no al Backlog)
+  s.estado='Aprobada';
+  s.destino='helpdesk';
+  s.importado=false;
+  s.hdCategoria=motivo;
+  s.hdSla=sla;
+  s.helpdeskObs=obs;
+  s.helpdeskFecha=new Date().toLocaleDateString('es-PE');
+  s.fechaAprobacion=s.fechaAprobacion||new Date().toLocaleDateString('es-PE');
+  sv();
+  sbActualizar(id,{estado:'Aprobada',destino:'helpdesk',notas:obs});
+  closeMd(); renderA();
+  showMd(`<div style="text-align:center;padding:16px 0">
+    <div style="font-size:48px">🎧</div>
+    <h3 style="color:#7c3aed;margin:12px 0 8px">Derivado a Helpdesk</h3>
+    <div style="background:#f9f8f5;border-radius:8px;padding:12px;margin-bottom:14px;font-size:13px">
+      <strong>${e(s.id)}</strong> · ${e(s.titulo)}<br>
+      <span style="color:#7c3aed;font-weight:700">Categoría: ${e(motivo)}</span><br>
+      <span style="color:#999;font-size:11px">SLA: ${sla} horas</span></div>
+    ${obs?`<div style="background:#ede9fe;border-left:4px solid #7c3aed;border-radius:0 8px 8px 0;padding:10px 14px;font-size:12px;color:#4c1d95;text-align:left;margin-bottom:14px">${e(obs)}</div>`:''}
+    <div style="background:#fffdf0;border:1px solid #F5C400;border-radius:8px;padding:12px;font-size:12px;text-align:left;margin-bottom:14px">
+      🔔 <strong>Siguiente paso:</strong><br>
+      Abre <strong>SCRUM Pionier.html</strong> → pestaña <strong>Backlog</strong><br>
+      → clic en <strong style="background:#F5C400;color:#111;padding:1px 8px;border-radius:4px">📥 Importar Solicitudes</strong><br>
+      El ticket aparecerá en <strong>🎧 Helpdesk</strong> automáticamente.</div>
+    <button class="ab y" onclick="closeMd()">Entendido</button>
+  </div>`);
+}
+function limpiar(){ const n=sols.filter(s=>s.estado==='Aprobada').length; if(!n){alert('No hay aprobadas.');return;} if(!confirm('¿Eliminar '+n+' aprobada(s)?'))return; sols=sols.filter(s=>s.estado!=='Aprobada'); sv();renderA(); }
+
+// ─── EXPORT ───────────────────────────────────────────────────
+function expConstancia(id){
+  const s=sols.find(x=>x.id===id); if(!s)return;
+  const f=s.fecha+' '+(s.hora||'');
+  const html=`<!DOCTYPE html>
+<html lang="es"><head><meta charset="UTF-8"><title>Constancia ${s.id}</title>
+<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:'Segoe UI',Arial,sans-serif;font-size:13px;color:#1a1a1a;background:#fff}.page{max-width:780px;margin:0 auto;padding:40px 50px}.header-bar{background:#111;padding:18px 28px;border-bottom:5px solid #F5C400;display:flex;justify-content:space-between;align-items:center}.header-bar h1{font-size:17px;font-weight:800;color:#fff;text-transform:uppercase;letter-spacing:1px}.header-bar .sol-id{background:#F5C400;color:#111;padding:5px 16px;border-radius:6px;font-size:14px;font-weight:800}.sub-bar{background:#F5C400;padding:6px 28px;font-size:10px;font-weight:700;color:#111;text-transform:uppercase;letter-spacing:.5px;margin-bottom:24px}h2{font-size:20px;font-weight:800;color:#111;margin-bottom:6px;text-align:center}.intro{text-align:center;font-size:12px;color:#666;margin-bottom:28px;line-height:1.7;max-width:540px;margin-left:auto;margin-right:auto}.section{margin-bottom:20px}.section-title{background:#111;color:#F5C400;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;padding:7px 14px;border-radius:6px 6px 0 0}.section-body{border:1.5px solid #e5e0d0;border-top:none;border-radius:0 0 6px 6px;padding:14px}.row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:10px}.field label{font-size:9px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px}.field .val{font-size:13px;font-weight:600;color:#111}.field .val.multi{font-size:12px;font-weight:400;line-height:1.7;color:#374151;white-space:pre-wrap;word-break:break-word;overflow-wrap:break-word}.commit-list{list-style:none;padding:0}.commit-list li{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid #f0ede0;font-size:12px;color:#374151;line-height:1.5}.commit-list li:last-child{border-bottom:none}.commit-list .chk{width:20px;height:20px;border:2px solid #111;border-radius:4px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:#111;color:#F5C400;font-weight:800;font-size:13px}.sign-section{margin-top:32px;display:grid;grid-template-columns:1fr 1fr;gap:40px}.sign-box{text-align:center}.sign-line{border-top:2px solid #111;margin-bottom:8px;margin-top:60px}.sign-name{font-weight:700;font-size:13px}.sign-role{font-size:11px;color:#999;margin-top:2px}.sign-date{font-size:10px;color:#bbb;margin-top:4px}.legal{background:#fffdf0;border:1.5px solid #F5C40050;border-radius:8px;padding:14px 18px;margin-top:24px;font-size:11px;color:#92400e;line-height:1.7;text-align:center}.footer{text-align:center;font-size:10px;color:#bbb;margin-top:24px;padding-top:14px;border-top:1px solid #e5e0d0}.no-print{display:block;text-align:center;margin:20px 0;padding-bottom:20px}@media print{.no-print{display:none}@page{margin:15mm 20mm}}</style></head>
+<body>
+<div class="no-print" style="background:#111;color:#F5C400;padding:12px;font-size:13px;font-weight:700;text-align:center">
+📄 Constancia de Compromiso — ${s.id} &nbsp;
+<button onclick="window.print()" style="background:#F5C400;color:#111;border:none;padding:6px 18px;border-radius:6px;font-weight:800;cursor:pointer;font-size:13px">🖨️ Imprimir / PDF</button>
+<button onclick="window.close()" style="background:transparent;color:#888;border:1px solid #444;padding:6px 14px;border-radius:6px;font-size:12px;cursor:pointer;margin-left:8px">✕ Cerrar</button></div>
+<div class="page">
+<div class="header-bar"><h1>🤝 Constancia de Compromiso</h1><span class="sol-id">${s.id}</span></div>
+<div class="sub-bar">Pionier — Portal de Solicitudes TI &amp; Datos · Emitido: ${f}</div>
+<h2>Carta de Compromiso del Solicitante</h2>
+<p class="intro">Yo, el/la abajo firmante, declaro haber registrado una solicitud en el Portal Pionier y asumo los compromisos detallados a continuación para garantizar el éxito del proyecto.</p>
+<div class="section"><div class="section-title">📋 Datos del Solicitante</div><div class="section-body">
+<div class="row"><div class="field"><label>Nombre completo</label><div class="val">${e(s.nombre)}</div></div><div class="field"><label>Área / Empresa</label><div class="val">${e(s.area)}</div></div></div>
+<div class="row"><div class="field"><label>Correo</label><div class="val">${e(s.correo||'—')}</div></div><div class="field"><label>Tipo de solicitud</label><div class="val">${e(s.tipo)}</div></div></div>
+<div class="row"><div class="field"><label>Fecha de registro</label><div class="val">${f}</div></div><div class="field"><label>Urgencia</label><div class="val">${s.urgencia}</div></div></div>
+</div></div>
+<div class="section"><div class="section-title">📝 Descripción</div><div class="section-body">
+<div class="field" style="margin-bottom:10px"><label>Título</label><div class="val">${e(s.titulo)}</div></div>
+<div class="field"><label>Descripción detallada</label><div class="val multi">${e(s.desc)}</div></div>
+</div></div>
+<div class="section"><div class="section-title">🎯 Objetivo y Valor</div><div class="section-body">
+<div class="field" style="margin-bottom:12px"><label>Objetivo del usuario</label><div class="val multi">${e(s.objetivo||'No especificado')}</div></div>
+<div class="field"><label>Valor esperado para el área</label><div class="val multi">${e(s.valorProyecto||'No especificado')}</div></div>
+</div></div>
+<div class="section"><div class="section-title">✅ Compromisos Aceptados</div><div class="section-body">
+<ul class="commit-list">
+<li><div class="chk">✓</div><div><strong>Brindaré información correcta y completa</strong><br>Proporcionaré datos precisos, acceso a los sistemas y responderé consultas del equipo TI en máximo 24 horas.</div></li>
+<li><div class="chk">✓</div><div><strong>Participaré activamente en las pruebas</strong><br>Validaré los entregables, asistiré a reuniones de revisión y daré feedback oportuno durante el desarrollo.</div></li>
+<li><div class="chk">✓</div><div><strong>Promoveré la adopción del cambio en mi área</strong><br>Apoyaré la implementación, capacitaré a mi equipo y reportaré incidencias oportunamente.</div></li>
+</ul></div></div>
+<div class="sign-section">
+<div class="sign-box"><div class="sign-line"></div><div class="sign-name">${e(s.nombre)}</div><div class="sign-role">Solicitante · ${e(s.area)}</div><div class="sign-date">Fecha: ______ / ______ / ________</div></div>
+<div class="sign-box"><div class="sign-line"></div><div class="sign-name">Keiko Palomino</div><div class="sign-role">Jefe de Proyectos / Scrum Master · Pionier</div><div class="sign-date">Fecha: ______ / ______ / ________</div></div>
+</div>
+<div class="legal"><strong>📌 Validez:</strong> Esta constancia tiene valor dentro del proceso de gestión Pionier. Al firmar, el solicitante declara conocer y cumplir los compromisos asumidos durante todo el ciclo del proyecto.</div>
+<div class="footer">Pionier · ${new Date().getFullYear()} · Documento N° ${s.id}</div>
+</div></body></html>`;
+  const w=window.open('','_blank','width=900,height=750');
+  w.document.write(html); w.document.close();
+}
+
+function expT(id){
+  const s=sols.find(x=>x.id===id); if(!s)return;
+  const f=new Date().toLocaleDateString('es-PE');
+  xls(`
+    <tr><td colspan="4" style="background:#111;color:#F5C400;font-size:16px;font-weight:800;padding:16px 20px">🎫 TICKET APROBADO — SCRUM Pionier</td></tr>
+    <tr><td colspan="4" style="background:#F5C400;color:#111;font-size:10px;font-weight:700;padding:5px 20px">Pionier · Portal de Solicitudes · ${f}</td></tr>
+    <tr><td colspan="4" style="padding:8px"></td></tr>
+    <tr><td colspan="4" style="background:#111;color:#F5C400;font-size:11px;font-weight:700;padding:8px 14px;text-transform:uppercase">📋 Datos del Ticket</td></tr>
+    ${ir('ID Solicitud',s.id,'Proyecto destino',s.proyecto||'—',true)}
+    ${ir('Story Points',s.spEstimado||'—','Fecha aprobación',s.fechaAprobacion||f)}
+    ${ir('Urgencia',s.urgencia,'Tipo',s.tipo||'—')}
+    <tr><td colspan="4" style="padding:8px"></td></tr>
+    <tr><td colspan="4" style="background:#111;color:#F5C400;font-size:11px;font-weight:700;padding:8px 14px;text-transform:uppercase">🎯 Objetivo y Valor del Proyecto</td></tr>
+    <tr><td colspan="4" style="padding:14px;background:#fffdf0;border-left:4px solid #F5C400;font-size:13px;line-height:1.7"><strong>Objetivo:</strong><br>${e(s.objetivo||'—')}<br><br><strong>Valor del proyecto:</strong><br>${e(s.valorProyecto||'—')}</td></tr>
+    <tr><td colspan="4" style="padding:8px"></td></tr>
+    <tr><td colspan="4" style="background:#111;color:#F5C400;font-size:11px;font-weight:700;padding:8px 14px;text-transform:uppercase">📝 Descripción</td></tr>
+    <tr><td colspan="4" style="padding:14px;background:#fff;font-size:13px;line-height:1.7;border-left:4px solid #F5C400"><strong style="font-size:14px">${e(s.titulo)}</strong><br><br>${e(s.desc).replace(/\n/g,'<br>')}</td></tr>
+    <tr><td colspan="4" style="padding:8px"></td></tr>
+    <tr><td colspan="4" style="background:#111;color:#F5C400;font-size:11px;font-weight:700;padding:8px 14px;text-transform:uppercase">👤 Solicitante</td></tr>
+    ${ir('Nombre',s.nombre,'Área',s.area)}
+    ${ir('Correo',s.correo||'—','Fecha solicitud',s.fecha+' '+(s.hora||''))}
+    <tr><td colspan="4" style="padding:8px"></td></tr>
+    <tr><td colspan="4" style="background:#111;color:#F5C400;font-size:11px;font-weight:700;padding:8px 14px;text-transform:uppercase">📌 Notas Scrum Master</td></tr>
+    <tr><td colspan="4" style="padding:14px;background:#fffdf0;border-left:4px solid #F5C400;font-size:13px;line-height:1.7">${e(s.notas||'Sin notas adicionales.')}</td></tr>
+    ${s.estado==='Helpdesk'?`<tr><td colspan="4" style="padding:8px"></td></tr>
+    <tr><td colspan="4" style="background:#4c1d95;color:#ede9fe;font-size:11px;font-weight:700;padding:8px 14px;text-transform:uppercase">🎧 Derivado a Helpdesk</td></tr>
+    <tr><td colspan="4" style="padding:14px;background:#ede9fe;border-left:4px solid #7c3aed;font-size:13px;line-height:1.7"><strong>Motivo:</strong> ${e(s.helpdeskMotivo||'—')}<br><strong>Observaciones:</strong> ${e(s.helpdeskObs||'—')}<br><strong>Fecha derivación:</strong> ${e(s.helpdeskFecha||'—')}</td></tr>`:''}
+    <tr><td colspan="4" style="padding:8px"></td></tr>
+    <tr><td colspan="4" style="background:#F5C400;color:#111;font-size:10px;font-weight:700;padding:8px;text-align:center">SCRUM Pionier · ${f}</td></tr>`,
+  `Ticket_${s.id}`);
+}
+
+function expAll(){
+  if(!sols.length){alert('No hay solicitudes.');return;}
+  const f=new Date().toLocaleDateString('es-PE');
+  const uc={Baja:'#16a34a',Media:'#d97706',Alta:'#dc2626','Crítica':'#111'};
+  const ec={Nueva:'#4f46e5','En revisión':'#d97706',Aprobada:'#16a34a',Rechazada:'#dc2626',Helpdesk:'#7c3aed'};
+  const rows=sols.map((s,i)=>`<tr style="background:${i%2===0?'#fffdf0':'#fff'};font-size:11px">
+    <td style="padding:7px 10px;border:1px solid #e5e0d0;font-family:monospace;font-weight:700">${e(s.id)}</td>
+    <td style="padding:7px 10px;border:1px solid #e5e0d0">${e(s.titulo)}</td>
+    <td style="padding:7px 10px;border:1px solid #e5e0d0">${e(s.nombre)}</td>
+    <td style="padding:7px 10px;border:1px solid #e5e0d0;color:#666">${e(s.area)}</td>
+    <td style="padding:7px 10px;border:1px solid #e5e0d0;text-align:center"><span style="background:${uc[s.urgencia]||'#888'}20;color:${uc[s.urgencia]||'#888'};padding:2px 7px;border-radius:4px;font-weight:700;font-size:10px">${s.urgencia}</span></td>
+    <td style="padding:7px 10px;border:1px solid #e5e0d0;text-align:center"><span style="background:${ec[s.estado]||'#888'}20;color:${ec[s.estado]||'#888'};padding:2px 7px;border-radius:4px;font-weight:700;font-size:10px">${s.estado}</span></td>
+    <td style="padding:7px 10px;border:1px solid #e5e0d0;text-align:center;font-weight:700;color:#d4a900">${s.spEstimado||'—'}</td>
+    <td style="padding:7px 10px;border:1px solid #e5e0d0">${e(s.proyecto||'—')}</td>
+    <td style="padding:7px 10px;border:1px solid #e5e0d0">${s.fecha}</td></tr>`).join('');
+  xls(`
+    <tr><td colspan="9" style="background:#111;color:#F5C400;font-size:16px;font-weight:800;padding:14px 16px">📋 SOLICITUDES — Pionier Portal TI &amp; Datos</td></tr>
+    <tr><td colspan="9" style="background:#F5C400;color:#111;font-size:10px;font-weight:700;padding:5px 16px">Exportado: ${f} · Total: ${sols.length} solicitudes</td></tr>
+    <tr>${['ID','Título','Solicitante','Área','Urgencia','Estado','SP','Proyecto','Fecha'].map(h=>`<td style="background:#111;color:#F5C400;padding:8px 10px;font-size:10px;font-weight:700;text-transform:uppercase;border:1px solid #333">${h}</td>`).join('')}</tr>
+    ${rows}
+    <tr><td colspan="9" style="background:#F5C400;color:#111;font-size:10px;font-weight:700;padding:7px;text-align:center">Pionier Portal · ${f}</td></tr>`,
+  'PIONER_Solicitudes_'+new Date().toISOString().split('T')[0]);
+}
+
+function ir(l1,v1,l2,v2,hl=false){
+  const bg=hl?'#F5C400':'#1a1a1a',fc=hl?'#111':'#aaa',vc=hl?'#111':'#fff';
+  return `<tr style="background:${bg}">
+    <td style="padding:9px 14px;color:${fc};font-size:10px;font-weight:700;text-transform:uppercase;width:20%">${e(String(l1))}</td>
+    <td style="padding:9px 14px;color:${vc};font-weight:600;width:30%">${e(String(v1))}</td>
+    <td style="padding:9px 14px;color:${fc};font-size:10px;font-weight:700;text-transform:uppercase;width:20%">${e(String(l2))}</td>
+    <td style="padding:9px 14px;color:${vc};font-weight:600;width:30%">${e(String(v2))}</td></tr>`;
+}
+function xls(content,fn){
+  const h=`<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="UTF-8"><style>body{font-family:Arial,sans-serif}table{border-collapse:collapse;width:100%}</style></head><body><table>${content}</table></body></html>`;
+  const b=new Blob([h],{type:'application/vnd.ms-excel;charset=utf-8'});
+  const u=URL.createObjectURL(b),a=document.createElement('a');
+  a.href=u;a.download=fn+'.xls';a.click();setTimeout(()=>URL.revokeObjectURL(u),1000);
+}
+
+// ─── MODAL ────────────────────────────────────────────────────
+function showMd(h){document.getElementById('mov').classList.remove('hidden');document.getElementById('mbd').innerHTML=h;}
+function closeMd(){document.getElementById('mov').classList.add('hidden');}
+function e(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+// ─── DATOS DEMO ───────────────────────────────────────────────
+if(!sols.length){
+  sols=[
+    {id:'SOL-001',nombre:'Ana García',area:'Comercial y Marketing',tipo:'📊 Reporte / Dashboard / BI',
+     titulo:'Reporte de ventas semanal por vendedor y zona',
+     desc:'Necesitamos un reporte que muestre las ventas de cada vendedor agrupadas por zona geográfica, con comparativo vs la semana anterior. Se usa en la reunión de lunes.',
+     correo:'ana.garcia@pionier.com.pe',urgencia:'Alta',fecha:'03/05/2025',hora:'09:15',
+     estado:'Nueva',archivos:[],notas:'',spEstimado:'',proyecto:'',importado:false},
+    {id:'SOL-002',nombre:'Roberto Quispe',area:'Logística',tipo:'🔗 Integración de sistemas',
+     titulo:'Sincronización automática de stock entre almacén y ERP',
+     desc:'El stock se actualiza manualmente dos veces al día. Necesitamos sincronización automática cada hora para evitar sobreventas y desabastecimiento.',
+     correo:'',urgencia:'Crítica',fecha:'02/05/2025',hora:'14:30',
+     estado:'En revisión',archivos:[{name:'flujo_actual.pdf',size:245000}],
+     notas:'Reunión coordinada para el 07/05 a las 10am. Alcance: solo almacén central.',
+     spEstimado:'8',proyecto:'API Rest Backend',importado:false},
+  ]; nid=3; sv();
+}
+upNN();
+</script>
+</body>
+</html>
