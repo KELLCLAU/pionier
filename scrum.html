@@ -3,6 +3,52 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script>
+// LOGIN GLOBAL — se ejecuta antes de mostrar nada
+(function(){
+  const KEY = 'pionier_session';
+  const PASSWORDS = ['keiko2026', 'pioner2026', 'scrum2026'];
+  if(sessionStorage.getItem(KEY) !== '1'){
+    document.addEventListener('DOMContentLoaded', function(){
+      document.body.innerHTML = `
+        <div style="min-height:100vh;background:#111;display:flex;align-items:center;justify-content:center;font-family:'Segoe UI',system-ui,sans-serif;">
+          <div style="background:#1a1a1a;border-radius:20px;padding:48px 40px;text-align:center;max-width:380px;width:90%;box-shadow:0 20px 60px #00000080;border:1px solid #2a2a2a;">
+            <div style="font-size:56px;margin-bottom:16px;">🔐</div>
+            <div style="width:60px;height:4px;background:#F5C400;margin:0 auto 20px;border-radius:2px;"></div>
+            <h2 style="font-size:20px;font-weight:800;color:#F5C400;margin-bottom:6px;text-transform:uppercase;letter-spacing:1px;">Pionier</h2>
+            <p style="font-size:12px;color:#666;margin-bottom:28px;">Portal interno — acceso restringido</p>
+            <input id="gPwInput" type="password" placeholder="Contraseña" 
+              style="width:100%;padding:14px 16px;background:#111;border:2px solid #333;border-radius:10px;color:#fff;font-size:16px;font-family:inherit;outline:none;text-align:center;letter-spacing:4px;margin-bottom:12px;transition:.2s;"
+              onkeydown="if(event.key==='Enter')gLogin()"
+              onfocus="this.style.borderColor='#F5C400'"
+              onblur="this.style.borderColor='#333'">
+            <button onclick="gLogin()"
+              style="width:100%;padding:14px;background:#F5C400;color:#111;border:none;border-radius:10px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;transition:.2s;"
+              onmouseover="this.style.background='#d4a900'"
+              onmouseout="this.style.background='#F5C400'">
+              Ingresar →
+            </button>
+            <div id="gPwErr" style="color:#dc2626;font-size:12px;margin-top:12px;display:none;font-weight:600;">
+              ❌ Contraseña incorrecta. Intenta de nuevo.
+            </div>
+            <p style="font-size:11px;color:#333;margin-top:24px;">© Pionier — Solo uso interno</p>
+          </div>
+        </div>`;
+    });
+  }
+  window.gLogin = function(){
+    const val = document.getElementById('gPwInput').value;
+    if(PASSWORDS.includes(val)){
+      sessionStorage.setItem(KEY, '1');
+      location.reload();
+    } else {
+      document.getElementById('gPwErr').style.display = 'block';
+      document.getElementById('gPwInput').value = '';
+      document.getElementById('gPwInput').focus();
+    }
+  };
+})();
+</script>
 <title>SCRUM Pionier</title>
 <script>/*!
  * Chart.js v4.5.1
