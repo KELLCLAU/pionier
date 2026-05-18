@@ -3,52 +3,6 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<script>
-// LOGIN GLOBAL — se ejecuta antes de mostrar nada
-(function(){
-  const KEY = 'pionier_session';
-  const PASSWORDS = ['keiko2026', 'pioner2026', 'scrum2026'];
-  if(sessionStorage.getItem(KEY) !== '1'){
-    document.addEventListener('DOMContentLoaded', function(){
-      document.body.innerHTML = `
-        <div style="min-height:100vh;background:#111;display:flex;align-items:center;justify-content:center;font-family:'Segoe UI',system-ui,sans-serif;">
-          <div style="background:#1a1a1a;border-radius:20px;padding:48px 40px;text-align:center;max-width:380px;width:90%;box-shadow:0 20px 60px #00000080;border:1px solid #2a2a2a;">
-            <div style="font-size:56px;margin-bottom:16px;">🔐</div>
-            <div style="width:60px;height:4px;background:#F5C400;margin:0 auto 20px;border-radius:2px;"></div>
-            <h2 style="font-size:20px;font-weight:800;color:#F5C400;margin-bottom:6px;text-transform:uppercase;letter-spacing:1px;">Pionier</h2>
-            <p style="font-size:12px;color:#666;margin-bottom:28px;">Portal interno — acceso restringido</p>
-            <input id="gPwInput" type="password" placeholder="Contraseña" 
-              style="width:100%;padding:14px 16px;background:#111;border:2px solid #333;border-radius:10px;color:#fff;font-size:16px;font-family:inherit;outline:none;text-align:center;letter-spacing:4px;margin-bottom:12px;transition:.2s;"
-              onkeydown="if(event.key==='Enter')gLogin()"
-              onfocus="this.style.borderColor='#F5C400'"
-              onblur="this.style.borderColor='#333'">
-            <button onclick="gLogin()"
-              style="width:100%;padding:14px;background:#F5C400;color:#111;border:none;border-radius:10px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;transition:.2s;"
-              onmouseover="this.style.background='#d4a900'"
-              onmouseout="this.style.background='#F5C400'">
-              Ingresar →
-            </button>
-            <div id="gPwErr" style="color:#dc2626;font-size:12px;margin-top:12px;display:none;font-weight:600;">
-              ❌ Contraseña incorrecta. Intenta de nuevo.
-            </div>
-            <p style="font-size:11px;color:#333;margin-top:24px;">© Pionier — Solo uso interno</p>
-          </div>
-        </div>`;
-    });
-  }
-  window.gLogin = function(){
-    const val = document.getElementById('gPwInput').value;
-    if(PASSWORDS.includes(val)){
-      sessionStorage.setItem(KEY, '1');
-      location.reload();
-    } else {
-      document.getElementById('gPwErr').style.display = 'block';
-      document.getElementById('gPwInput').value = '';
-      document.getElementById('gPwInput').focus();
-    }
-  };
-})();
-</script>
 <title>Pionier — Portal de Solicitudes TI & Datos</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -251,21 +205,76 @@ textarea.fi{resize:vertical;min-height:120px;line-height:1.6}
           <option value="">— Selecciona tu área —</option>
           <optgroup label="MODIPSA">
             <option>MODIPSA — Administración y Finanzas</option>
-            <option>MODIPSA — Logística</option>
-            <option>MODIPSA — Operaciones</option>
-            <option>MODIPSA — Mantenimiento</option>
+            <option>MODIPSA — Administración y Finanzas / Contabilidad</option>
+            <option>MODIPSA — Administración y Finanzas / Tesorería</option>
+            <option>MODIPSA — Auditoría y Control Interno</option>
+            <option>MODIPSA — Comercial y Marketing / Canal Textil y Exportación</option>
+            <option>MODIPSA — Comercial y Marketing / Canal Tiendas Propias</option>
             <option>MODIPSA — Comercial y Marketing</option>
-            <option>MODIPSA — Recursos Humanos</option>
+            <option>MODIPSA — Comercial y Marketing / Gestión de Marca - Producto</option>
+            <option>MODIPSA — Comercial y Marketing / Marketing y Publicidad</option>
+            <option>MODIPSA — Cuentas Generales</option>
+            <option>MODIPSA — Gerencia General</option>
+            <option>MODIPSA — Logística / Abastecimiento</option>
+            <option>MODIPSA — Logística / Almacén de Materias Primas</option>
+            <option>MODIPSA — Logística / Almacén de Productos Terminados</option>
+            <option>MODIPSA — Logística</option>
+            <option>MODIPSA — Mantenimiento / Desarrollo de Proyectos Mantenimiento</option>
+            <option>MODIPSA — Mantenimiento</option>
+            <option>MODIPSA — Mantenimiento / Mantenimiento de Flota Vehicular</option>
+            <option>MODIPSA — Mantenimiento / Mantenimiento de Máquinas y Equipos PC PH</option>
+            <option>MODIPSA — Mantenimiento / Mantenimiento de Máquinas y Equipos PZ PJ</option>
+            <option>MODIPSA — Mantenimiento / Mantenimiento de Planta</option>
+            <option>MODIPSA — Mantenimiento / Seguridad Integral</option>
+            <option>MODIPSA — Operaciones / Control de Calidad</option>
+            <option>MODIPSA — Operaciones / Desarrollo</option>
+            <option>MODIPSA — Operaciones / Ingeniería</option>
+            <option>MODIPSA — Operaciones</option>
+            <option>MODIPSA — Operaciones / Planeamiento y Programación</option>
+            <option>MODIPSA — Operaciones / Producción Plano</option>
+            <option>MODIPSA — Operaciones / Producción Punto</option>
+            <option>MODIPSA — Operaciones / Producción Servicios Externos</option>
+            <option>MODIPSA — Operaciones / Producción Textil</option>
+            <option>MODIPSA — Operaciones / Tejeduría Hilo</option>
+            <option>MODIPSA — Recursos Humanos / Gestión del Talento Humano</option>
+            <option>MODIPSA — Sub Gerencia General / Procesos y Mejora Continua</option>
+            <option>MODIPSA — Sub Gerencia General</option>
+            <option>MODIPSA — Tecnologías de la Información / Infraestructura de Red</option>
           </optgroup>
           <optgroup label="MASISAC">
             <option>MASISAC — Administración y Finanzas</option>
-            <option>MASISAC — Logística</option>
-            <option>MASISAC — Operaciones</option>
-            <option>MASISAC — Mantenimiento</option>
-            <option>MASISAC — Comercial y Marketing</option>
-            <option>MASISAC — Recursos Humanos</option>
+            <option>MASISAC — Administración y Finanzas / Contabilidad</option>
+            <option>MASISAC — Administración y Finanzas / Créditos y Cobranzas</option>
+            <option>MASISAC — Administración y Finanzas / Finanzas</option>
+            <option>MASISAC — Administración y Finanzas / Tesorería</option>
+            <option>MASISAC — Auditoría y Control Interno</option>
+            <option>MASISAC — Comercial y Marketing / Abastecimiento por Canal</option>
+            <option>MASISAC — Comercial y Marketing / Administración Comercial</option>
+            <option>MASISAC — Comercial y Marketing / Canal Departamental</option>
+            <option>MASISAC — Comercial y Marketing / Canal Ecommerce</option>
+            <option>MASISAC — Comercial y Marketing / Canal Horizontal</option>
+            <option>MASISAC — Comercial y Marketing / Canal Tiendas Propias</option>
+            <option>MASISAC — Comercial y Marketing / Gestión de Marca - Producto</option>
+            <option>MASISAC — Comercial y Marketing / Marketing y Publicidad</option>
+            <option>MASISAC — Comercial y Marketing / Proyectos Comerciales</option>
+            <option>MASISAC — Cuentas Generales</option>
+            <option>MASISAC — Gerencia General</option>
+            <option>MASISAC — Legal</option>
+            <option>MASISAC — Logística / Almacén de Productos Terminados</option>
+            <option>MASISAC — Mantenimiento / Mantenimiento de Tiendas</option>
+            <option>MASISAC — Mantenimiento / Seguridad Integral</option>
+            <option>MASISAC — Operaciones / Desarrollo</option>
+            <option>MASISAC — Operaciones / Producción Servicios Externos</option>
+            <option>MASISAC — Operaciones / Servicios Varios</option>
+            <option>MASISAC — Recursos Humanos / Gestión del Talento Humano</option>
+            <option>MASISAC — Sub Gerencia General / Procesos y Mejora Continua</option>
+            <option>MASISAC — Sub Gerencia General</option>
+            <option>MASISAC — Tecnologías de la Información / Desarrollo de Software</option>
+            <option>MASISAC — Tecnologías de la Información / Desarrollo Web</option>
+            <option>MASISAC — Tecnologías de la Información / Infraestructura de Red</option>
+            <option>MASISAC — Tecnologías de la Información / Inteligencia de Negocio</option>
+            <option>MASISAC — Tecnologías de la Información</option>
           </optgroup>
-          <option>TI / Datos</option>
           <option>Otra área</option>
         </select>
       </div>
