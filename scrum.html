@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SCRUM Pionier</title>
 <script>
 // LOGIN GLOBAL — se ejecuta antes de mostrar nada
 (function(){
@@ -17,7 +18,7 @@
             <div style="width:60px;height:4px;background:#F5C400;margin:0 auto 20px;border-radius:2px;"></div>
             <h2 style="font-size:20px;font-weight:800;color:#F5C400;margin-bottom:6px;text-transform:uppercase;letter-spacing:1px;">Pionier</h2>
             <p style="font-size:12px;color:#666;margin-bottom:28px;">Portal interno — acceso restringido</p>
-            <input id="gPwInput" type="password" placeholder="Contraseña" 
+            <input id="gPwInput" type="password" placeholder="Contraseña"
               style="width:100%;padding:14px 16px;background:#111;border:2px solid #333;border-radius:10px;color:#fff;font-size:16px;font-family:inherit;outline:none;text-align:center;letter-spacing:4px;margin-bottom:12px;transition:.2s;"
               onkeydown="if(event.key==='Enter')gLogin()"
               onfocus="this.style.borderColor='#F5C400'"
@@ -49,7 +50,6 @@
   };
 })();
 </script>
-<title>SCRUM Pionier</title>
 <script>/*!
  * Chart.js v4.5.1
  * https://www.chartjs.org
@@ -489,7 +489,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;font-size:14px;color:#1a1a1a;ba
     <div id="notif-solicitudes" style="display:none;background:#F5C400;border-radius:10px;padding:10px 16px;margin-bottom:10px;align-items:center;gap:10px;font-size:13px;font-weight:600;color:#111">
         <span id="notif-count-label">🔔 Hay <strong id="notif-count">0</strong> solicitud(es) aprobada(s) pendiente(s)</span>
         <button onclick="importarSolicitudes()" style="background:#111;color:#F5C400;border:none;border-radius:6px;padding:5px 14px;cursor:pointer;font-weight:700;font-size:12px;font-family:inherit">Importar ahora →</button>
-        <button onclick="document.getElementById('sol-json-file').click()" style="background:#7c3aed;color:#fff;border:none;border-radius:6px;padding:5px 12px;cursor:pointer;font-weight:700;font-size:12px;font-family:inherit">📂 Importar .json</button>
+
       </div>
 
       <!-- Contador de resultados -->
@@ -798,7 +798,10 @@ function renderProjects(){
     div.className='proj-card';
     div.onclick=()=>openProject(p.id);
     div.innerHTML=`${statusMap[p.status]||statusMap.active}
-      <div style="position:absolute;top:12px;right:12px;background:#111;color:#F5C400;font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px">${p.empresa||''}</div>
+      <div style="position:absolute;top:12px;right:12px;display:flex;align-items:center;gap:6px">
+        <button onclick="event.stopPropagation();editProject('${p.id}')" style="background:#F5C400;color:#111;border:none;border-radius:4px;font-size:10px;font-weight:700;padding:2px 8px;cursor:pointer">✏️ Editar</button>
+        <span style="background:#111;color:#F5C400;font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px">${p.empresa||''}</span>
+      </div>
       <h3>${p.name}</h3>
       <div class="meta">${p.desc}</div>
       <div class="meta" style="margin-top:8px">📋 ${tc} tickets &nbsp;·&nbsp; ${sp?'🏃 '+sp.name+' activo':'Sin sprint activo'}</div>
@@ -1867,6 +1870,45 @@ function createProject(){
     start:document.getElementById('np-start').value,end:addDays(document.getElementById('np-start').value,13),
     goal:'Kick-off y setup inicial',status:'planned'});
   state.velocity[pid]=[];
+  saveState();closeModal();renderProjects();
+}
+
+function editProject(pid){
+  const p=state.projects.find(x=>x.id===pid);
+  if(!p)return;
+  const empresaOpts=['MODIPSA','MASISAC'].map(e=>`<option ${p.empresa===e?'selected':''}>${e}</option>`).join('');
+  const statusOpts=[
+    {v:'planning',l:'Planeando'},
+    {v:'active',l:'Activo'},
+    {v:'paused',l:'Pausado'}
+  ].map(s=>`<option value="${s.v}" ${p.status===s.v?'selected':''}>${s.l}</option>`).join('');
+  showModal(`<h2>✏️ Editar Proyecto</h2>
+    <div class="form-row"><label>Nombre del proyecto</label><input id="ep-name" value="${p.name}"></div>
+    <div class="form-row"><label>Empresa</label><select id="ep-empresa">${empresaOpts}</select></div>
+    <div class="form-row"><label>Estado</label><select id="ep-status">${statusOpts}</select></div>
+    <div class="form-row"><label>Descripción</label><textarea id="ep-desc" rows="2">${p.desc||''}</textarea></div>
+    <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div><label>📅 Fecha inicio</label><input type="date" id="ep-start" value="${p.start||''}"></div>
+      <div><label>📅 Fecha fin estimada</label><input type="date" id="ep-end" value="${p.end||''}"></div>
+    </div>
+    <div class="form-actions">
+      <button class="btn" onclick="closeModal()">Cancelar</button>
+      <button class="btn primary" onclick="saveEditProject('${pid}')">💾 Guardar cambios</button>
+    </div>
+  `);
+}
+
+function saveEditProject(pid){
+  const p=state.projects.find(x=>x.id===pid);
+  if(!p)return;
+  const name=document.getElementById('ep-name').value.trim();
+  if(!name){alert('El nombre es requerido');return;}
+  p.name=name;
+  p.empresa=document.getElementById('ep-empresa').value;
+  p.status=document.getElementById('ep-status').value;
+  p.desc=document.getElementById('ep-desc').value||'Sin descripción';
+  p.start=document.getElementById('ep-start').value;
+  p.end=document.getElementById('ep-end').value;
   saveState();closeModal();renderProjects();
 }
 
