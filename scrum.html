@@ -1183,7 +1183,11 @@ function renderBoard(){
         ? fmtDate(t.fechaInicio)+' → '+fmtDate(t.fechaFin)
         : t.fechaFin ? '→ '+fmtDate(t.fechaFin)
         : t.fechaInicio ? fmtDate(t.fechaInicio)+' →' : '';
-      div.innerHTML=`<div class="ticket-id">${t.id}</div>
+      // Verificar si está bloqueado
+      const bloqueantes=(t.bloqueadoPor||[]).filter(depId=>{const d=state.tickets.find(x=>x.id===depId);return d&&d.col!=='Hecho';});
+      const estaBloqueado=bloqueantes.length>0;
+      const tieneAdjuntos=(t.adjuntos||[]).length>0;
+      div.innerHTML=`<div class="ticket-id">${t.id}${estaBloqueado?` <span title="Bloqueado por: ${bloqueantes.join(', ')}" style="color:#dc2626;font-size:10px">🔒</span>`:''}</div>
         <div class="ticket-title">${t.title}</div>
         ${fechaStr?`<div style="font-size:9px;color:#888;margin:3px 0 2px;display:flex;align-items:center;gap:3px">
           <span style="color:#bbb">📅</span>${fechaStr}
@@ -1192,6 +1196,7 @@ function renderBoard(){
           <span style="background:${t_col}20;color:${t_col};padding:2px 7px;border-radius:4px;font-size:9px;font-weight:700">${t_tipo}</span>
           <span class="priority ${pCls}">${t.priority}</span>
           <span class="sp">${t.sp}sp</span>
+          ${tieneAdjuntos?`<span title="${t.adjuntos.length} adjunto(s)" style="font-size:10px">📎</span>`:''}
           <div class="avatar" title="${MEMBER_NAMES[MEMBERS.indexOf(t.assignee)]||t.assignee}">${t.assignee}</div>
         </div>`;
       colDiv.appendChild(div);
@@ -1912,6 +1917,74 @@ function saveEditProject(pid){
   p.start=document.getElementById('ep-start').value;
   p.end=document.getElementById('ep-end').value;
   saveState();closeModal();renderProjects();
+}
+
+function adjuntarArchivo(tid, input){
+  const t=state.tickets.find(x=>x.id===tid); if(!t)return;
+  if(!t.adjuntos) t.adjuntos=[];
+  const files=Array.from(input.files);
+  let processed=0;
+  files.forEach(file=>{
+    const reader=new FileReader();
+    reader.onload=function(e){
+      const isImage=file.type.startsWith('image/');
+      const isPdf=file.type==='application/pdf';
+      t.adjuntos.push({
+        nombre: file.name,
+        tipo: isImage?'image':isPdf?'pdf':'file',
+        data: isImage?e.target.result:null,
+        size: Math.round(file.size/1024)+'KB'
+      });
+      processed++;
+      if(processed===files.length){
+        saveState();
+        // Refresh adjuntos list
+        const list=document.getElementById('td-adjuntos-list');
+        if(list){
+          list.innerHTML=(t.adjuntos||[]).map((a,ai)=>`
+            <div style="display:flex;align-items:center;gap:6px;background:#fff;border:1px solid #e5e0d0;border-radius:8px;padding:5px 10px;font-size:11px">
+              <span>${a.tipo==='image'?'🖼️':a.tipo==='pdf'?'📄':'📎'}</span>
+              <span style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${a.nombre}">${a.nombre}</span>
+              <span style="color:#bbb;font-size:10px">${a.size}</span>
+              ${a.tipo==='image'&&a.data?`<a href="${a.data}" target="_blank" style="color:#0ea5e9;font-size:10px">Ver</a>`:''}
+              <button onclick="eliminarAdjunto('${tid}',${ai})" style="background:none;border:none;cursor:pointer;color:#dc2626;font-size:12px;padding:0">✕</button>
+            </div>`).join('');
+        }
+      }
+    };
+    if(file.type.startsWith('image/')) reader.readAsDataURL(file);
+    else reader.readAsArrayBuffer(file), reader.onload=function(){
+      t.adjuntos.push({nombre:file.name,tipo:file.type==='application/pdf'?'pdf':'file',data:null,size:Math.round(file.size/1024)+'KB'});
+      processed++;
+      if(processed===files.length){saveState();showTicketDetail(tid);}
+    };
+  });
+}
+
+function eliminarAdjunto(tid,idx){
+  const t=state.tickets.find(x=>x.id===tid); if(!t||!t.adjuntos)return;
+  t.adjuntos.splice(idx,1);
+  saveState(); showTicketDetail(tid);
+}
+
+function agregarDependencia(tid){
+  const t=state.tickets.find(x=>x.id===tid); if(!t)return;
+  const sel=document.getElementById('td-dep-select');
+  const depId=sel&&sel.value;
+  if(!depId){alert('Selecciona un ticket bloqueante');return;}
+  if(!t.bloqueadoPor) t.bloqueadoPor=[];
+  if(t.bloqueadoPor.includes(depId)){alert('Ya está agregado');return;}
+  // Verificar dependencia circular
+  const depT=state.tickets.find(x=>x.id===depId);
+  if(depT&&(depT.bloqueadoPor||[]).includes(tid)){alert('⚠️ Dependencia circular: ese ticket ya depende de este.');return;}
+  t.bloqueadoPor.push(depId);
+  saveState(); showTicketDetail(tid);
+}
+
+function quitarDependencia(tid,depId){
+  const t=state.tickets.find(x=>x.id===tid); if(!t)return;
+  t.bloqueadoPor=(t.bloqueadoPor||[]).filter(x=>x!==depId);
+  saveState(); showTicketDetail(tid);
 }
 
 function buildAssigneeSelector(selected){
@@ -2985,6 +3058,60 @@ function showTicketDetail(tid){
             <div>
               <label style="font-size:10px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">🏁 Fecha fin estimada</label>
               <input type="date" id="td-ffin" value="${t.fechaFin||''}" class="ticket-form-input" style="font-size:13px">
+            </div>
+          </div>
+        </div>
+
+        <!-- ADJUNTOS -->
+        <div class="step-section">
+          <div class="step-label" style="margin-bottom:10px">
+            <div class="step-num">📎</div>
+            <div class="step-title">Archivos adjuntos</div>
+          </div>
+          <div style="border:1.5px dashed #e5e0d0;border-radius:10px;padding:12px;background:#fafaf8">
+            <div id="td-adjuntos-list" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px">
+              ${(t.adjuntos||[]).length===0?'<span style="font-size:11px;color:#bbb">Sin archivos adjuntos</span>':
+                (t.adjuntos||[]).map((a,ai)=>`
+                  <div style="display:flex;align-items:center;gap:6px;background:#fff;border:1px solid #e5e0d0;border-radius:8px;padding:5px 10px;font-size:11px">
+                    <span>${a.tipo==='image'?'🖼️':a.tipo==='pdf'?'📄':'📎'}</span>
+                    <span style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${a.nombre}">${a.nombre}</span>
+                    ${a.tipo==='image'?`<a href="${a.data}" target="_blank" style="color:#0ea5e9;font-size:10px">Ver</a>`:''}
+                    <button onclick="eliminarAdjunto('${t.id}',${ai})" style="background:none;border:none;cursor:pointer;color:#dc2626;font-size:12px;padding:0">✕</button>
+                  </div>`).join('')}
+            </div>
+            <label style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;background:#F5C400;color:#111;border:none;border-radius:8px;padding:6px 14px;font-size:11px;font-weight:700">
+              📎 Adjuntar archivo
+              <input type="file" id="td-file-input" multiple accept="image/*,.pdf,.doc,.docx,.xlsx,.xls,.txt" style="display:none" onchange="adjuntarArchivo('${t.id}',this)">
+            </label>
+          </div>
+        </div>
+
+        <!-- DEPENDENCIAS -->
+        <div class="step-section">
+          <div class="step-label" style="margin-bottom:10px">
+            <div class="step-num">🔗</div>
+            <div class="step-title">Dependencias (bloqueado por)</div>
+          </div>
+          <div style="border:1.5px solid #e5e0d0;border-radius:10px;padding:12px;background:#fafaf8">
+            <div id="td-deps-list" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px">
+              ${(t.bloqueadoPor||[]).length===0?'<span style="font-size:11px;color:#bbb">Sin dependencias</span>':
+                (t.bloqueadoPor||[]).map(depId=>{
+                  const depT=state.tickets.find(x=>x.id===depId);
+                  const isDone=depT&&depT.col==='Hecho';
+                  return `<div style="display:flex;align-items:center;gap:6px;background:${isDone?'#f0fdf4':'#fff7ed'};border:1px solid ${isDone?'#86efac':'#fed7aa'};border-radius:8px;padding:4px 10px;font-size:11px">
+                    <span>${isDone?'✅':'🔒'}</span>
+                    <span style="font-weight:600">${depId}</span>
+                    <span style="color:#666">${depT?depT.title.substring(0,25)+'...':'Ticket no encontrado'}</span>
+                    <button onclick="quitarDependencia('${t.id}','${depId}')" style="background:none;border:none;cursor:pointer;color:#dc2626;font-size:12px;padding:0">✕</button>
+                  </div>`;
+                }).join('')}
+            </div>
+            <div style="display:flex;gap:6px">
+              <select id="td-dep-select" style="flex:1;padding:5px 8px;border:1.5px solid #e5e0d0;border-radius:8px;font-size:11px;font-family:inherit;outline:none">
+                <option value="">— Seleccionar ticket bloqueante —</option>
+                ${state.tickets.filter(x=>x.id!==t.id&&!(t.bloqueadoPor||[]).includes(x.id)).map(x=>`<option value="${x.id}">${x.id} — ${x.title.substring(0,35)}</option>`).join('')}
+              </select>
+              <button onclick="agregarDependencia('${t.id}')" style="background:#111;color:#F5C400;border:none;border-radius:8px;padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer">+ Agregar</button>
             </div>
           </div>
         </div>
