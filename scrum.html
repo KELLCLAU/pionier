@@ -545,12 +545,19 @@ body{font-family:'Segoe UI',system-ui,sans-serif;font-size:14px;color:#1a1a1a;ba
             style="padding:9px 22px;background:transparent;color:#aaa;border:none;cursor:pointer;font-size:12px;font-weight:700;font-family:inherit;transition:.2s">
             🏢 Avance por Áreas
           </button>
+          <button id="bi-view-btn-roi" onclick="setBiView('roi')"
+            style="padding:9px 22px;background:transparent;color:#aaa;border:none;cursor:pointer;font-size:12px;font-weight:700;font-family:inherit;transition:.2s">
+            💰 ROI &amp; Rentabilidad
+          </button>
         </div>
         <div id="bi-view-general">
           <div class="bi-charts" id="bi-charts"></div>
         </div>
         <div id="bi-view-areas" style="display:none;padding:14px;background:#f5f5f0">
           <div id="bi-areas-content"></div>
+        </div>
+        <div id="bi-view-roi" style="display:none;padding:16px">
+          <div id="bi-roi-content"></div>
         </div>
       </div>
     </div>
@@ -812,6 +819,7 @@ function renderProjects(){
       </div>
       <h3>${p.name}</h3>
       <div class="meta">${p.desc}</div>
+      ${_getROIBadge(p)}
       <div class="meta" style="margin-top:8px">📋 ${tc} tickets &nbsp;·&nbsp; ${sp?'🏃 '+sp.name+' activo':'Sin sprint activo'}</div>
       <div class="meta" style="margin-top:4px">📅 ${fmtDate(p.start)} → ${fmtDate(p.end)}</div>
       <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
@@ -1660,13 +1668,14 @@ function renderBI(){
 // BI VISTA AREAS
 function setBiView(v){
   biCurrentView=v;
-  document.getElementById('bi-view-general').style.display=v==='general'?'block':'none';
-  document.getElementById('bi-view-areas').style.display=v==='areas'?'block':'none';
-  document.getElementById('bi-view-btn-general').style.background=v==='general'?'#C9A227':'transparent';
-  document.getElementById('bi-view-btn-general').style.color=v==='general'?'#111':'#aaa';
-  document.getElementById('bi-view-btn-areas').style.background=v==='areas'?'#C9A227':'transparent';
-  document.getElementById('bi-view-btn-areas').style.color=v==='areas'?'#111':'#aaa';
+  ['general','areas','roi'].forEach(function(x){
+    var el=document.getElementById('bi-view-'+x);
+    var btn=document.getElementById('bi-view-btn-'+x);
+    if(el) el.style.display=x===v?'block':'none';
+    if(btn){btn.style.background=x===v?'#C9A227':'transparent';btn.style.color=x===v?'#111':'#aaa';btn.style.fontWeight=x===v?'800':'700';}
+  });
   if(v==='areas') renderAreasBI();
+  if(v==='roi') renderROI();
 }
 
 function renderAreasBI(){
@@ -1876,6 +1885,16 @@ function showNewProject(){
       <div><label>Fecha inicio</label><input type="date" id="np-start" value="${new Date().toISOString().split('T')[0]}"></div>
       <div><label>Fecha fin estimada</label><input type="date" id="np-end" value="${addDays(new Date().toISOString().split('T')[0],90)}"></div>
     </div>
+    <div style="background:#fef9ec;border:1px solid #C9A22740;border-radius:8px;padding:14px;margin-top:4px">
+      <div style="font-size:11px;font-weight:700;color:#a8841e;margin-bottom:10px;text-transform:uppercase;letter-spacing:.4px">Datos de ROI (opcional)</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div><label>Presupuesto aprobado (S/)</label><input type="number" id="np-presupuesto" placeholder="Ej: 25000" min="0"></div>
+        <div><label>Beneficio esperado anual (S/)</label><input type="number" id="np-beneficio" placeholder="Ej: 40000" min="0"></div>
+      </div>
+      <div style="margin-top:8px"><label>Indicador a medir</label><input id="np-indicador" placeholder="Ej: Horas de proceso cierre mensual"></div>
+      <div style="margin-top:8px"><label>Valor actual del indicador</label><input id="np-indicador-base" placeholder="Ej: 40 horas/mes"></div>
+      <div style="margin-top:8px"><label>Area que impacta</label><input id="np-area-impacto" placeholder="Ej: Contabilidad - cierre mensual"></div>
+    </div>
     <div class="form-actions"><button class="btn" onclick="closeModal()">Cancelar</button><button class="btn primary" onclick="createProject()">Crear Proyecto</button></div>
   `);
 }
@@ -1885,9 +1904,17 @@ function createProject(){
   if(!name){alert('El nombre es requerido');return;}
   const pid='p'+state.nextId.p++;
   const prefix=name.split(' ').map(w=>w[0]).join('').toUpperCase().substring(0,4);
+  var _npRoi={
+    presupuesto:parseFloat((document.getElementById('np-presupuesto')||{value:0}).value)||0,
+    beneficioAnual:parseFloat((document.getElementById('np-beneficio')||{value:0}).value)||0,
+    indicador:(document.getElementById('np-indicador')||{value:''}).value||'',
+    indicadorBase:(document.getElementById('np-indicador-base')||{value:''}).value||'',
+    areaImpacto:(document.getElementById('np-area-impacto')||{value:''}).value||'',
+    costoReal:0,beneficioReal:0,indicadorPost:'',fase:'planificacion',notas:[]
+  };
   state.projects.push({id:pid,name,color:'#C9A227',empresa:document.getElementById('np-empresa').value,
     status:'planning',start:document.getElementById('np-start').value,end:document.getElementById('np-end').value,
-    desc:document.getElementById('np-desc').value||'Sin descripción',prefix});
+    desc:document.getElementById('np-desc').value||'Sin descripción',prefix,roi:_npRoi});
   state.sprints.push({id:'s'+state.nextId.s++,projId:pid,name:'Sprint 1',
     start:document.getElementById('np-start').value,end:addDays(document.getElementById('np-start').value,13),
     goal:'Kick-off y setup inicial',status:'planned'});
@@ -1931,6 +1958,26 @@ function saveEditProject(pid){
   p.desc=document.getElementById('ep-desc').value||'Sin descripción';
   p.start=document.getElementById('ep-start').value;
   p.end=document.getElementById('ep-end').value;
+  // Guardar ROI si hay campos disponibles
+  if(!p.roi) p.roi={notas:[]};
+  var _epPres=document.getElementById('ep-roi-presupuesto');
+  var _epCosto=document.getElementById('ep-roi-costo');
+  var _epBenef=document.getElementById('ep-roi-beneficio');
+  var _epBenefR=document.getElementById('ep-roi-beneficio-real');
+  var _epInd=document.getElementById('ep-roi-indicador');
+  var _epIndB=document.getElementById('ep-roi-indicador-base');
+  var _epIndP=document.getElementById('ep-roi-indicador-post');
+  var _epArea=document.getElementById('ep-roi-area');
+  var _epFase=document.getElementById('ep-roi-fase');
+  if(_epPres) p.roi.presupuesto=parseFloat(_epPres.value)||0;
+  if(_epCosto) p.roi.costoReal=parseFloat(_epCosto.value)||0;
+  if(_epBenef) p.roi.beneficioAnual=parseFloat(_epBenef.value)||0;
+  if(_epBenefR) p.roi.beneficioReal=parseFloat(_epBenefR.value)||0;
+  if(_epInd) p.roi.indicador=_epInd.value||'';
+  if(_epIndB) p.roi.indicadorBase=_epIndB.value||'';
+  if(_epIndP) p.roi.indicadorPost=_epIndP.value||'';
+  if(_epArea) p.roi.areaImpacto=_epArea.value||'';
+  if(_epFase) p.roi.fase=_epFase.value||'planificacion';
   saveState();closeModal();renderProjects();
 }
 
@@ -5308,6 +5355,241 @@ function eliminarTicketsPrueba(){
   }
 }
 
+
+// ================================================================
+// MODULO ROI & RENTABILIDAD
+// ================================================================
+function _getROIBadge(p){
+  var r=p.roi||{};
+  var costo=r.costoReal||r.presupuesto||0;
+  var breal=r.beneficioReal||0;
+  if(costo>0&&breal>0){
+    var rv=((breal-costo)/costo*100);
+    if(rv>=50) return '<div class="meta" style="margin-top:4px"><span style="font-size:10px;font-weight:700;background:#f0fdf4;color:#15803d;padding:2px 10px;border-radius:20px">ROI +'+rv.toFixed(0)+'%</span></div>';
+    if(rv>=0)  return '<div class="meta" style="margin-top:4px"><span style="font-size:10px;font-weight:700;background:#fefce8;color:#b45309;padding:2px 10px;border-radius:20px">ROI +'+rv.toFixed(0)+'%</span></div>';
+    return '<div class="meta" style="margin-top:4px"><span style="font-size:10px;font-weight:700;background:#fef2f2;color:#b91c1c;padding:2px 10px;border-radius:20px">ROI '+rv.toFixed(0)+'%</span></div>';
+  }
+  if(r.presupuesto>0){
+    var pr=r.presupuesto>=1000?(r.presupuesto/1000).toFixed(0)+'K':r.presupuesto;
+    return '<div class="meta" style="margin-top:4px"><span style="font-size:10px;color:#94a3b8">S/ '+pr+' presup.</span></div>';
+  }
+  return '';
+}
+
+function showROIEditor(pid){
+  var p=state.projects.find(function(x){return x.id===pid;});
+  if(!p) return;
+  var r=p.roi||{};
+  var faseOpts=['planificacion|Planificacion','ejecucion|En ejecucion','entregado|Entregado','postmortem|Post-mortem (3-12 meses)'];
+  var faseHtml='';
+  faseOpts.forEach(function(fo){
+    var parts=fo.split('|');
+    faseHtml+='<option value="'+parts[0]+'" '+(( r.fase||'planificacion')===parts[0]?'selected':'')+'>'+parts[1]+'</option>';
+  });
+  var html='<div class="modal-header"><h2>ROI - '+p.name+'</h2><button class="close-btn" onclick="closeModal()">x</button></div>';
+  html+='<div class="modal-body" style="padding:20px 28px">';
+  html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">';
+  html+='<div><label>Presupuesto aprobado (S/)</label><input type="number" id="ep-roi-presupuesto" value="'+(r.presupuesto||0)+'" min="0" style="width:100%;padding:8px;border:1px solid #dde1e9;border-radius:6px;font-family:inherit"></div>';
+  html+='<div><label>Costo real final (S/)</label><input type="number" id="ep-roi-costo" value="'+(r.costoReal||0)+'" min="0" style="width:100%;padding:8px;border:1px solid #dde1e9;border-radius:6px;font-family:inherit"></div>';
+  html+='</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">';
+  html+='<div><label>Beneficio esperado anual (S/)</label><input type="number" id="ep-roi-beneficio" value="'+(r.beneficioAnual||0)+'" min="0" style="width:100%;padding:8px;border:1px solid #dde1e9;border-radius:6px;font-family:inherit"></div>';
+  html+='<div><label>Beneficio real medido (S/ano)</label><input type="number" id="ep-roi-beneficio-real" value="'+(r.beneficioReal||0)+'" min="0" style="width:100%;padding:8px;border:1px solid #dde1e9;border-radius:6px;font-family:inherit"></div>';
+  html+='</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">';
+  html+='<div><label>Indicador a medir</label><input id="ep-roi-indicador" value="'+(r.indicador||'')+'" placeholder="Ej: Horas cierre mensual" style="width:100%;padding:8px;border:1px solid #dde1e9;border-radius:6px;font-family:inherit"></div>';
+  html+='<div><label>Valor ANTES del proyecto</label><input id="ep-roi-indicador-base" value="'+(r.indicadorBase||'')+'" placeholder="Ej: 40 horas/mes" style="width:100%;padding:8px;border:1px solid #dde1e9;border-radius:6px;font-family:inherit"></div>';
+  html+='</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">';
+  html+='<div><label>Valor DESPUES (post-implementacion)</label><input id="ep-roi-indicador-post" value="'+(r.indicadorPost||'')+'" placeholder="Ej: 18 horas/mes" style="width:100%;padding:8px;border:1px solid #dde1e9;border-radius:6px;font-family:inherit"></div>';
+  html+='<div><label>Area impactada</label><input id="ep-roi-area" value="'+(r.areaImpacto||'')+'" placeholder="Ej: Contabilidad" style="width:100%;padding:8px;border:1px solid #dde1e9;border-radius:6px;font-family:inherit"></div>';
+  html+='</div><div style="margin-bottom:16px">';
+  html+='<label>Fase de seguimiento</label>';
+  html+='<select id="ep-roi-fase" style="width:100%;padding:8px;border:1px solid #dde1e9;border-radius:6px;font-family:inherit;font-size:13px">'+faseHtml+'</select>';
+  html+='</div>';
+  html+='<div class="form-actions"><button class="btn" onclick="closeModal()">Cancelar</button>';
+  html+='<button class="btn primary" onclick="saveROI(\''+pid+'\')">Guardar ROI</button></div>';
+  html+='</div>';
+  showModal(html);
+}
+
+function saveROI(pid){
+  var p=state.projects.find(function(x){return x.id===pid;});
+  if(!p) return;
+  if(!p.roi) p.roi={notas:[]};
+  p.roi.presupuesto    = parseFloat(document.getElementById('ep-roi-presupuesto').value)||0;
+  p.roi.costoReal      = parseFloat(document.getElementById('ep-roi-costo').value)||0;
+  p.roi.beneficioAnual = parseFloat(document.getElementById('ep-roi-beneficio').value)||0;
+  p.roi.beneficioReal  = parseFloat(document.getElementById('ep-roi-beneficio-real').value)||0;
+  p.roi.indicador      = document.getElementById('ep-roi-indicador').value||'';
+  p.roi.indicadorBase  = document.getElementById('ep-roi-indicador-base').value||'';
+  p.roi.indicadorPost  = document.getElementById('ep-roi-indicador-post').value||'';
+  p.roi.areaImpacto    = document.getElementById('ep-roi-area').value||'';
+  p.roi.fase           = document.getElementById('ep-roi-fase').value||'planificacion';
+  saveState();
+  closeModal();
+  renderProjects();
+  alert('ROI guardado para: '+p.name);
+}
+
+function renderROI(){
+  var cont=document.getElementById('bi-roi-content');
+  if(!cont) return;
+  var projs=getProyectosFiltrados();
+
+  function fmt(v){
+    if(!v||isNaN(v)) return 'S/ 0';
+    if(v>=1000000) return 'S/ '+(v/1000000).toFixed(1)+'M';
+    if(v>=1000) return 'S/ '+(v/1000).toFixed(0)+'K';
+    return 'S/ '+Math.round(v);
+  }
+
+  var totalInv=0,totalAhorro=0,rentables=0,cerrados=0;
+  projs.forEach(function(p){
+    var r=p.roi||{};
+    var costo=r.costoReal||r.presupuesto||0;
+    totalInv+=costo;
+    if(r.beneficioReal>0){
+      totalAhorro+=r.beneficioReal;
+      cerrados++;
+      if(r.beneficioReal>costo) rentables++;
+    }
+  });
+  var roiProm=totalInv>0?((totalAhorro-totalInv)/totalInv*100):0;
+  var roiColor=roiProm>=50?'#4ade80':roiProm>=0?'#fbbf24':'#f87171';
+  var roiBorder=roiProm>=0?'#15803d':'#b91c1c';
+
+  var h='';
+
+  // KPIs
+  h+='<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px">';
+  h+='<div style="background:#1e2530;border-radius:10px;padding:14px;text-align:center;border-bottom:3px solid #C9A227">';
+  h+='<div style="font-size:22px;font-weight:800;color:#C9A227">'+fmt(totalInv)+'</div>';
+  h+='<div style="font-size:10px;color:#94a3b8;margin-top:3px;text-transform:uppercase">Inversion total</div>';
+  h+='<div style="font-size:10px;color:#64748b">'+projs.length+' proyectos</div></div>';
+
+  h+='<div style="background:#1e2530;border-radius:10px;padding:14px;text-align:center;border-bottom:3px solid #15803d">';
+  h+='<div style="font-size:22px;font-weight:800;color:#4ade80">'+fmt(totalAhorro)+'</div>';
+  h+='<div style="font-size:10px;color:#94a3b8;margin-top:3px;text-transform:uppercase">Ahorro real medido</div>';
+  h+='<div style="font-size:10px;color:#64748b">'+cerrados+' proy. cerrados</div></div>';
+
+  h+='<div style="background:#1e2530;border-radius:10px;padding:14px;text-align:center;border-bottom:3px solid '+roiBorder+'">';
+  h+='<div style="font-size:22px;font-weight:800;color:'+roiColor+'">'+(roiProm>=0?'+':'')+roiProm.toFixed(0)+'%</div>';
+  h+='<div style="font-size:10px;color:#94a3b8;margin-top:3px;text-transform:uppercase">ROI promedio</div>';
+  h+='<div style="font-size:10px;color:#64748b">meta: 50%</div></div>';
+
+  h+='<div style="background:#1e2530;border-radius:10px;padding:14px;text-align:center;border-bottom:3px solid #0284c7">';
+  h+='<div style="font-size:22px;font-weight:800;color:#60a5fa">'+rentables+'/'+(cerrados||'-')+'</div>';
+  h+='<div style="font-size:10px;color:#94a3b8;margin-top:3px;text-transform:uppercase">Proyectos rentables</div>';
+  h+='<div style="font-size:10px;color:#64748b">de los cerrados</div></div>';
+  h+='</div>';
+
+  // Calculadora + Semaforo
+  h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px">';
+
+  h+='<div style="background:#fff;border:1px solid #dde1e9;border-radius:12px;padding:16px">';
+  h+='<div style="font-size:12px;font-weight:700;color:#1e2530;margin-bottom:12px">Calculadora rapida de ROI</div>';
+  h+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">';
+  h+='<label style="font-size:11px;color:#64748b;width:160px;flex-shrink:0">Costo del proyecto (S/)</label>';
+  h+='<input type="number" id="roi-calc-costo" value="20000" oninput="calcROIWidget()" style="flex:1;padding:5px 8px;border:1px solid #dde1e9;border-radius:6px;font-size:12px;font-family:inherit"></div>';
+  h+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">';
+  h+='<label style="font-size:11px;color:#64748b;width:160px;flex-shrink:0">Beneficio/ahorro anual (S/)</label>';
+  h+='<input type="number" id="roi-calc-beneficio" value="35000" oninput="calcROIWidget()" style="flex:1;padding:5px 8px;border:1px solid #dde1e9;border-radius:6px;font-size:12px;font-family:inherit"></div>';
+  h+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">';
+  h+='<label style="font-size:11px;color:#64748b;width:160px;flex-shrink:0">Anos de vida util</label>';
+  h+='<input type="number" id="roi-calc-years" value="3" min="1" max="10" oninput="calcROIWidget()" style="flex:1;padding:5px 8px;border:1px solid #dde1e9;border-radius:6px;font-size:12px;font-family:inherit"></div>';
+  h+='<div style="border-top:1px solid #dde1e9;padding-top:10px;display:flex;justify-content:space-between">';
+  h+='<span style="font-size:12px;color:#64748b">ROI proyectado</span>';
+  h+='<strong id="roi-calc-result" style="font-size:15px;color:#15803d">+425%</strong></div>';
+  h+='<div style="display:flex;justify-content:space-between;margin-top:6px">';
+  h+='<span style="font-size:12px;color:#64748b">Payback en</span>';
+  h+='<strong id="roi-calc-payback" style="font-size:13px;color:#1e2530">6.9 meses</strong></div></div>';
+
+  h+='<div style="background:#fff;border:1px solid #dde1e9;border-radius:12px;padding:16px">';
+  h+='<div style="font-size:12px;font-weight:700;color:#1e2530;margin-bottom:12px">Semaforo para jefatura</div>';
+  h+='<div style="display:flex;flex-direction:column;gap:8px">';
+  h+='<div style="display:flex;align-items:center;gap:10px;padding:8px;background:#f0fdf4;border-radius:8px;border-left:3px solid #15803d">';
+  h+='<div style="width:12px;height:12px;background:#15803d;border-radius:50%;flex-shrink:0"></div>';
+  h+='<div><div style="font-size:11px;font-weight:700;color:#15803d">VERDE - Conviene</div>';
+  h+='<div style="font-size:10px;color:#166534">ROI mayor al 50% - El ahorro supera la inversion</div></div></div>';
+  h+='<div style="display:flex;align-items:center;gap:10px;padding:8px;background:#fefce8;border-radius:8px;border-left:3px solid #b45309">';
+  h+='<div style="width:12px;height:12px;background:#b45309;border-radius:50%;flex-shrink:0"></div>';
+  h+='<div><div style="font-size:11px;font-weight:700;color:#b45309">AMBAR - En evaluacion</div>';
+  h+='<div style="font-size:10px;color:#92400e">ROI entre 0-50% o indicador pendiente</div></div></div>';
+  h+='<div style="display:flex;align-items:center;gap:10px;padding:8px;background:#fef2f2;border-radius:8px;border-left:3px solid #b91c1c">';
+  h+='<div style="width:12px;height:12px;background:#b91c1c;border-radius:50%;flex-shrink:0"></div>';
+  h+='<div><div style="font-size:11px;font-weight:700;color:#b91c1c">ROJO - Por las puras</div>';
+  h+='<div style="font-size:10px;color:#991b1b">ROI negativo - El gasto sigue igual o subio</div></div></div>';
+  h+='<div style="font-size:10px;color:#94a3b8;margin-top:4px;line-height:1.5">Si el indicador no mejoro, el proyecto no tuvo impacto real.</div>';
+  h+='</div></div></div>';
+
+  // Tabla detalle
+  h+='<div style="font-size:13px;font-weight:700;color:#1e2530;margin-bottom:10px">Detalle ROI por proyecto</div>';
+  h+='<div style="background:#fff;border:1px solid #dde1e9;border-radius:12px;overflow:hidden;margin-bottom:16px">';
+  h+='<table style="width:100%;border-collapse:collapse;font-size:11px">';
+  h+='<thead><tr style="background:#1e2530">';
+  h+='<th style="padding:10px 12px;text-align:left;color:#C9A227;font-weight:700">Proyecto</th>';
+  h+='<th style="padding:10px 8px;text-align:right;color:#C9A227;font-weight:700">Presupuesto</th>';
+  h+='<th style="padding:10px 8px;text-align:right;color:#C9A227;font-weight:700">Costo real</th>';
+  h+='<th style="padding:10px 8px;text-align:right;color:#C9A227;font-weight:700">Benef. esp.</th>';
+  h+='<th style="padding:10px 8px;text-align:right;color:#C9A227;font-weight:700">Benef. real</th>';
+  h+='<th style="padding:10px 8px;text-align:center;color:#C9A227;font-weight:700">ROI</th>';
+  h+='<th style="padding:10px 8px;text-align:center;color:#C9A227;font-weight:700">Fase</th>';
+  h+='<th style="padding:10px 8px;text-align:center;color:#C9A227;font-weight:700">Accion</th>';
+  h+='</tr></thead><tbody>';
+
+  projs.forEach(function(p,i){
+    var r=p.roi||{};
+    var costo=r.costoReal||r.presupuesto||0;
+    var breal=r.beneficioReal||0;
+    var besp=r.beneficioAnual||0;
+    var roi=costo>0&&breal>0?((breal-costo)/costo*100):null;
+    var faseLabel={'planificacion':'Plan','ejecucion':'Ejec.','entregado':'Listo','postmortem':'Post-mortem'}[r.fase||'planificacion']||'Plan';
+    var semBg,semColor,roiTxt;
+    if(roi===null){semBg='#f1f5f9';semColor='#94a3b8';roiTxt='--';}
+    else if(roi>=50){semBg='#f0fdf4';semColor='#15803d';roiTxt='+'+(roi).toFixed(0)+'%';}
+    else if(roi>=0){semBg='#fefce8';semColor='#b45309';roiTxt='+'+(roi).toFixed(0)+'%';}
+    else{semBg='#fef2f2';semColor='#b91c1c';roiTxt=(roi).toFixed(0)+'%';}
+    var delta=r.presupuesto>0&&r.costoReal>0?r.costoReal-r.presupuesto:0;
+    var cc=delta>0?'#b91c1c':delta<0?'#15803d':'#64748b';
+    h+='<tr style="border-bottom:1px solid #f1f3f6;background:'+(i%2===0?'#fff':'#fafbfc')+'">';
+    h+='<td style="padding:10px 12px"><div style="font-weight:700;color:#1e2530">'+p.name+'</div>';
+    h+='<div style="font-size:10px;color:#94a3b8">'+p.empresa+(r.areaImpacto?' - '+r.areaImpacto:'')+'</div>';
+    if(r.indicador) h+='<div style="font-size:9px;color:#b45309">'+( r.indicadorBase||'-')+' > '+(r.indicadorPost||'pendiente')+'</div>';
+    h+='</td>';
+    h+='<td style="padding:10px 8px;text-align:right;color:#64748b">'+fmt(r.presupuesto)+'</td>';
+    h+='<td style="padding:10px 8px;text-align:right;color:'+cc+';font-weight:'+(r.costoReal?'700':'400')+'">'+fmt(r.costoReal)+(delta>0?' ^':delta<0?' v':'')+'</td>';
+    h+='<td style="padding:10px 8px;text-align:right;color:#64748b">'+(besp?fmt(besp)+'/ano':'--')+'</td>';
+    h+='<td style="padding:10px 8px;text-align:right;color:'+(breal>0?'#15803d':'#94a3b8')+';font-weight:'+(breal?'700':'400')+'">'+(breal?fmt(breal)+'/ano':'--')+'</td>';
+    h+='<td style="padding:10px 8px;text-align:center"><span style="background:'+semBg+';color:'+semColor+';padding:2px 8px;border-radius:20px;font-weight:700;font-size:11px">'+roiTxt+'</span></td>';
+    h+='<td style="padding:10px 8px;text-align:center"><span style="font-size:10px;background:#f1f3f6;padding:2px 6px;border-radius:4px;color:#64748b">'+faseLabel+'</span></td>';
+    h+='<td style="padding:10px 8px;text-align:center"><button onclick="showROIEditor(\''+p.id+'\')" style="font-size:10px;padding:3px 8px;background:#C9A227;color:#fff;border:none;border-radius:4px;cursor:pointer;font-family:inherit">Editar</button></td>';
+    h+='</tr>';
+  });
+
+  if(projs.length===0) h+='<tr><td colspan="8" style="padding:24px;text-align:center;color:#94a3b8;font-size:12px">No hay proyectos aun.</td></tr>';
+  h+='</tbody></table></div>';
+
+  // Guia
+  h+='<div style="background:#fef9ec;border:1px solid #C9A22730;border-radius:10px;padding:14px">';
+  h+='<div style="font-size:11px;font-weight:700;color:#a8841e;margin-bottom:8px">Como usar este modulo</div>';
+  h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:11px;color:#92400e;line-height:1.6">';
+  h+='<div><strong>Al crear un proyecto:</strong> llenar presupuesto y beneficio esperado. <strong>Al cerrarlo:</strong> actualizar costo real y cambiar a fase Entregado.</div>';
+  h+='<div><strong>A los 3-6 meses:</strong> clic en Editar ROI, ingresar beneficio real medido e indicador post. El ROI se calcula solo. Si el indicador no bajo, el proyecto no tuvo impacto real.</div>';
+  h+='</div></div>';
+
+  cont.innerHTML=h;
+  calcROIWidget();
+}
+
+function calcROIWidget(){
+  var costo=parseFloat((document.getElementById('roi-calc-costo')||{value:20000}).value)||1;
+  var benef=parseFloat((document.getElementById('roi-calc-beneficio')||{value:35000}).value)||0;
+  var anos=parseFloat((document.getElementById('roi-calc-years')||{value:3}).value)||1;
+  var roi=((benef*anos-costo)/costo*100).toFixed(0);
+  var payback=(costo/benef*12).toFixed(1);
+  var el=document.getElementById('roi-calc-result');
+  if(el){el.textContent=(roi>0?'+':'')+roi+'%';el.style.color=roi>0?'#15803d':'#b91c1c';}
+  var pb=document.getElementById('roi-calc-payback');
+  if(pb) pb.textContent=payback+' meses';
+}
 </script>
 </body>
 </html>
