@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pionier — Portal TI & Datos</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#0f1419;color:#fff;min-height:100vh}
+
+/* NAV */
+.nav{position:fixed;top:0;left:0;right:0;z-index:100;background:#0f1419ee;backdrop-filter:blur(12px);border-bottom:1px solid #1e2530;padding:0 40px;display:flex;align-items:center;justify-content:space-between;height:60px}
+.nav-logo{display:flex;align-items:center;gap:12px}
+.nav-logo .brand{font-size:20px;font-weight:900;letter-spacing:2px;color:#C9A227;text-transform:uppercase}
+.nav-logo .sub{font-size:10px;color:#64748b;letter-spacing:1px;text-transform:uppercase}
+.nav-links{display:flex;align-items:center;gap:8px}
+.nav-link{padding:7px 16px;border-radius:8px;font-size:13px;font-weight:600;color:#94a3b8;cursor:pointer;transition:.15s;text-decoration:none;border:none;background:none}
+.nav-link:hover{color:#fff;background:#1e2530}
+.nav-dot{width:8px;height:8px;background:#22c55e;border-radius:50%;margin-left:4px;box-shadow:0 0 8px #22c55e80}
+
+/* HERO */
+.hero{padding:120px 40px 80px;max-width:1200px;margin:0 auto;text-align:center}
+.hero-badge{display:inline-flex;align-items:center;gap:6px;background:#1e2530;border:1px solid #C9A22730;color:#C9A227;font-size:11px;font-weight:700;padding:5px 14px;border-radius:20px;margin-bottom:24px;letter-spacing:.5px;text-transform:uppercase}
+.hero h1{font-size:52px;font-weight:900;line-height:1.1;margin-bottom:16px;letter-spacing:-1px}
+.hero h1 span{color:#C9A227}
+.hero p{font-size:16px;color:#94a3b8;max-width:580px;margin:0 auto 40px;line-height:1.7}
+.hero-actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.btn-primary{padding:13px 28px;background:#C9A227;color:#0f1419;border:none;border-radius:10px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;transition:.15s;text-decoration:none;display:inline-flex;align-items:center;gap:8px}
+.btn-primary:hover{background:#e8b84b;transform:translateY(-1px)}
+.btn-outline{padding:13px 28px;background:transparent;color:#C9A227;border:1.5px solid #C9A22760;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:.15s;text-decoration:none;display:inline-flex;align-items:center;gap:8px}
+.btn-outline:hover{background:#C9A22715;border-color:#C9A227}
+
+/* STATS */
+.stats{background:#141b24;border-top:1px solid #1e2530;border-bottom:1px solid #1e2530;padding:32px 40px}
+.stats-inner{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);gap:0}
+.stat{text-align:center;padding:0 20px;border-right:1px solid #1e2530}
+.stat:last-child{border-right:none}
+.stat-num{font-size:36px;font-weight:900;color:#C9A227;line-height:1}
+.stat-lbl{font-size:10px;color:#64748b;letter-spacing:1px;text-transform:uppercase;margin-top:6px}
+
+/* PORTALES */
+.portales{max-width:1200px;margin:0 auto;padding:72px 40px}
+.section-label{font-size:11px;color:#C9A227;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px}
+.section-title{font-size:32px;font-weight:800;margin-bottom:8px}
+.section-sub{color:#64748b;font-size:15px;margin-bottom:40px}
+.portales-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.portal-card{background:#141b24;border:1px solid #1e2530;border-radius:16px;overflow:hidden;transition:.2s;cursor:pointer;text-decoration:none;display:block}
+.portal-card:hover{border-color:#C9A22760;transform:translateY(-3px);box-shadow:0 16px 40px #00000060}
+.portal-card.primary{border-color:#C9A22740}
+.portal-header{padding:28px 28px 20px;display:flex;align-items:flex-start;gap:16px}
+.portal-icon{width:52px;height:52px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0}
+.portal-icon.yellow{background:#C9A22720;border:1px solid #C9A22740}
+.portal-icon.blue{background:#0284c720;border:1px solid #0284c740}
+.portal-title{font-size:20px;font-weight:800;margin-bottom:4px}
+.portal-desc{font-size:13px;color:#94a3b8;line-height:1.5}
+.portal-features{padding:0 28px 20px}
+.feature{display:flex;align-items:center;gap:10px;padding:7px 0;border-top:1px solid #1e2530;font-size:13px;color:#94a3b8}
+.feature .dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.dot-yellow{background:#C9A227}
+.dot-blue{background:#0284c7}
+.dot-green{background:#22c55e}
+.dot-purple{background:#7c3aed}
+.portal-footer{padding:16px 28px;background:#0f1419;display:flex;align-items:center;justify-content:space-between}
+.portal-cta{font-size:13px;font-weight:700;color:#C9A227}
+.portal-cta.blue-cta{color:#0284c7}
+.portal-arrow{font-size:18px;transition:.2s}
+.portal-card:hover .portal-arrow{transform:translateX(4px)}
+
+/* MODULO ROI */
+.roi-section{background:#141b24;border-top:1px solid #1e2530;border-bottom:1px solid #1e2530;padding:72px 40px}
+.roi-inner{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center}
+.roi-kpis{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:24px}
+.roi-kpi{background:#1e2530;border-radius:10px;padding:14px;border-left:3px solid #C9A227}
+.roi-kpi.green{border-left-color:#22c55e}
+.roi-kpi.amber{border-left-color:#f59e0b}
+.roi-kpi.red{border-left-color:#ef4444}
+.roi-kpi-label{font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.roi-kpi-val{font-size:18px;font-weight:800;color:#C9A227}
+.roi-kpi.green .roi-kpi-val{color:#22c55e}
+.roi-kpi.amber .roi-kpi-val{color:#f59e0b}
+.roi-kpi.red .roi-kpi-val{color:#ef4444}
+.roi-kpi-desc{font-size:11px;color:#64748b;margin-top:2px}
+.semaforo{display:flex;flex-direction:column;gap:10px;margin-top:24px}
+.sem-item{display:flex;align-items:center;gap:12px;padding:12px;background:#1e2530;border-radius:8px}
+.sem-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0}
+.sem-title{font-size:12px;font-weight:700}
+.sem-desc{font-size:11px;color:#64748b;margin-top:2px}
+
+/* EQUIPO */
+.equipo{max-width:1200px;margin:0 auto;padding:72px 40px}
+.team-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-top:32px}
+.team-card{background:#141b24;border:1px solid #1e2530;border-radius:12px;padding:16px 12px;text-align:center;transition:.15s}
+.team-card:hover{border-color:#C9A22740;transform:translateY(-2px)}
+.team-avatar{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;margin:0 auto 10px}
+.team-name{font-size:11px;font-weight:700;color:#fff;margin-bottom:2px;line-height:1.3}
+.team-role{font-size:9px;color:#64748b;line-height:1.3}
+
+/* FOOTER */
+footer{background:#0a0f14;border-top:1px solid #1e2530;padding:28px 40px;display:flex;align-items:center;justify-content:space-between}
+.footer-brand{font-size:14px;font-weight:800;color:#C9A227;letter-spacing:1px}
+.footer-sub{font-size:11px;color:#64748b;margin-top:2px}
+.footer-links{display:flex;gap:20px}
+.footer-link{font-size:12px;color:#64748b;text-decoration:none;transition:.15s}
+.footer-link:hover{color:#C9A227}
+.footer-year{font-size:11px;color:#334155}
+
+/* MODAL LOGIN */
+.login-overlay{position:fixed;inset:0;background:#0f1419f0;z-index:999;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px)}
+.login-box{background:#141b24;border:1px solid #1e2530;border-radius:20px;padding:40px;width:360px;text-align:center}
+.login-box .lock{font-size:40px;margin-bottom:16px}
+.login-box h3{font-size:18px;font-weight:800;color:#C9A227;margin-bottom:4px;letter-spacing:1px}
+.login-box p{font-size:12px;color:#64748b;margin-bottom:24px}
+.login-box input{width:100%;padding:13px;background:#0f1419;border:1.5px solid #1e2530;border-radius:10px;color:#fff;font-size:15px;text-align:center;letter-spacing:4px;outline:none;font-family:inherit;margin-bottom:12px;transition:.15s}
+.login-box input:focus{border-color:#C9A227}
+.login-box button{width:100%;padding:13px;background:#C9A227;color:#0f1419;border:none;border-radius:10px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;transition:.15s}
+.login-box button:hover{background:#e8b84b}
+.login-err{color:#ef4444;font-size:12px;margin-top:10px;display:none;font-weight:600}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-logo">
+    <div>
+      <div class="brand">Pionier</div>
+      <div class="sub">MODIPSA · MASISAC</div>
+    </div>
+  </div>
+  <div class="nav-links">
+    <a href="#portales" class="nav-link">Portales</a>
+    <a href="#roi" class="nav-link">Impacto & KPIs</a>
+    <a href="#equipo" class="nav-link">Equipo TI</a>
+    <div class="nav-dot" title="Sistema activo"></div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-badge">🚀 Portal TI & Datos · 2026</div>
+  <h1>Gestión ágil para<br><span>MODIPSA & MASISAC</span></h1>
+  <p>Plataforma central del equipo TI. Solicitudes, proyectos, sprints, KPIs y seguimiento de ROI en un solo lugar.</p>
+  <div class="hero-actions">
+    <a href="https://kellclau.github.io/pionier/scrum.html" class="btn-primary">
+      Ingresar al sistema →
+    </a>
+    <a href="#portales" class="btn-outline">Ver portales</a>
+  </div>
+</section>
+
+<!-- STATS -->
+<div class="stats">
+  <div class="stats-inner">
+    <div class="stat"><div class="stat-num">24</div><div class="stat-lbl">Profesionales TI</div></div>
+    <div class="stat"><div class="stat-num">2</div><div class="stat-lbl">Empresas</div></div>
+    <div class="stat"><div class="stat-num">24/7</div><div class="stat-lbl">Disponibilidad</div></div>
+    <div class="stat"><div class="stat-num">2026</div><div class="stat-lbl">Año activo</div></div>
+  </div>
+</div>
+
+<!-- PORTALES -->
+<section class="portales" id="portales">
+  <div class="section-label">Acceso rápido</div>
+  <div class="section-title">Nuestros portales</div>
+  <div class="section-sub">Dos puntos de acceso según tu rol</div>
+  <div class="portales-grid">
+
+    <!-- PORTAL SOPORTE -->
+    <a href="https://kellclau.github.io/pionier/" class="portal-card">
+      <div class="portal-header">
+        <div class="portal-icon blue">🎧</div>
+        <div>
+          <div class="portal-title">Soporte</div>
+          <div class="portal-desc">¿Tienes un problema técnico? Repórtalo aquí.<br>¿Quieres solicitar un proyecto al equipo TI? Envía tu solicitud fácilmente. Rápido y sin contraseña.</div>
+        </div>
+      </div>
+      <div class="portal-features">
+        <div class="feature"><div class="dot dot-blue"></div>Formulario simple sin contraseña</div>
+        <div class="feature"><div class="dot dot-blue"></div>Número de ticket automático</div>
+        <div class="feature"><div class="dot dot-blue"></div>Seguimiento en tiempo real</div>
+        <div class="feature"><div class="dot dot-blue"></div>Disponible 24/7</div>
+      </div>
+      <div class="portal-footer">
+        <span class="portal-cta blue-cta">Ir al formulario</span>
+        <span class="portal-arrow">→</span>
+      </div>
+    </a>
+
+    <!-- PORTAL INTERNO -->
+    <a href="javascript:void(0)" onclick="openScrum()" class="portal-card primary">
+      <div class="portal-header">
+        <div class="portal-icon yellow">⚙</div>
+        <div>
+          <div class="portal-title">Interno</div>
+          <div class="portal-desc">Panel de gestión ágil para el equipo TI. Tablero Kanban, sprints, BI, ROI y cronograma. Requiere contraseña.</div>
+        </div>
+      </div>
+      <div class="portal-features">
+        <div class="feature"><div class="dot dot-yellow"></div>Tablero Kanban y Backlog</div>
+        <div class="feature"><div class="dot dot-green"></div>Gantt, Velocidad y KPIs BI</div>
+        <div class="feature"><div class="dot dot-purple"></div>ROI, Rentabilidad y KPIs por proyecto</div>
+        <div class="feature"><div class="dot dot-yellow"></div>Cronograma y reportes</div>
+      </div>
+      <div class="portal-footer">
+        <span class="portal-cta">Ingresar al sistema</span>
+        <span class="portal-arrow">→</span>
+      </div>
+    </a>
+
+  </div>
+</section>
+
+<!-- ROI SECTION -->
+<section class="roi-section" id="roi">
+  <div class="roi-inner">
+    <div>
+      <div class="section-label">Seguimiento de valor</div>
+      <div class="section-title" style="font-size:26px">ROI & KPIs por proyecto</div>
+      <p style="color:#94a3b8;font-size:14px;line-height:1.7;margin-top:12px">
+        Jefatura ahora puede ver si cada proyecto realmente valió la pena. Registramos el costo, el beneficio prometido y lo comparamos con el beneficio real medido a los 3–6 meses de implementado.
+      </p>
+      <div class="semaforo">
+        <div class="sem-item">
+          <div class="sem-dot" style="background:#22c55e"></div>
+          <div>
+            <div class="sem-title" style="color:#22c55e">VERDE — Conviene</div>
+            <div class="sem-desc">ROI mayor al 50% · El ahorro supera la inversión</div>
+          </div>
+        </div>
+        <div class="sem-item">
+          <div class="sem-dot" style="background:#f59e0b"></div>
+          <div>
+            <div class="sem-title" style="color:#f59e0b">ÁMBAR — En evaluación</div>
+            <div class="sem-desc">ROI entre 0–50% · Resultados parciales o en medición</div>
+          </div>
+        </div>
+        <div class="sem-item">
+          <div class="sem-dot" style="background:#ef4444"></div>
+          <div>
+            <div class="sem-title" style="color:#ef4444">ROJO — Por las puras</div>
+            <div class="sem-desc">ROI negativo · El gasto sigue igual o subió</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div style="font-size:13px;color:#64748b;margin-bottom:8px;font-weight:600;text-transform:uppercase;letter-spacing:.5px">KPIs que medimos</div>
+      <div class="roi-kpis">
+        <div class="roi-kpi green">
+          <div class="roi-kpi-label">Horas de proceso</div>
+          <div class="roi-kpi-val">-55%</div>
+          <div class="roi-kpi-desc">Antes: 40h → Ahora: 18h</div>
+        </div>
+        <div class="roi-kpi amber">
+          <div class="roi-kpi-label">Costo operativo</div>
+          <div class="roi-kpi-val">-22%</div>
+          <div class="roi-kpi-desc">En seguimiento mensual</div>
+        </div>
+        <div class="roi-kpi green">
+          <div class="roi-kpi-label">Tiempo de respuesta</div>
+          <div class="roi-kpi-val">-3 días</div>
+          <div class="roi-kpi-desc">Antes: 5d → Ahora: 2d</div>
+        </div>
+        <div class="roi-kpi">
+          <div class="roi-kpi-label">Satisfacción usuario</div>
+          <div class="roi-kpi-val" style="color:#C9A227">Pendiente</div>
+          <div class="roi-kpi-desc">Encuesta Q2 2026</div>
+        </div>
+      </div>
+      <div style="margin-top:16px;padding:14px;background:#1e2530;border-radius:10px;font-size:12px;color:#94a3b8;line-height:1.6">
+        <strong style="color:#C9A227">¿Cómo funciona?</strong> Al crear un proyecto se define el presupuesto y el indicador a medir. A los 3–6 meses post-implementación se registra el valor real. El sistema calcula el ROI automáticamente y muestra el semáforo para jefatura.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- EQUIPO -->
+<section class="equipo" id="equipo">
+  <div class="section-label">Nuestro equipo</div>
+  <div class="section-title">Profesionales TI — Pioner</div>
+  <div class="section-sub">24 especialistas en MODIPSA & MASISAC</div>
+  <div class="team-grid">
+    <div class="team-card"><div class="team-avatar" style="background:#C9A22720;color:#C9A227">CS</div><div class="team-name">Carlos Salas</div><div class="team-role">Coord. SW & Web</div></div>
+    <div class="team-card"><div class="team-avatar" style="background:#0284c720;color:#0284c7">KB</div><div class="team-name">Kelly Barrientos</div><div class="team-role">Ing. Datos / Arq.</div></div>
+    <div class="team-card"><div class="team-avatar" style="background:#0ea5e920;color:#0ea5e9">OM</div><div class="team-name">Omar Muñoz</div><div class="team-role">Jefe de TI</div></div>
+    <div class="team-card"><div class="team-avatar" style="background:#16a34a20;color:#16a34a">KP</div><div class="team-name">Keiko Palomino</div><div class="team-role">Jefe de Proyectos</div></div>
+    <div class="team-card"><div class="team-avatar" style="background:#d9770620;color:#d97706">OR</div><div class="team-name">Owen Rojas</div><div class="team-role">Analista BI</div></div>
+    <div class="team-card"><div class="team-avatar" style="background:#7c3aed20;color:#7c3aed">CL</div><div class="team-name">Claudia López</div><div class="team-role">Enc. Dev Web</div></div>
+    <div class="team-card"><div class="team-avatar" style="background:#C9A22720;color:#C9A227">MH</div><div class="team-name">Miguel Hernández</div><div class="team-role">Prog. ERP</div></div>
+    <div class="team-card"><div class="team-avatar" style="background:#C9A22720;color:#C9A227">JH</div><div class="team-name">Jaime Halire</div><div class="team-role">Prog. ERP</div></div>
+    <div class="team-card"><div class="team-avatar" style="background:#C9A22720;color:#C9A227">LP</div><div class="team-name">Luis Palomino</div><div class="team-role">Prog. ERP</div></div>
+    <div class="team-card"><div class="team-avatar" style="background:#C9A22720;color:#C9A227">ST</div><div class="team-name">Saúl Tapia</div><div class="team-role">Prog. ERP</div></div>
+    <div class="team-card"><div class="team-avatar" style="background:#C9A22720;color:#C9A227">CG</div><div class="team-name">Cleison Guevara</div><div class="team-role">Prog. ERP</div></div>
+    <div class="team-card"><div class="team-avatar" style="background:#C9A22720;color:#C9A227">CB</div><div class="team-name">Claudio Barahona</div><div class="team-role">Prog. ERP</div></div>
+    <div class="team-card"><div class="team-avatar" style="background:#C9A22720;color:#C9A227">CA</div><div class="team-name">Carla Arce</div><div class="team-role">Prog. ERP</div></div>
+    <div class="team-card"><div class="team-avatar" style="background:#7c3aed20;color:#7c3aed">RT</div><div class="team-name">Rigoberto Timaná</div><div class="team-role">Dev Web</div></div>
+    <div class="team-card"><div class="team-avatar" style="background:#7c3aed20;color:#7c3aed">JS</div><div class="team-name">Jean Sánchez</div><div class="team-role">Dev Web</div></div>
+    <div class="team-card"><div class="team-avatar" style="background:#7c3aed20;color:#7c3aed">WR</div><div class="team-name">Wilder Rojas</div><div class="team-role">Dev Web</div></div>
+    <div class="team-card"><div class="team-avatar" style="background:#d9770620;color:#d97706">ME</div><div class="team-name">Mauro Elías</div><div class="team-role">Analista BI</div></div>
+    <div class="team-card"><div class="team-avatar" style="background:#0891b220;color:#0891b2">AC</div><div class="team-name">Antony Chilquillo</div><div class="team-role">Redes & Ciberseg.</div></div>
+    <div class="team-card"><div class="team-avatar" style="background:#64748b20;color:#94a3b8">DG</div><div class="team-name">Daniel Guerrero</div><div class="team-role">Analista Soporte</div></div>
+    <div class="team-card"><div class="team-avatar" style="background:#0891b220;color:#0891b2">CH</div><div class="team-name">Cristian Huaman</div><div class="team-role">Asist. Ciberseg.</div></div>
+    <div class="team-card"><div class="team-avatar" style="background:#64748b20;color:#94a3b8">AA</div><div class="team-name">Alex Aguirre</div><div class="team-role">Asist. Soporte</div></div>
+    <div class="team-card"><div class="team-avatar" style="background:#64748b20;color:#94a3b8">FV</div><div class="team-name">Franco Vásquez</div><div class="team-role">Analista Soporte</div></div>
+    <div class="team-card"><div class="team-avatar" style="background:#64748b20;color:#94a3b8">JS</div><div class="team-name">Jamitthon Sánchez</div><div class="team-role">Asist. TI</div></div>
+    <div class="team-card"><div class="team-avatar" style="background:#16a34a20;color:#16a34a">+</div><div class="team-name">Equipo completo</div><div class="team-role">Ver en el sistema</div></div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div>
+    <div class="footer-brand">PIONIER</div>
+    <div class="footer-sub">MODIPSA · MASISAC — Portal TI & Datos</div>
+  </div>
+  <div class="footer-links">
+    <a href="https://kellclau.github.io/pionier/" class="footer-link">Solicitudes</a>
+    <a href="https://kellclau.github.io/pionier/scrum.html" class="footer-link">Sistema SCRUM</a>
+  </div>
+  <div class="footer-year">© 2026 Pionier</div>
+</footer>
+
+<!-- MODAL LOGIN SCRUM -->
+<div class="login-overlay" id="loginModal" style="display:none">
+  <div class="login-box">
+    <div class="lock">🔐</div>
+    <h3>PIONIER</h3>
+    <p>Portal interno — acceso restringido</p>
+    <input id="scrumPw" type="password" placeholder="Contraseña"
+      onkeydown="if(event.key==='Enter')doLogin()">
+    <button onclick="doLogin()">Ingresar →</button>
+    <div class="login-err" id="loginErr">Contraseña incorrecta. Intenta de nuevo.</div>
+  </div>
+</div>
+
+<script>
+function openScrum(){
+  document.getElementById('loginModal').style.display='flex';
+  setTimeout(function(){document.getElementById('scrumPw').focus();},100);
+}
+function doLogin(){
+  var val=document.getElementById('scrumPw').value;
+  var ok=['keiko2026','pioner2026','scrum2026'];
+  if(ok.includes(val)){
+    sessionStorage.setItem('pionier_session','1');
+    window.location.href='https://kellclau.github.io/pionier/scrum.html';
+  } else {
+    document.getElementById('loginErr').style.display='block';
+    document.getElementById('scrumPw').value='';
+    document.getElementById('scrumPw').focus();
+  }
+}
+document.getElementById('loginModal').addEventListener('click',function(e){
+  if(e.target===this) this.style.display='none';
+});
+// Scroll suave
+document.querySelectorAll('a[href^="#"]').forEach(function(a){
+  a.addEventListener('click',function(e){
+    e.preventDefault();
+    var target=document.querySelector(this.getAttribute('href'));
+    if(target) target.scrollIntoView({behavior:'smooth',block:'start'});
+  });
+});
+</script>
+</body>
+</html>
