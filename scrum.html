@@ -4261,37 +4261,225 @@ function guardarFechasSprint(sid){
 }
 
 function exportarExcelGeneral(){
-  const rows = [['ID Ticket','Proyecto','Empresa','Sprint','Título','Descripción','Columna','Prioridad','SP','Asignado','Fecha Inicio Sprint','Fecha Fin Sprint']];
-  state.tickets.forEach(t=>{
-    const proj = state.projects.find(p=>p.id===t.projId)||{};
-    const sp = state.sprints.find(s=>s.id===t.sprintId)||null;
-    const mi = MEMBERS.indexOf(t.assignee);
-    const nombreCompleto = mi>=0 ? MEMBER_NAMES[mi] : (t.assignee||'');
-    rows.push([
-      t.id||'', proj.name||'', proj.empresa||'',
-      sp ? sp.name : 'Backlog',
-      t.title||'', t.desc||'', t.col||'',
-      t.priority||'', t.sp||0, nombreCompleto,
-      sp ? (sp.start||'') : '',
-      sp ? (sp.end||'') : ''
-    ]);
-  });
-  if(rows.length===1){ alert('No hay tickets para exportar.'); return; }
-  let html = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel">';
-  html += '<head><meta charset="UTF-8"><style>td{border:1px solid #ccc;padding:6px 10px;font-size:12px;}th{background:#111111;color:#C9A227;padding:8px 10px;font-size:12px;font-weight:bold;}tr:nth-child(even) td{background:#fffdf0;}</style></head><body><table>';
-  html += '<tr>' + rows[0].map(h=>'<th>'+h+'</th>').join('') + '</tr>';
-  rows.slice(1).forEach(r=>{ html += '<tr>' + r.map(c=>'<td>'+(c||'')+'</td>').join('') + '</tr>'; });
-  html += '</table></body></html>';
-  const blob = new Blob([html],{type:'application/vnd.ms-excel;charset=utf-8'});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'SCRUM_Pionier_'+new Date().toISOString().split('T')[0]+'.xls';
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  setTimeout(()=>URL.revokeObjectURL(a.href),1000);
-  alert('✅ Excel descargado con '+(rows.length-1)+' tickets');
+  var html='<div class="modal-header"><h2>Exportar a Excel</h2><button class="close-btn" onclick="closeModal()">x</button></div>';
+  html+='<div class="modal-body" style="padding:24px 28px">';
+  html+='<div style="font-size:13px;color:#64748b;margin-bottom:16px">Elige que informacion exportar:</div>';
+  html+='<div style="display:flex;flex-direction:column;gap:10px">';
+
+  html+='<div onclick="exportProyectos()" style="display:flex;align-items:center;gap:14px;padding:14px;background:#f8fafc;border:1px solid #dde1e9;border-radius:10px;cursor:pointer" onmouseover="this.style.borderColor=\'#C9A227\'" onmouseout="this.style.borderColor=\'#dde1e9\'">';
+  html+='<div style="width:40px;height:40px;background:#fef9ec;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">📁</div>';
+  html+='<div><div style="font-weight:700;color:#1e2530;font-size:13px">Todos los proyectos</div>';
+  html+='<div style="font-size:11px;color:#64748b;margin-top:2px">'+state.projects.length+' proyectos — nombre, empresa, sede, estado, fechas, progreso, ROI</div></div></div>';
+
+  html+='<div onclick="exportTicketsAll()" style="display:flex;align-items:center;gap:14px;padding:14px;background:#f8fafc;border:1px solid #dde1e9;border-radius:10px;cursor:pointer" onmouseover="this.style.borderColor=\'#C9A227\'" onmouseout="this.style.borderColor=\'#dde1e9\'">';
+  html+='<div style="width:40px;height:40px;background:#fef9ec;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">🎫</div>';
+  html+='<div><div style="font-weight:700;color:#1e2530;font-size:13px">Todos los tickets</div>';
+  html+='<div style="font-size:11px;color:#64748b;margin-top:2px">'+state.tickets.length+' tickets — ID, proyecto, sprint, prioridad, estado, asignado</div></div></div>';
+
+  html+='<div onclick="exportCompleto()" style="display:flex;align-items:center;gap:14px;padding:14px;background:#fef9ec;border:2px solid #C9A22760;border-radius:10px;cursor:pointer" onmouseover="this.style.borderColor=\'#C9A227\'" onmouseout="this.style.borderColor=\'#C9A22760\'">';
+  html+='<div style="width:40px;height:40px;background:#C9A22720;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">📊</div>';
+  html+='<div><div style="font-weight:700;color:#1e2530;font-size:13px">Reporte completo <span style="font-size:10px;background:#C9A227;color:#fff;padding:1px 6px;border-radius:10px;margin-left:4px">RECOMENDADO</span></div>';
+  html+='<div style="font-size:11px;color:#64748b;margin-top:2px">Proyectos + Tickets + ROI en un solo archivo</div></div></div>';
+
+  html+='<div onclick="exportROI()" style="display:flex;align-items:center;gap:14px;padding:14px;background:#f8fafc;border:1px solid #dde1e9;border-radius:10px;cursor:pointer" onmouseover="this.style.borderColor=\'#C9A227\'" onmouseout="this.style.borderColor=\'#dde1e9\'">';
+  html+='<div style="width:40px;height:40px;background:#f0fdf4;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">💰</div>';
+  html+='<div><div style="font-weight:700;color:#1e2530;font-size:13px">ROI y Rentabilidad</div>';
+  html+='<div style="font-size:11px;color:#64748b;margin-top:2px">Inversion, costo real, beneficio y semaforo por proyecto</div></div></div>';
+
+  html+='</div></div>';
+  showModal(html);
 }
+
+function _dlExcel(htmlContent,filename){
+  var blob=new Blob([htmlContent],{type:'application/vnd.ms-excel;charset=utf-8'});
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=filename+'_'+new Date().toISOString().split('T')[0]+'.xls';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  setTimeout(function(){URL.revokeObjectURL(a.href);},1000);
+}
+
+function _excelHeader(){
+  return '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel"><head><meta charset="UTF-8"><style>'
+    +'body{font-family:Calibri,Arial,sans-serif}table{border-collapse:collapse;width:100%}'
+    +'th{background:#1e2530;color:#C9A227;padding:8px 12px;font-size:12px;font-weight:bold;text-align:left;border:1px solid #444}'
+    +'td{border:1px solid #dde1e9;padding:6px 10px;font-size:11px;vertical-align:top}'
+    +'tr:nth-child(even) td{background:#fafbfc}'
+    +'.verde{background:#f0fdf4;color:#15803d;font-weight:700;padding:2px 8px;border-radius:4px}'
+    +'.ambar{background:#fefce8;color:#b45309;font-weight:700;padding:2px 8px;border-radius:4px}'
+    +'.rojo{background:#fef2f2;color:#b91c1c;font-weight:700;padding:2px 8px;border-radius:4px}'
+    +'.badge{background:#e2e8f0;padding:2px 6px;border-radius:4px;font-size:10px}'
+    +'h2{color:#1e2530;font-size:14px;margin:16px 0 8px;border-bottom:2px solid #C9A227;padding-bottom:4px}'
+    +'</style></head><body>';
+}
+
+function exportProyectos(){
+  closeModal();
+  var projs=state.projects;
+  if(!projs.length){alert('No hay proyectos.');return;}
+  var html=_excelHeader();
+  html+='<h2>SCRUM PIONIER — Proyectos ('+projs.length+')</h2><table><tr>';
+  ['#','Proyecto','Empresa','Sede','Estado','Inicio','Fin','Tickets','Completado','Presupuesto (S/)','Costo real (S/)','Benef. esp. (S/)','Benef. real (S/)','ROI','Fase ROI','Area impactada'].forEach(function(h){html+='<th>'+h+'</th>';});
+  html+='</tr>';
+  projs.forEach(function(p,i){
+    var tickets=state.tickets.filter(function(t){return t.projId===p.id;});
+    var done=tickets.filter(function(t){return t.col==='Hecho';});
+    var pct=tickets.length?Math.round(done.length/tickets.length*100):0;
+    var r=p.roi||{};
+    var costo=r.costoReal||r.presupuesto||0;
+    var breal=r.beneficioReal||0;
+    var roi=costo>0&&breal>0?((breal-costo)/costo*100):null;
+    var roiTxt=roi===null?'--':roi>=0?'+'+roi.toFixed(0)+'%':roi.toFixed(0)+'%';
+    var roiClass=roi===null?'badge':roi>=50?'verde':roi>=0?'ambar':'rojo';
+    var estadoLabel={'planning':'Planeando','active':'Activo','paused':'Pausado','done':'Completado'}[p.status]||p.status;
+    html+='<tr><td>'+(i+1)+'</td>';
+    html+='<td style="font-weight:700">'+p.name+'</td>';
+    html+='<td>'+p.empresa+'</td>';
+    html+='<td>'+(p.sede||'--')+'</td>';
+    html+='<td><span class="badge">'+estadoLabel+'</span></td>';
+    html+='<td>'+(p.start||'--')+'</td><td>'+(p.end||'--')+'</td>';
+    html+='<td style="text-align:center">'+tickets.length+'</td>';
+    html+='<td style="text-align:center;font-weight:700">'+pct+'%</td>';
+    html+='<td style="text-align:right">'+(r.presupuesto?'S/ '+r.presupuesto.toLocaleString('es-PE'):'--')+'</td>';
+    html+='<td style="text-align:right">'+(r.costoReal?'S/ '+r.costoReal.toLocaleString('es-PE'):'--')+'</td>';
+    html+='<td style="text-align:right">'+(r.beneficioAnual?'S/ '+r.beneficioAnual.toLocaleString('es-PE')+'/ano':'--')+'</td>';
+    html+='<td style="text-align:right">'+(r.beneficioReal?'S/ '+r.beneficioReal.toLocaleString('es-PE')+'/ano':'--')+'</td>';
+    html+='<td style="text-align:center"><span class="'+roiClass+'">'+roiTxt+'</span></td>';
+    html+='<td>'+({'planificacion':'Planificacion','ejecucion':'En ejecucion','entregado':'Entregado','postmortem':'Post-mortem'}[r.fase||'planificacion'])+'</td>';
+    html+='<td>'+(r.areaImpacto||'--')+'</td></tr>';
+  });
+  html+='</table></body></html>';
+  _dlExcel(html,'SCRUM_Proyectos');
+  alert('Excel descargado con '+projs.length+' proyectos');
+}
+
+function exportTicketsAll(){
+  closeModal();
+  var tickets=state.tickets;
+  if(!tickets.length){alert('No hay tickets.');return;}
+  var html=_excelHeader();
+  html+='<h2>SCRUM PIONIER — Tickets ('+tickets.length+')</h2><table><tr>';
+  ['ID','Proyecto','Empresa','Sede','Sprint','Titulo','Estado','Prioridad','SP','Asignado'].forEach(function(h){html+='<th>'+h+'</th>';});
+  html+='</tr>';
+  tickets.forEach(function(t){
+    var proj=state.projects.find(function(p){return p.id===t.projId;})||{};
+    var sp=state.sprints.find(function(s){return s.id===t.sprintId;})||null;
+    var mi=MEMBERS.indexOf(t.assignee);
+    var nombre=mi>=0?MEMBER_NAMES[mi]:(t.assignee||'');
+    var colClass=t.col==='Hecho'?'verde':t.col==='En progreso'?'ambar':'badge';
+    html+='<tr><td style="font-weight:700">'+t.id+'</td>';
+    html+='<td>'+proj.name+'</td><td>'+proj.empresa+'</td>';
+    html+='<td>'+(proj.sede||'--')+'</td>';
+    html+='<td>'+(sp?sp.name:'Backlog')+'</td>';
+    html+='<td style="font-weight:700">'+t.title+'</td>';
+    html+='<td><span class="'+colClass+'">'+t.col+'</span></td>';
+    html+='<td>'+t.priority+'</td>';
+    html+='<td style="text-align:center">'+t.sp+'</td>';
+    html+='<td>'+nombre+'</td></tr>';
+  });
+  html+='</table></body></html>';
+  _dlExcel(html,'SCRUM_Tickets');
+  alert('Excel descargado con '+tickets.length+' tickets');
+}
+
+function exportROI(){
+  closeModal();
+  var projs=state.projects.filter(function(p){return p.roi&&(p.roi.presupuesto||p.roi.costoReal||p.roi.beneficioReal);});
+  if(!projs.length){alert('Ningun proyecto tiene datos de ROI aun.');return;}
+  var html=_excelHeader();
+  html+='<h2>SCRUM PIONIER — ROI y Rentabilidad</h2><table><tr>';
+  ['Proyecto','Empresa','Sede','Presupuesto','Costo real','Benef. esperado','Benef. real','ROI','Payback','Semaforo','Fase','Area'].forEach(function(h){html+='<th>'+h+'</th>';});
+  html+='</tr>';
+  projs.forEach(function(p){
+    var r=p.roi||{};
+    var costo=r.costoReal||r.presupuesto||0;
+    var breal=r.beneficioReal||0;
+    var roi=costo>0&&breal>0?((breal-costo)/costo*100):null;
+    var payback=r.beneficioReal>0?(costo/r.beneficioReal*12):null;
+    var roiTxt=roi===null?'Sin datos':roi>=0?'+'+roi.toFixed(0)+'%':roi.toFixed(0)+'%';
+    var semaforo=roi===null?'Pendiente':roi>=50?'VERDE - Conviene':roi>=0?'AMBAR - En evaluacion':'ROJO - Por las puras';
+    var semClass=roi===null?'badge':roi>=50?'verde':roi>=0?'ambar':'rojo';
+    html+='<tr><td style="font-weight:700">'+p.name+'</td>';
+    html+='<td>'+p.empresa+'</td><td>'+(p.sede||'--')+'</td>';
+    html+='<td>'+(r.presupuesto?'S/ '+r.presupuesto.toLocaleString('es-PE'):'--')+'</td>';
+    html+='<td>'+(r.costoReal?'S/ '+r.costoReal.toLocaleString('es-PE'):'--')+'</td>';
+    html+='<td>'+(r.beneficioAnual?'S/ '+r.beneficioAnual.toLocaleString('es-PE')+'/ano':'--')+'</td>';
+    html+='<td>'+(r.beneficioReal?'S/ '+r.beneficioReal.toLocaleString('es-PE')+'/ano':'--')+'</td>';
+    html+='<td><span class="'+semClass+'">'+roiTxt+'</span></td>';
+    html+='<td>'+(payback?payback.toFixed(1)+' meses':'--')+'</td>';
+    html+='<td><span class="'+semClass+'">'+semaforo+'</span></td>';
+    html+='<td>'+({'planificacion':'Planificacion','ejecucion':'En ejecucion','entregado':'Entregado','postmortem':'Post-mortem'}[r.fase||'planificacion'])+'</td>';
+    html+='<td>'+(r.areaImpacto||'--')+'</td></tr>';
+  });
+  html+='</table></body></html>';
+  _dlExcel(html,'SCRUM_ROI');
+  alert('Excel de ROI descargado');
+}
+
+function exportCompleto(){
+  closeModal();
+  var projs=state.projects;
+  var tickets=state.tickets;
+  if(!projs.length&&!tickets.length){alert('No hay datos.');return;}
+  var html=_excelHeader();
+  var done=tickets.filter(function(t){return t.col==='Hecho';});
+  var pct=tickets.length?Math.round(done.length/tickets.length*100):0;
+  html+='<h2>Resumen general</h2><table style="width:auto"><tr><th>Indicador</th><th>Valor</th></tr>';
+  html+='<tr><td>Total proyectos</td><td style="font-weight:700;text-align:center">'+projs.length+'</td></tr>';
+  html+='<tr><td>Total tickets</td><td style="font-weight:700;text-align:center">'+tickets.length+'</td></tr>';
+  html+='<tr><td>Tickets completados</td><td style="font-weight:700;text-align:center">'+done.length+' ('+pct+'%)</td></tr>';
+  html+='<tr><td>Proyectos MODIPSA</td><td style="font-weight:700;text-align:center">'+projs.filter(function(p){return p.empresa==='MODIPSA';}).length+'</td></tr>';
+  html+='<tr><td>Proyectos MASISAC</td><td style="font-weight:700;text-align:center">'+projs.filter(function(p){return p.empresa==='MASISAC';}).length+'</td></tr>';
+  html+='<tr><td>Fecha exportacion</td><td>'+new Date().toLocaleString('es-PE')+'</td></tr>';
+  html+='</table>';
+  html+='<h2 style="margin-top:24px">Proyectos ('+projs.length+')</h2><table><tr>';
+  ['#','Proyecto','Empresa','Sede','Estado','Inicio','Fin','Tickets','Completado','ROI'].forEach(function(h){html+='<th>'+h+'</th>';});
+  html+='</tr>';
+  projs.forEach(function(p,i){
+    var tks=tickets.filter(function(t){return t.projId===p.id;});
+    var dn=tks.filter(function(t){return t.col==='Hecho';});
+    var pc=tks.length?Math.round(dn.length/tks.length*100):0;
+    var r=p.roi||{};
+    var costo=r.costoReal||r.presupuesto||0;
+    var breal=r.beneficioReal||0;
+    var roi=costo>0&&breal>0?((breal-costo)/costo*100):null;
+    var roiTxt=roi===null?'--':roi>=0?'+'+roi.toFixed(0)+'%':roi.toFixed(0)+'%';
+    var semClass=roi===null?'badge':roi>=50?'verde':roi>=0?'ambar':'rojo';
+    var estadoLabel={'planning':'Planeando','active':'Activo','paused':'Pausado','done':'Completado'}[p.status]||p.status;
+    html+='<tr><td>'+(i+1)+'</td><td style="font-weight:700">'+p.name+'</td>';
+    html+='<td>'+p.empresa+'</td><td>'+(p.sede||'--')+'</td>';
+    html+='<td><span class="badge">'+estadoLabel+'</span></td>';
+    html+='<td>'+(p.start||'--')+'</td><td>'+(p.end||'--')+'</td>';
+    html+='<td style="text-align:center">'+tks.length+'</td>';
+    html+='<td style="text-align:center;font-weight:700">'+pc+'%</td>';
+    html+='<td><span class="'+semClass+'">'+roiTxt+'</span></td></tr>';
+  });
+  html+='</table>';
+  html+='<h2 style="margin-top:24px">Tickets ('+tickets.length+')</h2><table><tr>';
+  ['ID','Proyecto','Empresa','Sede','Sprint','Titulo','Estado','Prioridad','SP','Asignado'].forEach(function(h){html+='<th>'+h+'</th>';});
+  html+='</tr>';
+  tickets.forEach(function(t){
+    var proj=projs.find(function(p){return p.id===t.projId;})||{};
+    var sp=state.sprints.find(function(s){return s.id===t.sprintId;})||null;
+    var mi=MEMBERS.indexOf(t.assignee);
+    var nombre=mi>=0?MEMBER_NAMES[mi]:(t.assignee||'');
+    var colClass=t.col==='Hecho'?'verde':t.col==='En progreso'?'ambar':'badge';
+    html+='<tr><td style="font-weight:700">'+t.id+'</td>';
+    html+='<td>'+proj.name+'</td><td>'+proj.empresa+'</td>';
+    html+='<td>'+(proj.sede||'--')+'</td>';
+    html+='<td>'+(sp?sp.name:'Backlog')+'</td>';
+    html+='<td>'+t.title+'</td>';
+    html+='<td><span class="'+colClass+'">'+t.col+'</span></td>';
+    html+='<td>'+t.priority+'</td>';
+    html+='<td style="text-align:center">'+t.sp+'</td>';
+    html+='<td>'+nombre+'</td></tr>';
+  });
+  html+='</table></body></html>';
+  _dlExcel(html,'SCRUM_Completo');
+  alert('Reporte completo descargado — '+projs.length+' proyectos y '+tickets.length+' tickets');
+}
+
+
 function importarDatos(input){
   const file = input.files[0];
   if(!file) return;
