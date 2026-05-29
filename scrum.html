@@ -287,6 +287,15 @@ body{font-family:'Segoe UI',system-ui,sans-serif;font-size:14px;color:#1a1a1a;ba
       <button class="empresa-badge" id="btn-emp-todas" onclick="filtrarEmpresa('todas',this)" style="cursor:pointer;border:2px solid #C9A227;background:#C9A227;color:#1e2530;border-radius:6px;padding:5px 14px;font-size:12px;font-weight:800;letter-spacing:.5px;transition:.15s;font-family:inherit">Todas</button>
       <button class="empresa-badge" id="btn-emp-mod" onclick="filtrarEmpresa('MODIPSA',this)" style="cursor:pointer;border:2px solid #C9A22780;background:transparent;color:#C9A227;border-radius:6px;padding:5px 14px;font-size:12px;font-weight:800;letter-spacing:.5px;transition:.15s;font-family:inherit">MODIPSA</button>
       <button class="empresa-badge" id="btn-emp-mas" onclick="filtrarEmpresa('MASISAC',this)" style="cursor:pointer;border:2px solid #C9A22780;background:transparent;color:#C9A227;border-radius:6px;padding:5px 14px;font-size:12px;font-weight:800;letter-spacing:.5px;transition:.15s;font-family:inherit">MASISAC</button>
+      <span style="color:#334155;margin:0 6px;font-size:14px">|</span>
+      <select id="filtro-sede" onchange="filtrarSede(this.value)" style="background:#263040;color:#94a3b8;border:1.5px solid #C9A22740;border-radius:6px;padding:5px 10px;font-size:11px;font-family:inherit;cursor:pointer;outline:none">
+        <option value="">📍 Todas las sedes</option>
+        <option value="Jicamarca">Jicamarca</option>
+        <option value="Azangaro">Azangaro</option>
+        <option value="Zarate">Zarate</option>
+        <option value="Campoy">Campoy</option>
+        <option value="Huachipa">Huachipa</option>
+      </select>
       <button class="btn sm primary" onclick="showNewProject()" style="margin-left:8px">+ Proyecto</button>
       <button class="btn sm" style="background:#263040;color:#C9A227;border-color:#3d4f63" onclick="showNewTicket()">+ Ticket</button>
       <button class="btn sm" style="background:#217346;color:#fff;border-color:#217346;font-weight:700" onclick="exportarExcelGeneral()" title="Exportar todos los tickets a Excel">📊 Excel</button>
@@ -402,7 +411,15 @@ body{font-family:'Segoe UI',system-ui,sans-serif;font-size:14px;color:#1a1a1a;ba
     <!-- BOARD -->
     <div id="tab-board" class="hidden">
       <div class="board-header">
-        <select id="board-proj" onchange="populateSprints()"></select>
+        <div style="position:relative;display:inline-block">
+          <input id="board-proj-search" placeholder="Buscar proyecto..." autocomplete="off"
+            oninput="filtrarProyectosBoard(this.value)"
+            onfocus="document.getElementById('board-proj-dd').style.display='block'"
+            onblur="setTimeout(function(){document.getElementById('board-proj-dd').style.display='none'},200)"
+            style="padding:6px 12px;border:1.5px solid #C9A22760;border-radius:8px;background:#263040;color:#fff;font-family:inherit;font-size:12px;width:250px;outline:none">
+          <div id="board-proj-dd" style="display:none;position:absolute;top:100%;left:0;width:250px;max-height:220px;overflow-y:auto;background:#1e2530;border:1px solid #C9A22740;border-radius:8px;z-index:99;box-shadow:0 8px 24px #00000040;margin-top:2px"></div>
+          <input type="hidden" id="board-proj">
+        </div>
         <select id="board-sprint" onchange="renderBoard()"></select>
         <span style="font-size:12px;color:var(--gray);margin-left:auto" id="sprint-dates"></span>
         <button class="btn sm" style="background:#263040;color:#C9A227;border:1.5px solid #C9A227;font-weight:700" onclick="showNuevoSprintBoard()">🚀 Crear Sprint</button>
@@ -819,6 +836,7 @@ function renderProjects(){
       </div>
       <h3>${p.name}</h3>
       <div class="meta">${p.desc}</div>
+      ${p.sede?'<div class="meta" style="margin-top:4px"><span style="font-size:10px;background:#263040;color:#94a3b8;padding:2px 8px;border-radius:10px">📍 '+p.sede+'</span></div>':''}
       ${_getROIBadge(p)}
       <div class="meta" style="margin-top:8px">📋 ${tc} tickets &nbsp;·&nbsp; ${sp?'🏃 '+sp.name+' activo':'Sin sprint activo'}</div>
       <div class="meta" style="margin-top:4px">📅 ${fmtDate(p.start)} → ${fmtDate(p.end)}</div>
@@ -843,9 +861,14 @@ function openProject(pid){
 
 // BOARD
 function populateBoardSelects(){
-  const ps=document.getElementById('board-proj');
-  const projs = getProyectosFiltrados();
-  ps.innerHTML=projs.map(p=>`<option value="${p.id}">${p.name} (${p.empresa||''})</option>`).join('');
+  var projs=getProyectosFiltrados();
+  var hidden=document.getElementById('board-proj');
+  var search=document.getElementById('board-proj-search');
+  if(projs.length&&!hidden.value){
+    hidden.value=projs[0].id;
+    if(search) search.value=projs[0].name+(projs[0].sede?' — '+projs[0].sede:'')+(projs[0].empresa?' ('+projs[0].empresa+')':'');
+  }
+  _renderBoardDD(projs);
   populateSprints();
 }
 function populateSprints(){
@@ -1880,6 +1903,7 @@ function showNewProject(){
   showModal(`<h2>➕ Nuevo Proyecto</h2>
     <div class="form-row"><label>Nombre del proyecto</label><input id="np-name" placeholder="Ej: Control de Inventario" autofocus></div>
     <div class="form-row"><label>Empresa</label><select id="np-empresa">${empresaOpts}</select></div>
+    <div class="form-row"><label>Sede / Local</label><select id="np-sede"><option value="">Sin sede especifica</option><option>Jicamarca</option><option>Azangaro</option><option>Zarate</option><option>Campoy</option><option>Huachipa</option><option>Todas las sedes</option></select></div>
     <div class="form-row"><label>Descripción</label><textarea id="np-desc" rows="2" placeholder="¿Qué se va a construir?"></textarea></div>
     <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
       <div><label>Fecha inicio</label><input type="date" id="np-start" value="${new Date().toISOString().split('T')[0]}"></div>
@@ -1912,7 +1936,9 @@ function createProject(){
     areaImpacto:(document.getElementById('np-area-impacto')||{value:''}).value||'',
     costoReal:0,beneficioReal:0,indicadorPost:'',fase:'planificacion',notas:[]
   };
+  var _npSede=(document.getElementById('np-sede')||{value:''}).value||'';
   state.projects.push({id:pid,name,color:'#C9A227',empresa:document.getElementById('np-empresa').value,
+    sede:_npSede,
     status:'planning',start:document.getElementById('np-start').value,end:document.getElementById('np-end').value,
     desc:document.getElementById('np-desc').value||'Sin descripción',prefix,roi:_npRoi});
   state.sprints.push({id:'s'+state.nextId.s++,projId:pid,name:'Sprint 1',
@@ -1935,6 +1961,7 @@ function editProject(pid){
     <div class="form-row"><label>Nombre del proyecto</label><input id="ep-name" value="${p.name}"></div>
     <div class="form-row"><label>Empresa</label><select id="ep-empresa">${empresaOpts}</select></div>
     <div class="form-row"><label>Estado</label><select id="ep-status">${statusOpts}</select></div>
+    <div class="form-row"><label>Sede / Local</label><select id="ep-sede"><option value="">Sin sede especifica</option><option ${(p.sede||'')==='Jicamarca'?'selected':''}>Jicamarca</option><option ${(p.sede||'')==='Azangaro'?'selected':''}>Azangaro</option><option ${(p.sede||'')==='Zarate'?'selected':''}>Zarate</option><option ${(p.sede||'')==='Campoy'?'selected':''}>Campoy</option><option ${(p.sede||'')==='Huachipa'?'selected':''}>Huachipa</option><option ${(p.sede||'')==='Todas las sedes'?'selected':''}>Todas las sedes</option></select></div>
     <div class="form-row"><label>Descripción</label><textarea id="ep-desc" rows="2">${p.desc||''}</textarea></div>
     <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
       <div><label>📅 Fecha inicio</label><input type="date" id="ep-start" value="${p.start||''}"></div>
@@ -1958,6 +1985,7 @@ function saveEditProject(pid){
   p.desc=document.getElementById('ep-desc').value||'Sin descripción';
   p.start=document.getElementById('ep-start').value;
   p.end=document.getElementById('ep-end').value;
+  p.sede=(document.getElementById('ep-sede')||{value:''}).value||'';
   // Guardar ROI si hay campos disponibles
   if(!p.roi) p.roi={notas:[]};
   var _epPres=document.getElementById('ep-roi-presupuesto');
@@ -4076,9 +4104,50 @@ function _refreshAllViews(){
 
 // Filtra proyectos según empresa global
 function getProyectosFiltrados(){
-  return empresaFiltro === 'todas'
+  var projs = empresaFiltro === 'todas'
     ? state.projects
     : state.projects.filter(p => p.empresa === empresaFiltro);
+  if(window._sedeFiltro) projs = projs.filter(p => (p.sede||'') === window._sedeFiltro);
+  return projs;
+}
+
+function filtrarSede(sede){
+  window._sedeFiltro = sede || '';
+  _refreshAllViews();
+}
+
+function filtrarProyectosBoard(q){
+  var projs = getProyectosFiltrados();
+  if(q.trim()){
+    var ql=q.toLowerCase();
+    projs=projs.filter(function(p){
+      return p.name.toLowerCase().includes(ql)||(p.sede||'').toLowerCase().includes(ql)||(p.empresa||'').toLowerCase().includes(ql);
+    });
+  }
+  document.getElementById('board-proj-dd').style.display='block';
+  _renderBoardDD(projs);
+}
+
+function _renderBoardDD(projs){
+  var dd=document.getElementById('board-proj-dd');
+  if(!dd) return;
+  dd.innerHTML='';
+  if(!projs.length){dd.innerHTML='<div style="padding:10px;color:#64748b;font-size:12px">Sin resultados</div>';return;}
+  projs.forEach(function(p){
+    var div=document.createElement('div');
+    div.style.cssText='padding:10px 12px;cursor:pointer;border-bottom:1px solid #263040;transition:.1s';
+    div.innerHTML='<div style="font-size:12px;color:#fff;font-weight:600">'+p.name+'</div>'
+      +'<div style="font-size:10px;color:#64748b;margin-top:2px">'+(p.empresa||'')+(p.sede?' · '+p.sede:'')+'</div>';
+    div.addEventListener('mouseover',function(){this.style.background='#263040';});
+    div.addEventListener('mouseout',function(){this.style.background='none';});
+    div.addEventListener('click',function(){
+      document.getElementById('board-proj').value=p.id;
+      document.getElementById('board-proj-search').value=p.name+(p.sede?' — '+p.sede:'')+(p.empresa?' ('+p.empresa+')':'');
+      document.getElementById('board-proj-dd').style.display='none';
+      populateSprints();
+    });
+    dd.appendChild(div);
+  });
 }
 
 // Actualiza todos los <select> de proyecto con el filtro activo
@@ -5075,7 +5144,8 @@ function renderQA(){
             +(proj?proj.name+' · ':'')+'<span style="color:#0ea5e9">'+r.tipo+'</span>'
             +' · '+r.fecha+' · 👤 '+r.responsable
           +'</div>'
-          +(r.obs?'<div style="font-size:11px;color:#374151;background:#f9f8f5;border-left:3px solid '+rc+';padding:6px 10px;border-radius:0 6px 6px 0">'+r.obs+'</div>':'')
+          +(r.obs?'<div style="font-size:11px;color:#374151;background:#f9f8f5;border-left:3px solid '+rc+';padding:6px 10px;border-radius:0 6px 6px 0;margin-bottom:6px">'+r.obs+'</div>':'')
+          +(function(){var adjs=r.adjuntos||[];if(!adjs.length)return '';var html='<div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:4px">';adjs.forEach(function(a){var ico=a.tipo==='image'?'IMG':a.tipo==='pdf'?'PDF':'ADJ';var ver=a.tipo==='image'&&a.data?'<a href="'+a.data+'" target="_blank" style="color:#0ea5e9;font-size:10px;margin-left:4px">Ver</a>':'';html+='<span style="display:inline-flex;align-items:center;gap:4px;background:#fff;border:1px solid #e5e0d0;border-radius:6px;padding:3px 8px;font-size:10px;color:#555">'+ico+' '+a.nombre+' <span style="color:#bbb">'+a.size+'</span>'+ver+'</span>';});return html+'</div>';})()
         +'</div>'
         +'<button onclick="eliminarQA('+i+')" style="background:none;border:none;color:#ddd;cursor:pointer;font-size:14px;flex-shrink:0;padding:0" title="Eliminar">✕</button>'
       +'</div>';
@@ -5183,6 +5253,17 @@ function showNuevaPrueba(){
     +'<div><label style="font-size:11px;font-weight:700;color:#666;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Observaciones / evidencia</label>'
     +'<textarea id="qa-obs" rows="3" style="width:100%;padding:9px 12px;border:1.5px solid #e5e0d0;border-radius:8px;font-size:12px;font-family:inherit;outline:none;resize:vertical" placeholder="Describe lo que encontraste, pasos reproducibles, evidencia..."></textarea></div>'
 
+    // Archivos de evidencia
+    +'<div style="margin-top:12px"><label style="font-size:11px;font-weight:700;color:#666;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:8px">Archivos de evidencia (opcional)</label>'
+    +'<div id="qa-dropzone" ondragover="event.preventDefault();this.style.borderColor=&quot;#C9A227&quot;" ondragleave="this.style.borderColor=&quot;#e5e0d0&quot;" ondrop="event.preventDefault();this.style.borderColor=&quot;#e5e0d0&quot;;qaHandleFiles(event.dataTransfer.files)" style="border:2px dashed #e5e0d0;border-radius:10px;padding:16px;text-align:center;cursor:pointer;transition:.2s;background:#fafaf8" onclick="document.getElementById(&quot;qa-file-input&quot;).click()">'
+    +'<div style="font-size:24px;margin-bottom:6px">📎</div>'
+    +'<div style="font-size:12px;color:#888">Arrastra archivos aqui o <span style="color:#C9A227;font-weight:700">haz clic para seleccionar</span></div>'
+    +'<div style="font-size:10px;color:#bbb;margin-top:4px">PNG, JPG, PDF, DOCX — max 5MB por archivo</div>'
+    +'<input type="file" id="qa-file-input" multiple accept="image/*,.pdf,.doc,.docx,.xlsx,.txt" style="display:none" onchange="qaHandleFiles(this.files)">'
+    +'</div>'
+    +'<div id="qa-adjuntos-preview" style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px"></div>'
+    +'</div>'
+
     // Responsable
     +'<div><label style="font-size:11px;font-weight:700;color:#666;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Quien realizó la prueba ★</label>'
     +'<input id="qa-resp" value="Keiko Palomino" style="width:100%;padding:9px 12px;border:1.5px solid #e5e0d0;border-radius:8px;font-size:13px;font-family:inherit;outline:none"></div>'
@@ -5225,8 +5306,10 @@ function guardarPrueba(){
     projId:proj, tipo, titulo, resultado:result,
     obs:document.getElementById('qa-obs').value.trim(),
     responsable:resp,
-    fecha:new Date().toLocaleDateString('es-PE')
+    fecha:new Date().toLocaleDateString('es-PE'),
+    adjuntos: window._qaAdjuntosTmp || []
   });
+  window._qaAdjuntosTmp = [];
   if(proj) qaSelProyecto=proj;
   closeModal();
   renderQA();
@@ -5687,6 +5770,64 @@ function calcROIWidget(){
   var pb=document.getElementById('roi-calc-payback');
   if(pb) pb.textContent=payback+' meses';
 }
+
+// ─── ADJUNTOS EN QA ──────────────────────────────────────────
+window._qaAdjuntosTmp = [];
+
+function qaHandleFiles(files){
+  if(!window._qaAdjuntosTmp) window._qaAdjuntosTmp=[];
+  var preview=document.getElementById('qa-adjuntos-preview');
+  Array.from(files).forEach(function(file){
+    if(file.size>5*1024*1024){alert('El archivo "'+file.name+'" supera 5MB. Reduce el tamaño o comprime la imagen.');return;}
+    var reader=new FileReader();
+    reader.onload=function(e){
+      var tipo=file.type.startsWith('image/')?'image':file.type==='application/pdf'?'pdf':'file';
+      var adj={nombre:file.name,tipo:tipo,data:tipo==='image'?e.target.result:null,size:Math.round(file.size/1024)+'KB',b64:tipo!=='image'?e.target.result:null};
+      window._qaAdjuntosTmp.push(adj);
+      qaRenderPreview();
+    };
+    if(file.type.startsWith('image/')||file.type==='application/pdf'){
+      reader.readAsDataURL(file);
+    } else {
+      reader.readAsArrayBuffer(file);
+      reader.onload=function(){
+        window._qaAdjuntosTmp.push({nombre:file.name,tipo:'file',data:null,size:Math.round(file.size/1024)+'KB'});
+        qaRenderPreview();
+      };
+    }
+  });
+}
+
+function qaRenderPreview(){
+  var preview=document.getElementById('qa-adjuntos-preview');
+  if(!preview||!window._qaAdjuntosTmp) return;
+  preview.innerHTML='';
+  window._qaAdjuntosTmp.forEach(function(a,i){
+    var div=document.createElement('div');
+    div.style.cssText='display:flex;align-items:center;gap:6px;background:#fff;border:1px solid #e5e0d0;border-radius:8px;padding:6px 10px;font-size:11px;max-width:220px';
+    var ico=a.tipo==='image'?'🖼️':a.tipo==='pdf'?'📄':'📎';
+    var ver=a.tipo==='image'&&a.data?'<a href="'+a.data+'" target="_blank" style="color:#0ea5e9;font-size:10px;margin-left:4px">Ver</a>':'';
+    div.innerHTML='<span>'+ico+'</span>'
+      +'<span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10px" title="'+a.nombre+'">'+a.nombre+'</span>'
+      +'<span style="color:#bbb;font-size:9px">'+a.size+'</span>'
+      +ver
+      +'<button onclick="qaEliminarAdj('+i+')" style="background:none;border:none;cursor:pointer;color:#dc2626;font-size:12px;padding:0;margin-left:2px">×</button>';
+    preview.appendChild(div);
+  });
+  if(window._qaAdjuntosTmp.length>0){
+    var dropzone=document.getElementById('qa-dropzone');
+    if(dropzone) dropzone.style.borderColor='#C9A227';
+  }
+}
+
+function qaEliminarAdj(i){
+  if(window._qaAdjuntosTmp) window._qaAdjuntosTmp.splice(i,1);
+  qaRenderPreview();
+}
+
+function qaDropOver(e){e.preventDefault();document.getElementById('qa-dropzone').style.borderColor='#C9A227';}
+function qaDropLeave(e){document.getElementById('qa-dropzone').style.borderColor='#e5e0d0';}
+function qaDropDrop(e){e.preventDefault();document.getElementById('qa-dropzone').style.borderColor='#e5e0d0';qaHandleFiles(e.dataTransfer.files);}
 </script>
 </body>
 </html>
