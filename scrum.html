@@ -812,6 +812,10 @@ function getProgress(pid){
   const ts=state.tickets.filter(t=>t.projId===pid);
   return ts.length?Math.round(ts.filter(t=>t.col==='Hecho').length/ts.length*100):0;
 }
+function _enEjecucion(p){
+  if(state.sprints.some(function(s){return s.projId===p.id&&s.status==='active';})) return true;
+  return state.tickets.some(function(t){return t.projId===p.id && t.col && t.col!=='Backlog';});
+}
 function addDays(dateStr,n){const d=new Date(dateStr);d.setDate(d.getDate()+n);return d.toISOString().split('T')[0];}
 function getWeek(d){const onejan=new Date(d.getFullYear(),0,1);return Math.ceil((((d-onejan)/86400000)+onejan.getDay()+1)/7);}
 function fmtDate(s){if(!s)return '';const d=new Date(s);return d.toLocaleDateString('es',{day:'2-digit',month:'short'});}
@@ -827,7 +831,7 @@ function renderProjects(){
   const done=filtTickets.filter(t=>t.col==='Hecho').length;
   const inprog=filtTickets.filter(t=>t.col==='En progreso').length;
   const sprints=state.sprints.filter(s=>s.status==='active'&&_filtProjIds.includes(s.projId)).length;
-  var _nAct=_filtProjs.filter(function(p){return state.sprints.some(function(s){return s.projId===p.id&&s.status==='active';});}).length;
+  var _nAct=_filtProjs.filter(_enEjecucion).length;
   var _nPend=_filtProjs.length-_nAct;
   document.getElementById('global-stats').innerHTML=`
     <div class="stat"><div class="val">${_nAct}</div><div class="lbl">Proyectos activos</div></div>
@@ -838,9 +842,8 @@ function renderProjects(){
   const grid=document.getElementById('proj-grid');
   grid.innerHTML='';
   const proysFiltrados=getProyectosFiltrados();
-  // Grid principal: solo proyectos con sprint activo (o todos si ninguno activo)
-  const proysConSprint=proysFiltrados.filter(p=>state.sprints.some(s=>s.projId===p.id&&s.status==='active'));
-  const proysMostrar=proysConSprint.length>0?proysConSprint:proysFiltrados;
+  // Grid principal: SOLO proyectos en ejecución (trabajo iniciado o sprint activo)
+  const proysMostrar=proysFiltrados.filter(_enEjecucion);
   proysMostrar.forEach(p=>{
     const pct=getProgress(p.id);
     const tc=state.tickets.filter(t=>t.projId===p.id).length;
@@ -911,7 +914,7 @@ function renderReqSidebar(){
   var sb=document.getElementById('req-list');
   if(!sb) return;
   var pendientes=getProyectosFiltrados().filter(function(p){
-    return !state.sprints.some(function(s){return s.projId===p.id&&s.status==='active';});
+    return !_enEjecucion(p);
   });
   if(!pendientes.length){
     sb.innerHTML='<div style="font-size:11px;color:#475569;padding:16px 0;text-align:center">Sin requerimientos pendientes ✅</div>';
