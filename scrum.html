@@ -84,10 +84,10 @@ body{font-family:'Segoe UI',system-ui,sans-serif;font-size:14px;color:#1a1a1a;ba
   --bd:#dde1e9;
 }
 
-.app{max-width:1280px;margin:0 auto;padding:16px;display:flex;flex-direction:column;gap:0}
+.app{max-width:100%;margin:0;padding:0;display:flex;flex-direction:column;gap:0}
 
 /* HEADER */
-.header{background:#1e2530;color:#fff;padding:0;display:flex;align-items:stretch;justify-content:space-between;border-radius:14px 14px 0 0;overflow:hidden;box-shadow:0 4px 16px #1e253028}
+.header{background:#1e2530;color:#fff;padding:0;display:flex;align-items:stretch;justify-content:space-between;border-radius:0;overflow:hidden;box-shadow:0 4px 16px #1e253028}
 .header-left{display:flex;align-items:center;gap:0}
 .header-stripe{width:8px;background:var(--amarillo);flex-shrink:0;align-self:stretch}
 .header-text{padding:14px 20px}
@@ -321,6 +321,20 @@ body{font-family:'Segoe UI',system-ui,sans-serif;font-size:14px;color:#1a1a1a;ba
 
     <!-- PROJECTS -->
     <div id="tab-projects">
+      <div id="proj-layout-grid" style="display:grid;grid-template-columns:270px 1fr;min-height:calc(100vh - 140px);transition:grid-template-columns .3s">
+        <!-- SIDEBAR REQUERIMIENTOS -->
+        <div id="req-sidebar-col" style="background:#141b24;border-right:2px solid #C9A22730;padding:14px;overflow-y:auto;transition:all .3s;min-width:270px;max-width:270px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+            <div style="font-size:10px;font-weight:800;color:#C9A227;text-transform:uppercase;letter-spacing:1px" id="req-sidebar-title">📋 Requerimientos pendientes</div>
+            <button onclick="toggleSidebar()" id="req-toggle-btn" title="Ocultar/Mostrar panel" style="background:rgba(201,162,39,.15);border:1px solid #C9A22740;border-radius:6px;color:#C9A227;cursor:pointer;font-size:11px;font-weight:700;padding:3px 8px;font-family:inherit;transition:.2s" onmouseover="this.style.background='rgba(201,162,39,.3)'" onmouseout="this.style.background='rgba(201,162,39,.15)'">◀</button>
+          </div>
+          <div id="req-list"></div>
+        </div>
+        <!-- CONTENIDO PRINCIPAL -->
+        <div style="overflow-y:auto;padding:14px">
+
+      <!-- SECCIÓN SPRINTS DESPLEGABLE -->
+      <div id="sprint-section" style="margin-bottom:16px"></div>
 
       <!-- BANNER SPRINT — solo aquí -->
       <div id="sprint-banner" style="background:#263040;border-radius:12px;margin-bottom:16px;overflow:hidden;border:1px solid #222">
@@ -406,7 +420,9 @@ body{font-family:'Segoe UI',system-ui,sans-serif;font-size:14px;color:#1a1a1a;ba
       </div>
       <div class="stats-row" id="global-stats"></div>
       <div style="margin-bottom:16px;background:#eef1f6;border-radius:12px;border-left:4px solid #C9A227;overflow:hidden;border:1px solid #dde1e9"><div onclick="const b=document.getElementById('team-dir-body');const ic=document.getElementById('team-dir-ic');if(b.style.display==='none'){b.style.display='';ic.textContent='▲'}else{b.style.display='none';ic.textContent='▼'}" style="display:flex;justify-content:space-between;align-items:center;padding:14px;cursor:pointer;background:#1e2530;border-radius:10px 10px 0 0"><span style="color:#C9A227;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px">👥 Equipo Scrum — Pioner</span><span id="team-dir-ic" style="color:#C9A227;font-size:12px">▲</span></div><div id="team-dir-body"><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(185px,1fr));gap:10px;padding:0 14px 14px" id="team-dir"></div></div></div><div class="proj-grid" id="proj-grid"></div>
-    </div>
+    </div><!-- fin columna derecha -->
+    </div><!-- fin grid 2 col -->
+    </div><!-- fin tab-projects -->
 
     <!-- BOARD -->
     <div id="tab-board" class="hidden">
@@ -811,17 +827,21 @@ function renderProjects(){
   const done=filtTickets.filter(t=>t.col==='Hecho').length;
   const inprog=filtTickets.filter(t=>t.col==='En progreso').length;
   const sprints=state.sprints.filter(s=>s.status==='active'&&_filtProjIds.includes(s.projId)).length;
+  var _nAct=_filtProjs.filter(function(p){return state.sprints.some(function(s){return s.projId===p.id&&s.status==='active';});}).length;
+  var _nPend=_filtProjs.length-_nAct;
   document.getElementById('global-stats').innerHTML=`
-    <div class="stat"><div class="val">${_filtProjs.length}</div><div class="lbl">Proyectos</div></div>
-    <div class="stat"><div class="val">${sprints}</div><div class="lbl">Sprints activos</div></div>
+    <div class="stat"><div class="val">${_nAct}</div><div class="lbl">Proyectos activos</div></div>
+    <div class="stat"><div class="val">${_nPend}</div><div class="lbl">Sin iniciar</div></div>
     <div class="stat"><div class="val">${inprog}</div><div class="lbl">En progreso</div></div>
     <div class="stat"><div class="val">${done}/${total}</div><div class="lbl">Tickets cerrados</div></div>
   `;
   const grid=document.getElementById('proj-grid');
   grid.innerHTML='';
-  const proysFiltrados = empresaFiltro === 'todas' ? state.projects : state.projects.filter(p=>p.empresa===empresaFiltro);
-  // Stats always global
-  proysFiltrados.forEach(p=>{
+  const proysFiltrados=getProyectosFiltrados();
+  // Grid principal: solo proyectos con sprint activo (o todos si ninguno activo)
+  const proysConSprint=proysFiltrados.filter(p=>state.sprints.some(s=>s.projId===p.id&&s.status==='active'));
+  const proysMostrar=proysConSprint.length>0?proysConSprint:proysFiltrados;
+  proysMostrar.forEach(p=>{
     const pct=getProgress(p.id);
     const tc=state.tickets.filter(t=>t.projId===p.id).length;
     const sp=state.sprints.find(s=>s.projId===p.id&&s.status==='active');
@@ -837,6 +857,7 @@ function renderProjects(){
       <h3>${p.name}</h3>
       <div class="meta">${p.desc}</div>
       ${p.sede?'<div class="meta" style="margin-top:4px"><span style="font-size:10px;background:#263040;color:#94a3b8;padding:2px 8px;border-radius:10px">📍 '+p.sede+'</span></div>':''}
+      ${p.area?'<div class="meta" style="margin-top:2px"><span style="font-size:10px;background:#1e3a5f;color:#7dd3fc;padding:2px 8px;border-radius:10px">🏢 '+p.area+'</span></div>':''}
       ${_getROIBadge(p)}
       <div class="meta" style="margin-top:8px">📋 ${tc} tickets &nbsp;·&nbsp; ${sp?'🏃 '+sp.name+' activo':'Sin sprint activo'}</div>
       <div class="meta" style="margin-top:4px">📅 ${fmtDate(p.start)} → ${fmtDate(p.end)}</div>
@@ -852,11 +873,97 @@ function renderProjects(){
   }
   // Actualizar directorio del equipo siempre
   renderTeam();
+  renderReqSidebar();
+}
+
+function toggleSidebar(){
+  var col = document.getElementById('req-sidebar-col');
+  var grid = document.getElementById('proj-layout-grid');
+  var btn = document.getElementById('req-toggle-btn');
+  var title = document.getElementById('req-sidebar-title');
+  var list = document.getElementById('req-list');
+  if(!col) return;
+  var isOpen = col.style.maxWidth !== '38px';
+  if(isOpen){
+    // Colapsar
+    col.style.minWidth = '38px';
+    col.style.maxWidth = '38px';
+    col.style.padding = '14px 6px';
+    col.style.overflow = 'hidden';
+    if(grid) grid.style.gridTemplateColumns = '38px 1fr';
+    if(btn){ btn.textContent = '▶'; btn.title = 'Mostrar panel'; }
+    if(title) title.style.display = 'none';
+    if(list) list.style.display = 'none';
+  } else {
+    // Expandir
+    col.style.minWidth = '270px';
+    col.style.maxWidth = '270px';
+    col.style.padding = '14px';
+    col.style.overflow = 'auto';
+    if(grid) grid.style.gridTemplateColumns = '270px 1fr';
+    if(btn){ btn.textContent = '◀'; btn.title = 'Ocultar panel'; }
+    if(title) title.style.display = '';
+    if(list) list.style.display = '';
+  }
+}
+
+function renderReqSidebar(){
+  var sb=document.getElementById('req-list');
+  if(!sb) return;
+  var pendientes=getProyectosFiltrados().filter(function(p){
+    return !state.sprints.some(function(s){return s.projId===p.id&&s.status==='active';});
+  });
+  if(!pendientes.length){
+    sb.innerHTML='<div style="font-size:11px;color:#475569;padding:16px 0;text-align:center">Sin requerimientos pendientes ✅</div>';
+    return;
+  }
+  sb.innerHTML='';
+  pendientes.forEach(function(p){
+    var pct=getProgress(p.id);
+    var tc=state.tickets.filter(function(t){return t.projId===p.id;}).length;
+    var ec=p.empresa==='MODIPSA'?'#1d4ed8':'#15803d';
+    var div=document.createElement('div');
+    div.style.cssText='background:#1e2530;border-radius:8px;padding:10px;margin-bottom:8px;cursor:pointer;border-left:3px solid #C9A227;transition:.15s';
+    div.addEventListener('mouseover',function(){this.style.background='#263040';});
+    div.addEventListener('mouseout',function(){this.style.background='#1e2530';});
+    div.addEventListener('click',(function(pid){return function(){openProject(pid);};})(p.id));
+    div.innerHTML='<div style="display:flex;align-items:center;gap:5px;margin-bottom:4px">'
+      +'<span style="font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;background:'+ec+'30;color:'+ec+'">'+p.empresa+'</span>'
+      +(p.sede?'<span style="font-size:9px;color:#64748b">📍'+p.sede+'</span>':'')
+      +'</div>'
+      +'<div style="font-size:11px;font-weight:700;color:#e2e8f0;line-height:1.3;margin-bottom:4px">'+p.name+'</div>'
+      +(p.area?'<div style="font-size:9px;color:#7dd3fc;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">🏢 '+p.area+'</div>':'')
+      +'<div style="font-size:10px;color:#475569;margin-bottom:5px">'+tc+' tickets · '+pct+'%</div>'
+      +'<div style="background:#263040;border-radius:3px;height:3px">'
+      +'<div style="background:#C9A227;height:3px;width:'+pct+'%;border-radius:3px"></div>'
+      +'</div>';
+    sb.appendChild(div);
+  });
 }
 
 function openProject(pid){
-  document.querySelector('[onclick="switchTab(\'board\',this)"]').click();
-  setTimeout(()=>{document.getElementById('board-proj').value=pid;populateSprints();},60);
+  // Cambiar al tab Board usando switchTab directamente
+  document.querySelectorAll('.nav button').forEach(function(b){b.classList.remove('active');});
+  ['projects','board','backlog','gantt','velocity','qa','bi','cronograma'].forEach(function(t){
+    var el=document.getElementById('tab-'+t);
+    if(el) el.classList.toggle('hidden', t!=='board');
+  });
+  var btnBoard=document.querySelector('.nav button[onclick*="board"]');
+  if(btnBoard) btnBoard.classList.add('active');
+
+  // Poblar selects del board y luego seleccionar el proyecto
+  setTimeout(function(){
+    populateBoardSelects();
+    setTimeout(function(){
+      var hidden=document.getElementById('board-proj');
+      var search=document.getElementById('board-proj-search');
+      var proj=state.projects.find(function(p){return p.id===pid;});
+      if(hidden) hidden.value=pid;
+      if(search&&proj) search.value=proj.name+(proj.sede?' — '+proj.sede:'')+(proj.empresa?' ('+proj.empresa+')':'');
+      populateSprints();
+      renderBoard();
+    },100);
+  },50);
 }
 
 // BOARD
@@ -1904,6 +2011,163 @@ function showNewProject(){
     <div class="form-row"><label>Nombre del proyecto</label><input id="np-name" placeholder="Ej: Control de Inventario" autofocus></div>
     <div class="form-row"><label>Empresa</label><select id="np-empresa">${empresaOpts}</select></div>
     <div class="form-row"><label>Sede / Local</label><select id="np-sede"><option value="">Sin sede especifica</option><option>Jicamarca</option><option>Azangaro</option><option>Zarate</option><option>Campoy</option><option>Huachipa</option><option>Todas las sedes</option></select></div>
+    <div class="form-row"><label>Área solicitante</label><select id="np-area"><option value="">— Selecciona el área —</option>
+<optgroup label="── GERENCIA ──">
+<option value="GERENCIA GENERAL">GERENCIA GENERAL</option>
+<option value="SUB GERENCIA GENERAL">SUB GERENCIA GENERAL</option>
+<option value="PROCESOS Y MEJORA CONTINUA">PROCESOS Y MEJORA CONTINUA</option>
+</optgroup>
+<optgroup label="── AUDITORIA Y LEGAL ──">
+<option value="AUDITORIA Y CONTROL INTERNO">AUDITORIA Y CONTROL INTERNO</option>
+<option value="AUDITORIA INTERNA">AUDITORIA INTERNA</option>
+<option value="CONTROL INTERNO">CONTROL INTERNO</option>
+<option value="LEGAL">LEGAL</option>
+<option value="CUENTAS GENERALES">CUENTAS GENERALES</option>
+</optgroup>
+<optgroup label="── ADMINISTRACION Y FINANZAS ──">
+<option value="ADMINISTRACION Y FINANZAS">ADMINISTRACION Y FINANZAS</option>
+<option value="FINANZAS">FINANZAS</option>
+<option value="CONTABILIDAD GENERAL">CONTABILIDAD GENERAL</option>
+<option value="CONTABILIDAD DE COSTOS">CONTABILIDAD DE COSTOS</option>
+<option value="CREDITOS Y COBRANZAS">CREDITOS Y COBRANZAS</option>
+<option value="TESORERIA">TESORERIA</option>
+</optgroup>
+<optgroup label="── LOGISTICA Y ALMACEN ──">
+<option value="LOGISTICA">LOGISTICA</option>
+<option value="PLANEAMIENTO LOGISTICO">PLANEAMIENTO LOGISTICO</option>
+<option value="COMPRAS">COMPRAS</option>
+<option value="COMERCIO EXTERIOR">COMERCIO EXTERIOR</option>
+<option value="ALMACEN M.P. TELA PLANO">ALMACEN M.P. TELA PLANO</option>
+<option value="ALMACEN M.P. TELA PUNTO">ALMACEN M.P. TELA PUNTO</option>
+<option value="ALMACEN M.P. HILADO">ALMACEN M.P. HILADO</option>
+<option value="ALMACEN M.A. AVIOS PLANO">ALMACEN M.A. AVIOS PLANO</option>
+<option value="ALMACEN M.A. AVIOS PUNTO">ALMACEN M.A. AVIOS PUNTO</option>
+<option value="ALMACEN M.A. INSUMOS QUIMICOS">ALMACEN M.A. INSUMOS QUIMICOS</option>
+<option value="ALMACEN M.A. INSUMOS QUIMICOS TINTORERIA">ALMACEN M.A. INSUMOS QUIMICOS TINTORERIA</option>
+<option value="ALMACEN MANTENIMIENTO, REPUESTOS Y ACTIVOS">ALMACEN MANTENIMIENTO, REPUESTOS Y ACTIVOS</option>
+<option value="ALMACEN SUMINISTROS DIVERSOS ECONOMATO">ALMACEN SUMINISTROS DIVERSOS ECONOMATO</option>
+<option value="ALMACEN DE SUMINISTROS PUNTO">ALMACEN DE SUMINISTROS PUNTO</option>
+<option value="ALMACEN DE PRODUCTOS TERMINADOS">ALMACEN DE PRODUCTOS TERMINADOS</option>
+<option value="APT - TRANSITO">APT - TRANSITO</option>
+<option value="APT - TIENDAS PROPIAS">APT - TIENDAS PROPIAS</option>
+<option value="APT - TIENDAS POR DEPARTAMENTO">APT - TIENDAS POR DEPARTAMENTO</option>
+<option value="APT - ECOMMERCE">APT - ECOMMERCE</option>
+<option value="APT - TIENDAS OUTLETS">APT - TIENDAS OUTLETS</option>
+<option value="ALMACEN DE REPROCESOS">ALMACEN DE REPROCESOS</option>
+<option value="ALMACEN DE MUESTRAS INTERNAS">ALMACEN DE MUESTRAS INTERNAS</option>
+</optgroup>
+<optgroup label="── OPERACIONES ──">
+<option value="OPERACIONES">OPERACIONES</option>
+<option value="PLANEAMIENTO Y PROGRAMACION PLANO (PCP)">PLANEAMIENTO Y PROGRAMACION PLANO (PCP)</option>
+<option value="PLANEAMIENTO Y PROGRAMACION PUNTO (PCP)">PLANEAMIENTO Y PROGRAMACION PUNTO (PCP)</option>
+<option value="PLANEAMIENTO Y PROGRAMACION TEXTIL">PLANEAMIENTO Y PROGRAMACION TEXTIL</option>
+<option value="DESARROLLO PRODUCTO PLANO">DESARROLLO PRODUCTO PLANO</option>
+<option value="DESARROLLO PRODUCTO PUNTO">DESARROLLO PRODUCTO PUNTO</option>
+<option value="DESARROLLO PRODUCTO TEXTIL">DESARROLLO PRODUCTO TEXTIL</option>
+<option value="DESARROLLO PRODUCTO FANTASIA">DESARROLLO PRODUCTO FANTASIA</option>
+<option value="DISEÑO GRAFICO TEXTIL">DISEÑO GRAFICO TEXTIL</option>
+<option value="INGENIERIA PLANO">INGENIERIA PLANO</option>
+<option value="INGENIERIA PUNTO">INGENIERIA PUNTO</option>
+<option value="INGENIERIA TEXTIL">INGENIERIA TEXTIL</option>
+</optgroup>
+<optgroup label="── PRODUCCION PLANO ──">
+<option value="PRODUCCION PLANO">PRODUCCION PLANO</option>
+<option value="CORTE PLANO">CORTE PLANO</option>
+<option value="BORDADOS PLANO">BORDADOS PLANO</option>
+<option value="COSTURA PLANO">COSTURA PLANO</option>
+<option value="MUESTRAS LAVANDERIA PLANO">MUESTRAS LAVANDERIA PLANO</option>
+<option value="LAVANDERIA DE PRODUCCION">LAVANDERIA DE PRODUCCION</option>
+<option value="PLANCHADO PLANO">PLANCHADO PLANO</option>
+<option value="ACABADO PLANO">ACABADO PLANO</option>
+</optgroup>
+<optgroup label="── PRODUCCION PUNTO ──">
+<option value="PRODUCCION PUNTO">PRODUCCION PUNTO</option>
+<option value="CORTE PUNTO">CORTE PUNTO</option>
+<option value="ESTAMPADO DIGITAL PUNTO">ESTAMPADO DIGITAL PUNTO</option>
+<option value="ESTAMPADO SERIGRAFICO PUNTO">ESTAMPADO SERIGRAFICO PUNTO</option>
+<option value="COSTURA PUNTO">COSTURA PUNTO</option>
+<option value="ACABADO PUNTO">ACABADO PUNTO</option>
+</optgroup>
+<optgroup label="── PRODUCCION TEXTIL ──">
+<option value="PRODUCCION TEXTIL">PRODUCCION TEXTIL</option>
+<option value="LABORATORIO TEXTIL">LABORATORIO TEXTIL</option>
+<option value="TEJEDURIA DE LONAS Y CORREAS">TEJEDURIA DE LONAS Y CORREAS</option>
+<option value="TEJEDURIA">TEJEDURIA</option>
+<option value="LAVANDERIA TEXTIL">LAVANDERIA TEXTIL</option>
+<option value="TINTORERIA DE HILOS TEXTIL">TINTORERIA DE HILOS TEXTIL</option>
+<option value="TINTORERIA DE TELAS TEXTIL">TINTORERIA DE TELAS TEXTIL</option>
+<option value="ACABADO TEXTIL">ACABADO TEXTIL</option>
+<option value="DESPACHO TEXTIL">DESPACHO TEXTIL</option>
+<option value="SERVICIOS EXTERNOS PLANO">SERVICIOS EXTERNOS PLANO</option>
+<option value="SERVICIOS EXTERNOS PUNTO">SERVICIOS EXTERNOS PUNTO</option>
+<option value="MAQUILA">MAQUILA</option>
+</optgroup>
+<optgroup label="── CONTROL DE CALIDAD ──">
+<option value="CONTROL DE CALIDAD">CONTROL DE CALIDAD</option>
+<option value="CONTROL DE CALIDAD PLANO">CONTROL DE CALIDAD PLANO</option>
+<option value="CONTROL DE CALIDAD PUNTO">CONTROL DE CALIDAD PUNTO</option>
+<option value="CONTROL DE CALIDAD TEXTIL">CONTROL DE CALIDAD TEXTIL</option>
+</optgroup>
+<optgroup label="── MANTENIMIENTO ──">
+<option value="MANTENIMIENTO">MANTENIMIENTO</option>
+<option value="MANTENIMIENTO DE MAQUINAS Y EQUIPOS">MANTENIMIENTO DE MAQUINAS Y EQUIPOS</option>
+<option value="CONTROL SCADA Y AUTOMATIZACION">CONTROL SCADA Y AUTOMATIZACION</option>
+<option value="MANTENIMIENTO DE PLANTA Y MUEBLES">MANTENIMIENTO DE PLANTA Y MUEBLES</option>
+<option value="MANTENIMIENTO ELECTRICO DE PLANTA">MANTENIMIENTO ELECTRICO DE PLANTA</option>
+<option value="AIRE ACONDICIONADO">AIRE ACONDICIONADO</option>
+<option value="CONTROL SCADA">CONTROL SCADA</option>
+<option value="MANTENIMIENTO MECANICO">MANTENIMIENTO MECANICO</option>
+<option value="MANTENIMIENTO DE ELECTRICIDAD Y ELECTRONICA">MANTENIMIENTO DE ELECTRICIDAD Y ELECTRONICA</option>
+<option value="MANTENIMIENTO DE OPERACIONES COSTURA">MANTENIMIENTO DE OPERACIONES COSTURA</option>
+<option value="MANTENIMIENTO DE OPERACIONES TEJEDURIA">MANTENIMIENTO DE OPERACIONES TEJEDURIA</option>
+<option value="MANTENIMIENTO MECANICO VEHICULAR">MANTENIMIENTO MECANICO VEHICULAR</option>
+</optgroup>
+<optgroup label="── SEGURIDAD Y SERVICIOS ──">
+<option value="SEGURIDAD Y VIGILANCIA">SEGURIDAD Y VIGILANCIA</option>
+<option value="SSOMA">SSOMA</option>
+<option value="CCTV">CCTV</option>
+<option value="LIMPIEZA">LIMPIEZA</option>
+</optgroup>
+<optgroup label="── COMERCIAL Y MARKETING ──">
+<option value="COMERCIAL Y MARKETING">COMERCIAL Y MARKETING</option>
+<option value="ADMINISTRACION COMERCIAL">ADMINISTRACION COMERCIAL</option>
+<option value="MARKETING">MARKETING</option>
+<option value="IMPRESIONES DE MARKETING">IMPRESIONES DE MARKETING</option>
+<option value="CANAL TIENDAS PROPIAS">CANAL TIENDAS PROPIAS</option>
+<option value="FUERZA DE VENTAS">FUERZA DE VENTAS</option>
+<option value="CANAL DEPARTAMENTAL">CANAL DEPARTAMENTAL</option>
+<option value="RIPLEY">RIPLEY</option>
+<option value="SAGA">SAGA</option>
+<option value="OECHSLE">OECHSLE</option>
+<option value="ESTILOS">ESTILOS</option>
+<option value="CANAL HORIZONTAL">CANAL HORIZONTAL</option>
+<option value="CANAL ECOMMERCE">CANAL ECOMMERCE</option>
+<option value="EXPORTACION">EXPORTACION</option>
+<option value="VENTAS TEXTIL">VENTAS TEXTIL</option>
+<option value="GESTION DE MARCA - PRODUCTO">GESTION DE MARCA - PRODUCTO</option>
+<option value="PLANEAMIENTO COMERCIAL">PLANEAMIENTO COMERCIAL</option>
+<option value="ABASTECIMIENTO RETAIL">ABASTECIMIENTO RETAIL</option>
+<option value="DISEÑO DE MODAS">DISEÑO DE MODAS</option>
+<option value="DISEÑO GRAFICO">DISEÑO GRAFICO</option>
+</optgroup>
+<optgroup label="── RECURSOS HUMANOS ──">
+<option value="RECURSOS HUMANOS">RECURSOS HUMANOS</option>
+<option value="EMPLEABILIDAD Y DESARROLLO HUMANO">EMPLEABILIDAD Y DESARROLLO HUMANO</option>
+<option value="BIENESTAR SOCIAL">BIENESTAR SOCIAL</option>
+<option value="ADMINISTRACION DE PERSONAL">ADMINISTRACION DE PERSONAL</option>
+<option value="PLANILLAS">PLANILLAS</option>
+</optgroup>
+<optgroup label="── TECNOLOGIA DE INFORMACION ──">
+<option value="DESARROLLO DE SOFTWARE">DESARROLLO DE SOFTWARE</option>
+<option value="DESARROLLO WEB">DESARROLLO WEB</option>
+<option value="INFRAESTRUCTURA DE RED">INFRAESTRUCTURA DE RED</option>
+<option value="INTELIGENCIA DE NEGOCIO">INTELIGENCIA DE NEGOCIO</option>
+<option value="TECNOLOGIAS DE LA INFORMACION">TECNOLOGIAS DE LA INFORMACION</option>
+</optgroup>
+<optgroup label="── PLANIFICACION ──">
+<option value="PLANIFICACION DE PROYECTOS">PLANIFICACION DE PROYECTOS</option>
+</optgroup>
+</select></div>
     <div class="form-row"><label>Descripción</label><textarea id="np-desc" rows="2" placeholder="¿Qué se va a construir?"></textarea></div>
     <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
       <div><label>Fecha inicio</label><input type="date" id="np-start" value="${new Date().toISOString().split('T')[0]}"></div>
@@ -1937,8 +2201,9 @@ function createProject(){
     costoReal:0,beneficioReal:0,indicadorPost:'',fase:'planificacion',notas:[]
   };
   var _npSede=(document.getElementById('np-sede')||{value:''}).value||'';
+  var _npArea=(document.getElementById('np-area')||{value:''}).value||'';
   state.projects.push({id:pid,name,color:'#C9A227',empresa:document.getElementById('np-empresa').value,
-    sede:_npSede,
+    sede:_npSede, area:_npArea,
     status:'planning',start:document.getElementById('np-start').value,end:document.getElementById('np-end').value,
     desc:document.getElementById('np-desc').value||'Sin descripción',prefix,roi:_npRoi});
   state.sprints.push({id:'s'+state.nextId.s++,projId:pid,name:'Sprint 1',
@@ -1962,6 +2227,163 @@ function editProject(pid){
     <div class="form-row"><label>Empresa</label><select id="ep-empresa">${empresaOpts}</select></div>
     <div class="form-row"><label>Estado</label><select id="ep-status">${statusOpts}</select></div>
     <div class="form-row"><label>Sede / Local</label><select id="ep-sede"><option value="">Sin sede especifica</option><option ${(p.sede||'')==='Jicamarca'?'selected':''}>Jicamarca</option><option ${(p.sede||'')==='Azangaro'?'selected':''}>Azangaro</option><option ${(p.sede||'')==='Zarate'?'selected':''}>Zarate</option><option ${(p.sede||'')==='Campoy'?'selected':''}>Campoy</option><option ${(p.sede||'')==='Huachipa'?'selected':''}>Huachipa</option><option ${(p.sede||'')==='Todas las sedes'?'selected':''}>Todas las sedes</option></select></div>
+    <div class="form-row"><label>Área solicitante</label><select id="ep-area"><option value="">— Selecciona el área —</option>
+<optgroup label="── GERENCIA ──">
+<option value="GERENCIA GENERAL">GERENCIA GENERAL</option>
+<option value="SUB GERENCIA GENERAL">SUB GERENCIA GENERAL</option>
+<option value="PROCESOS Y MEJORA CONTINUA">PROCESOS Y MEJORA CONTINUA</option>
+</optgroup>
+<optgroup label="── AUDITORIA Y LEGAL ──">
+<option value="AUDITORIA Y CONTROL INTERNO">AUDITORIA Y CONTROL INTERNO</option>
+<option value="AUDITORIA INTERNA">AUDITORIA INTERNA</option>
+<option value="CONTROL INTERNO">CONTROL INTERNO</option>
+<option value="LEGAL">LEGAL</option>
+<option value="CUENTAS GENERALES">CUENTAS GENERALES</option>
+</optgroup>
+<optgroup label="── ADMINISTRACION Y FINANZAS ──">
+<option value="ADMINISTRACION Y FINANZAS">ADMINISTRACION Y FINANZAS</option>
+<option value="FINANZAS">FINANZAS</option>
+<option value="CONTABILIDAD GENERAL">CONTABILIDAD GENERAL</option>
+<option value="CONTABILIDAD DE COSTOS">CONTABILIDAD DE COSTOS</option>
+<option value="CREDITOS Y COBRANZAS">CREDITOS Y COBRANZAS</option>
+<option value="TESORERIA">TESORERIA</option>
+</optgroup>
+<optgroup label="── LOGISTICA Y ALMACEN ──">
+<option value="LOGISTICA">LOGISTICA</option>
+<option value="PLANEAMIENTO LOGISTICO">PLANEAMIENTO LOGISTICO</option>
+<option value="COMPRAS">COMPRAS</option>
+<option value="COMERCIO EXTERIOR">COMERCIO EXTERIOR</option>
+<option value="ALMACEN M.P. TELA PLANO">ALMACEN M.P. TELA PLANO</option>
+<option value="ALMACEN M.P. TELA PUNTO">ALMACEN M.P. TELA PUNTO</option>
+<option value="ALMACEN M.P. HILADO">ALMACEN M.P. HILADO</option>
+<option value="ALMACEN M.A. AVIOS PLANO">ALMACEN M.A. AVIOS PLANO</option>
+<option value="ALMACEN M.A. AVIOS PUNTO">ALMACEN M.A. AVIOS PUNTO</option>
+<option value="ALMACEN M.A. INSUMOS QUIMICOS">ALMACEN M.A. INSUMOS QUIMICOS</option>
+<option value="ALMACEN M.A. INSUMOS QUIMICOS TINTORERIA">ALMACEN M.A. INSUMOS QUIMICOS TINTORERIA</option>
+<option value="ALMACEN MANTENIMIENTO, REPUESTOS Y ACTIVOS">ALMACEN MANTENIMIENTO, REPUESTOS Y ACTIVOS</option>
+<option value="ALMACEN SUMINISTROS DIVERSOS ECONOMATO">ALMACEN SUMINISTROS DIVERSOS ECONOMATO</option>
+<option value="ALMACEN DE SUMINISTROS PUNTO">ALMACEN DE SUMINISTROS PUNTO</option>
+<option value="ALMACEN DE PRODUCTOS TERMINADOS">ALMACEN DE PRODUCTOS TERMINADOS</option>
+<option value="APT - TRANSITO">APT - TRANSITO</option>
+<option value="APT - TIENDAS PROPIAS">APT - TIENDAS PROPIAS</option>
+<option value="APT - TIENDAS POR DEPARTAMENTO">APT - TIENDAS POR DEPARTAMENTO</option>
+<option value="APT - ECOMMERCE">APT - ECOMMERCE</option>
+<option value="APT - TIENDAS OUTLETS">APT - TIENDAS OUTLETS</option>
+<option value="ALMACEN DE REPROCESOS">ALMACEN DE REPROCESOS</option>
+<option value="ALMACEN DE MUESTRAS INTERNAS">ALMACEN DE MUESTRAS INTERNAS</option>
+</optgroup>
+<optgroup label="── OPERACIONES ──">
+<option value="OPERACIONES">OPERACIONES</option>
+<option value="PLANEAMIENTO Y PROGRAMACION PLANO (PCP)">PLANEAMIENTO Y PROGRAMACION PLANO (PCP)</option>
+<option value="PLANEAMIENTO Y PROGRAMACION PUNTO (PCP)">PLANEAMIENTO Y PROGRAMACION PUNTO (PCP)</option>
+<option value="PLANEAMIENTO Y PROGRAMACION TEXTIL">PLANEAMIENTO Y PROGRAMACION TEXTIL</option>
+<option value="DESARROLLO PRODUCTO PLANO">DESARROLLO PRODUCTO PLANO</option>
+<option value="DESARROLLO PRODUCTO PUNTO">DESARROLLO PRODUCTO PUNTO</option>
+<option value="DESARROLLO PRODUCTO TEXTIL">DESARROLLO PRODUCTO TEXTIL</option>
+<option value="DESARROLLO PRODUCTO FANTASIA">DESARROLLO PRODUCTO FANTASIA</option>
+<option value="DISEÑO GRAFICO TEXTIL">DISEÑO GRAFICO TEXTIL</option>
+<option value="INGENIERIA PLANO">INGENIERIA PLANO</option>
+<option value="INGENIERIA PUNTO">INGENIERIA PUNTO</option>
+<option value="INGENIERIA TEXTIL">INGENIERIA TEXTIL</option>
+</optgroup>
+<optgroup label="── PRODUCCION PLANO ──">
+<option value="PRODUCCION PLANO">PRODUCCION PLANO</option>
+<option value="CORTE PLANO">CORTE PLANO</option>
+<option value="BORDADOS PLANO">BORDADOS PLANO</option>
+<option value="COSTURA PLANO">COSTURA PLANO</option>
+<option value="MUESTRAS LAVANDERIA PLANO">MUESTRAS LAVANDERIA PLANO</option>
+<option value="LAVANDERIA DE PRODUCCION">LAVANDERIA DE PRODUCCION</option>
+<option value="PLANCHADO PLANO">PLANCHADO PLANO</option>
+<option value="ACABADO PLANO">ACABADO PLANO</option>
+</optgroup>
+<optgroup label="── PRODUCCION PUNTO ──">
+<option value="PRODUCCION PUNTO">PRODUCCION PUNTO</option>
+<option value="CORTE PUNTO">CORTE PUNTO</option>
+<option value="ESTAMPADO DIGITAL PUNTO">ESTAMPADO DIGITAL PUNTO</option>
+<option value="ESTAMPADO SERIGRAFICO PUNTO">ESTAMPADO SERIGRAFICO PUNTO</option>
+<option value="COSTURA PUNTO">COSTURA PUNTO</option>
+<option value="ACABADO PUNTO">ACABADO PUNTO</option>
+</optgroup>
+<optgroup label="── PRODUCCION TEXTIL ──">
+<option value="PRODUCCION TEXTIL">PRODUCCION TEXTIL</option>
+<option value="LABORATORIO TEXTIL">LABORATORIO TEXTIL</option>
+<option value="TEJEDURIA DE LONAS Y CORREAS">TEJEDURIA DE LONAS Y CORREAS</option>
+<option value="TEJEDURIA">TEJEDURIA</option>
+<option value="LAVANDERIA TEXTIL">LAVANDERIA TEXTIL</option>
+<option value="TINTORERIA DE HILOS TEXTIL">TINTORERIA DE HILOS TEXTIL</option>
+<option value="TINTORERIA DE TELAS TEXTIL">TINTORERIA DE TELAS TEXTIL</option>
+<option value="ACABADO TEXTIL">ACABADO TEXTIL</option>
+<option value="DESPACHO TEXTIL">DESPACHO TEXTIL</option>
+<option value="SERVICIOS EXTERNOS PLANO">SERVICIOS EXTERNOS PLANO</option>
+<option value="SERVICIOS EXTERNOS PUNTO">SERVICIOS EXTERNOS PUNTO</option>
+<option value="MAQUILA">MAQUILA</option>
+</optgroup>
+<optgroup label="── CONTROL DE CALIDAD ──">
+<option value="CONTROL DE CALIDAD">CONTROL DE CALIDAD</option>
+<option value="CONTROL DE CALIDAD PLANO">CONTROL DE CALIDAD PLANO</option>
+<option value="CONTROL DE CALIDAD PUNTO">CONTROL DE CALIDAD PUNTO</option>
+<option value="CONTROL DE CALIDAD TEXTIL">CONTROL DE CALIDAD TEXTIL</option>
+</optgroup>
+<optgroup label="── MANTENIMIENTO ──">
+<option value="MANTENIMIENTO">MANTENIMIENTO</option>
+<option value="MANTENIMIENTO DE MAQUINAS Y EQUIPOS">MANTENIMIENTO DE MAQUINAS Y EQUIPOS</option>
+<option value="CONTROL SCADA Y AUTOMATIZACION">CONTROL SCADA Y AUTOMATIZACION</option>
+<option value="MANTENIMIENTO DE PLANTA Y MUEBLES">MANTENIMIENTO DE PLANTA Y MUEBLES</option>
+<option value="MANTENIMIENTO ELECTRICO DE PLANTA">MANTENIMIENTO ELECTRICO DE PLANTA</option>
+<option value="AIRE ACONDICIONADO">AIRE ACONDICIONADO</option>
+<option value="CONTROL SCADA">CONTROL SCADA</option>
+<option value="MANTENIMIENTO MECANICO">MANTENIMIENTO MECANICO</option>
+<option value="MANTENIMIENTO DE ELECTRICIDAD Y ELECTRONICA">MANTENIMIENTO DE ELECTRICIDAD Y ELECTRONICA</option>
+<option value="MANTENIMIENTO DE OPERACIONES COSTURA">MANTENIMIENTO DE OPERACIONES COSTURA</option>
+<option value="MANTENIMIENTO DE OPERACIONES TEJEDURIA">MANTENIMIENTO DE OPERACIONES TEJEDURIA</option>
+<option value="MANTENIMIENTO MECANICO VEHICULAR">MANTENIMIENTO MECANICO VEHICULAR</option>
+</optgroup>
+<optgroup label="── SEGURIDAD Y SERVICIOS ──">
+<option value="SEGURIDAD Y VIGILANCIA">SEGURIDAD Y VIGILANCIA</option>
+<option value="SSOMA">SSOMA</option>
+<option value="CCTV">CCTV</option>
+<option value="LIMPIEZA">LIMPIEZA</option>
+</optgroup>
+<optgroup label="── COMERCIAL Y MARKETING ──">
+<option value="COMERCIAL Y MARKETING">COMERCIAL Y MARKETING</option>
+<option value="ADMINISTRACION COMERCIAL">ADMINISTRACION COMERCIAL</option>
+<option value="MARKETING">MARKETING</option>
+<option value="IMPRESIONES DE MARKETING">IMPRESIONES DE MARKETING</option>
+<option value="CANAL TIENDAS PROPIAS">CANAL TIENDAS PROPIAS</option>
+<option value="FUERZA DE VENTAS">FUERZA DE VENTAS</option>
+<option value="CANAL DEPARTAMENTAL">CANAL DEPARTAMENTAL</option>
+<option value="RIPLEY">RIPLEY</option>
+<option value="SAGA">SAGA</option>
+<option value="OECHSLE">OECHSLE</option>
+<option value="ESTILOS">ESTILOS</option>
+<option value="CANAL HORIZONTAL">CANAL HORIZONTAL</option>
+<option value="CANAL ECOMMERCE">CANAL ECOMMERCE</option>
+<option value="EXPORTACION">EXPORTACION</option>
+<option value="VENTAS TEXTIL">VENTAS TEXTIL</option>
+<option value="GESTION DE MARCA - PRODUCTO">GESTION DE MARCA - PRODUCTO</option>
+<option value="PLANEAMIENTO COMERCIAL">PLANEAMIENTO COMERCIAL</option>
+<option value="ABASTECIMIENTO RETAIL">ABASTECIMIENTO RETAIL</option>
+<option value="DISEÑO DE MODAS">DISEÑO DE MODAS</option>
+<option value="DISEÑO GRAFICO">DISEÑO GRAFICO</option>
+</optgroup>
+<optgroup label="── RECURSOS HUMANOS ──">
+<option value="RECURSOS HUMANOS">RECURSOS HUMANOS</option>
+<option value="EMPLEABILIDAD Y DESARROLLO HUMANO">EMPLEABILIDAD Y DESARROLLO HUMANO</option>
+<option value="BIENESTAR SOCIAL">BIENESTAR SOCIAL</option>
+<option value="ADMINISTRACION DE PERSONAL">ADMINISTRACION DE PERSONAL</option>
+<option value="PLANILLAS">PLANILLAS</option>
+</optgroup>
+<optgroup label="── TECNOLOGIA DE INFORMACION ──">
+<option value="DESARROLLO DE SOFTWARE">DESARROLLO DE SOFTWARE</option>
+<option value="DESARROLLO WEB">DESARROLLO WEB</option>
+<option value="INFRAESTRUCTURA DE RED">INFRAESTRUCTURA DE RED</option>
+<option value="INTELIGENCIA DE NEGOCIO">INTELIGENCIA DE NEGOCIO</option>
+<option value="TECNOLOGIAS DE LA INFORMACION">TECNOLOGIAS DE LA INFORMACION</option>
+</optgroup>
+<optgroup label="── PLANIFICACION ──">
+<option value="PLANIFICACION DE PROYECTOS">PLANIFICACION DE PROYECTOS</option>
+</optgroup>
+</select></div>
     <div class="form-row"><label>Descripción</label><textarea id="ep-desc" rows="2">${p.desc||''}</textarea></div>
     <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
       <div><label>📅 Fecha inicio</label><input type="date" id="ep-start" value="${p.start||''}"></div>
@@ -1986,6 +2408,7 @@ function saveEditProject(pid){
   p.start=document.getElementById('ep-start').value;
   p.end=document.getElementById('ep-end').value;
   p.sede=(document.getElementById('ep-sede')||{value:''}).value||'';
+  p.area=(document.getElementById('ep-area')||{value:''}).value||'';
   // Guardar ROI si hay campos disponibles
   if(!p.roi) p.roi={notas:[]};
   var _epPres=document.getElementById('ep-roi-presupuesto');
@@ -2642,8 +3065,10 @@ function createTicket(){
   if(!title){alert('El título es requerido');return;}
   const proj=state.projects.find(p=>p.id===projId);
   const prefix=proj?.prefix||(proj?.name.split(' ').map(w=>w[0]).join('').toUpperCase().substring(0,3))||'TK';
-  const count=state.tickets.filter(t=>t.projId===projId).length+1;
-  state.tickets.push({id:`${prefix}-${String(count).padStart(2,'0')}`,projId,
+  var _mx=0;state.tickets.forEach(function(t){if(t.projId===projId){var m=t.id.match(/-(\d+)$/);if(m)_mx=Math.max(_mx,parseInt(m[1]));}});
+  var _ni=_mx+1,_nid=prefix+'-'+String(_ni).padStart(2,'0');
+  while(state.tickets.some(function(t){return t.id===_nid;})){_ni++;_nid=prefix+'-'+String(_ni).padStart(2,'0');}
+  state.tickets.push({id:_nid,projId,
     sprintId:document.getElementById('nt-sprint').value||null,
     title,desc:document.getElementById('nt-desc').value,col:document.getElementById('nt-col').value,
     priority:document.getElementById('nt-priority').value,sp:parseInt(document.getElementById('nt-sp').value),
@@ -3436,6 +3861,8 @@ function guardarTicket(tid){
   saveState();closeModal();
   renderBoard();renderBacklog();renderProjects();
   renderTeam();
+  renderSprintSection();
+  renderReqSidebar();
 }
 function deleteTicket(tid){
   if(!confirm('¿Eliminar este ticket?'))return;
@@ -3951,8 +4378,9 @@ async function importarSolicitudes(){
       if(!proj) proj=state.projects[0];
       if(!proj)return;
       const prefix=proj.prefix||(proj.name.split(' ').map(w=>w[0]).join('').toUpperCase().substring(0,3));
-      const count=state.tickets.filter(t=>t.projId===proj.id).length+1;
-      const tid=prefix+'-'+String(count).padStart(2,'0');
+      var _im=0;state.tickets.forEach(function(t){if(t.projId===proj.id){var m=t.id.match(/-(\d+)$/);if(m)_im=Math.max(_im,parseInt(m[1]));}});
+      var _ii=_im+1,tid=prefix+'-'+String(_ii).padStart(2,'0');
+      while(state.tickets.some(function(t){return t.id===tid;})){_ii++;tid=prefix+'-'+String(_ii).padStart(2,'0');}
       state.tickets.push({
         id:tid, projId:proj.id, sprintId:null,
         title:sol.titulo,
@@ -4261,33 +4689,316 @@ function guardarFechasSprint(sid){
 }
 
 function exportarExcelGeneral(){
-  var html='<div class="modal-header"><h2>Exportar a Excel</h2><button class="close-btn" onclick="closeModal()">x</button></div>';
-  html+='<div class="modal-body" style="padding:24px 28px">';
-  html+='<div style="font-size:13px;color:#64748b;margin-bottom:16px">Elige que informacion exportar:</div>';
-  html+='<div style="display:flex;flex-direction:column;gap:10px">';
+  var html='<div class="modal-header" style="background:#1e2530;padding:20px 28px;border-bottom:3px solid #C9A227">'
+    +'<h2 style="color:#C9A227;margin:0;font-size:18px">📊 Exportar a Excel</h2>'
+    +'<button class="close-btn" onclick="closeModal()" style="background:rgba(255,255,255,.1);border:1px solid #333;color:#aaa;padding:8px 14px;border-radius:8px;cursor:pointer;font-size:16px">✕</button>'
+    +'</div>'
+    +'<div style="padding:28px;background:#f8fafc">'
+    +'<div style="font-size:13px;color:#64748b;margin-bottom:20px">Elige qué información exportar — formato para Gerencia:</div>'
+    +'<div style="display:flex;flex-direction:column;gap:10px">'
 
-  html+='<div onclick="exportProyectos()" style="display:flex;align-items:center;gap:14px;padding:14px;background:#f8fafc;border:1px solid #dde1e9;border-radius:10px;cursor:pointer" onmouseover="this.style.borderColor=\'#C9A227\'" onmouseout="this.style.borderColor=\'#dde1e9\'">';
-  html+='<div style="width:40px;height:40px;background:#fef9ec;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">📁</div>';
-  html+='<div><div style="font-weight:700;color:#1e2530;font-size:13px">Todos los proyectos</div>';
-  html+='<div style="font-size:11px;color:#64748b;margin-top:2px">'+state.projects.length+' proyectos — nombre, empresa, sede, estado, fechas, progreso, ROI</div></div></div>';
+    // Opción 1: Todos los proyectos
+    +'<div onclick="exportarExcelTipo(\'proyectos\')" style="display:flex;align-items:center;gap:16px;background:#fff;border:2px solid #e2e8f0;border-radius:12px;padding:16px 20px;cursor:pointer;transition:.15s" onmouseover="this.style.borderColor=\'#C9A227\';this.style.background=\'#fffdf0\'" onmouseout="this.style.borderColor=\'#e2e8f0\';this.style.background=\'#fff\'">'
+    +'<span style="font-size:28px">📁</span>'
+    +'<div><div style="font-weight:700;font-size:14px;color:#1e2530">Todos los proyectos</div>'
+    +'<div style="font-size:12px;color:#64748b;margin-top:2px">'+state.projects.length+' proyectos — nombre, empresa, sede, área, estado, sprints, progreso</div></div>'
+    +'</div>'
 
-  html+='<div onclick="exportTicketsAll()" style="display:flex;align-items:center;gap:14px;padding:14px;background:#f8fafc;border:1px solid #dde1e9;border-radius:10px;cursor:pointer" onmouseover="this.style.borderColor=\'#C9A227\'" onmouseout="this.style.borderColor=\'#dde1e9\'">';
-  html+='<div style="width:40px;height:40px;background:#fef9ec;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">🎫</div>';
-  html+='<div><div style="font-weight:700;color:#1e2530;font-size:13px">Todos los tickets</div>';
-  html+='<div style="font-size:11px;color:#64748b;margin-top:2px">'+state.tickets.length+' tickets — ID, proyecto, sprint, prioridad, estado, asignado</div></div></div>';
+    // Opción 2: Todos los tickets
+    +'<div onclick="exportarExcelTipo(\'tickets\')" style="display:flex;align-items:center;gap:16px;background:#fff;border:2px solid #e2e8f0;border-radius:12px;padding:16px 20px;cursor:pointer;transition:.15s" onmouseover="this.style.borderColor=\'#C9A227\';this.style.background=\'#fffdf0\'" onmouseout="this.style.borderColor=\'#e2e8f0\';this.style.background=\'#fff\'">'
+    +'<span style="font-size:28px">🎫</span>'
+    +'<div><div style="font-weight:700;font-size:14px;color:#1e2530">Todos los tickets</div>'
+    +'<div style="font-size:12px;color:#64748b;margin-top:2px">'+state.tickets.length+' tickets — ID, proyecto, sprint, prioridad, estado, asignado</div></div>'
+    +'</div>'
 
-  html+='<div onclick="exportCompleto()" style="display:flex;align-items:center;gap:14px;padding:14px;background:#fef9ec;border:2px solid #C9A22760;border-radius:10px;cursor:pointer" onmouseover="this.style.borderColor=\'#C9A227\'" onmouseout="this.style.borderColor=\'#C9A22760\'">';
-  html+='<div style="width:40px;height:40px;background:#C9A22720;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">📊</div>';
-  html+='<div><div style="font-weight:700;color:#1e2530;font-size:13px">Reporte completo <span style="font-size:10px;background:#C9A227;color:#fff;padding:1px 6px;border-radius:10px;margin-left:4px">RECOMENDADO</span></div>';
-  html+='<div style="font-size:11px;color:#64748b;margin-top:2px">Proyectos + Tickets + ROI en un solo archivo</div></div></div>';
+    // Opción 3: Reporte completo (RECOMENDADO)
+    +'<div onclick="exportarExcelTipo(\'completo\')" style="display:flex;align-items:center;gap:16px;background:#fffdf0;border:2px solid #C9A227;border-radius:12px;padding:16px 20px;cursor:pointer;transition:.15s" onmouseover="this.style.background=\'#fff8e1\'" onmouseout="this.style.background=\'#fffdf0\'">'
+    +'<span style="font-size:28px">📊</span>'
+    +'<div><div style="display:flex;align-items:center;gap:8px"><span style="font-weight:700;font-size:14px;color:#1e2530">Reporte completo</span><span style="background:#C9A227;color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px">RECOMENDADO</span></div>'
+    +'<div style="font-size:12px;color:#64748b;margin-top:2px">Proyectos + Tickets + ROI + Resumen Ejecutivo en un solo archivo</div></div>'
+    +'</div>'
 
-  html+='<div onclick="exportROI()" style="display:flex;align-items:center;gap:14px;padding:14px;background:#f8fafc;border:1px solid #dde1e9;border-radius:10px;cursor:pointer" onmouseover="this.style.borderColor=\'#C9A227\'" onmouseout="this.style.borderColor=\'#dde1e9\'">';
-  html+='<div style="width:40px;height:40px;background:#f0fdf4;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">💰</div>';
-  html+='<div><div style="font-weight:700;color:#1e2530;font-size:13px">ROI y Rentabilidad</div>';
-  html+='<div style="font-size:11px;color:#64748b;margin-top:2px">Inversion, costo real, beneficio y semaforo por proyecto</div></div></div>';
+    // Opción 4: ROI y Rentabilidad
+    +'<div onclick="exportarExcelTipo(\'roi\')" style="display:flex;align-items:center;gap:16px;background:#fff;border:2px solid #e2e8f0;border-radius:12px;padding:16px 20px;cursor:pointer;transition:.15s" onmouseover="this.style.borderColor=\'#C9A227\';this.style.background=\'#fffdf0\'" onmouseout="this.style.borderColor=\'#e2e8f0\';this.style.background=\'#fff\'">'
+    +'<span style="font-size:28px">💰</span>'
+    +'<div><div style="font-weight:700;font-size:14px;color:#1e2530">ROI y Rentabilidad</div>'
+    +'<div style="font-size:12px;color:#64748b;margin-top:2px">Inversión estimada, beneficio y semáforo por proyecto</div></div>'
+    +'</div>'
 
-  html+='</div></div>';
+    +'</div>'
+    +'<div id="export-status" style="margin-top:16px;text-align:center;font-size:12px;color:#64748b"></div>'
+    +'</div>';
   showModal(html);
+}
+
+function exportarExcelTipo(tipo){
+  var statusEl=document.getElementById('export-status');
+  if(statusEl) statusEl.innerHTML='<span style="color:#C9A227">⏳ Generando Excel...</span>';
+
+  setTimeout(function(){
+    try{
+      var XLSX=window.XLSX||window.xlsx;
+      if(!XLSX){
+        // Cargar SheetJS dinámicamente si no está disponible
+        var s=document.createElement('script');
+        s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+        s.onload=function(){exportarExcelTipo(tipo);};
+        document.head.appendChild(s);
+        return;
+      }
+
+      var wb=XLSX.utils.book_new();
+      var fecha=new Date().toLocaleDateString('es-PE');
+
+      // ── COLORES (para estilos de celdas) ──────────────────────
+      var S={
+        hdBg:{patternType:"solid",fgColor:{rgb:"1A1A1A"}},
+        hdFont:{bold:true,color:{rgb:"F5C400"},sz:12,name:"Segoe UI"},
+        subBg:{patternType:"solid",fgColor:{rgb:"2A2A2A"}},
+        subFont:{color:{rgb:"888888"},sz:9,name:"Segoe UI"},
+        thBg:{patternType:"solid",fgColor:{rgb:"1A1A1A"}},
+        thFont:{bold:true,color:{rgb:"FFFFFF"},sz:9,name:"Segoe UI"},
+        white:{patternType:"solid",fgColor:{rgb:"FFFFFF"}},
+        gray:{patternType:"solid",fgColor:{rgb:"F5F5F5"}},
+        purple:{patternType:"solid",fgColor:{rgb:"F3E5F5"}},
+      };
+
+      function cell(v, fill, fnt, aln, fmt){
+        var c={v:v,t:typeof v==='number'?'n':'s'};
+        if(fill) c.s={fill:fill,font:fnt||{sz:9,name:"Segoe UI"},alignment:aln||{wrapText:true,vertical:"center"}};
+        if(fmt) c.z=fmt;
+        return c;
+      }
+
+      var nc=function(v,bold,color,bg,wrap,halign){
+        return {v:v,t:typeof v==='number'?'n':'s',s:{
+          fill:{patternType:"solid",fgColor:{rgb:(bg||"FFFFFF")}},
+          font:{bold:!!bold,color:{rgb:(color||"1A1A1A")},sz:9,name:"Segoe UI"},
+          alignment:{wrapText:!!wrap,vertical:"center",horizontal:(halign||"left")},
+          border:{top:{style:"thin",color:{rgb:"E0E0E0"}},bottom:{style:"thin",color:{rgb:"E0E0E0"}},
+                  left:{style:"thin",color:{rgb:"E0E0E0"}},right:{style:"thin",color:{rgb:"E0E0E0"}}}
+        }};
+      };
+
+      var scol=function(n){try{n=parseInt(n);}catch(e){return "888888";}
+        return n<=3?"2E7D32":n<=5?"E65100":"C62828";};
+      var sedecol=function(s){return s&&s.toLowerCase().indexOf("campoy")>=0?"6A1B9A":"1565C0";};
+      var estcol=function(e){e=(e||"").toLowerCase();
+        return e.indexOf("progreso")>=0?"6A1B9A":e.indexOf("hecho")>=0?"2E7D32":"1565C0";};
+      var compFn=function(ns){return ns<=2?"Baja":ns>=5?"Alta":"Media";};
+
+      // ── HOJA 1: LISTA MAESTRA ─────────────────────────────────
+      if(tipo==="proyectos"||tipo==="completo"){
+        var aoa=[
+          [{v:"Lista de Proyectos para Priorización — Grupo Pionier",s:{fill:S.hdBg,font:S.hdFont,alignment:{vertical:"center"}}}],
+          [{v:"MODIPSA / MASISAC  ·  Área de Gestión de Proyectos  ·  "+fecha,s:{fill:S.subBg,font:S.subFont,alignment:{vertical:"center"}}}],
+          [
+            nc("#",true,"FFFFFF","1A1A1A",true,"center"),
+            nc("Proyecto",true,"FFFFFF","1A1A1A",true,"center"),
+            nc("Área beneficiada",true,"FFFFFF","1A1A1A",true,"center"),
+            nc("Sede",true,"FFFFFF","1A1A1A",true,"center"),
+            nc("Problema que resuelve",true,"FFFFFF","1A1A1A",true,"center"),
+            nc("Estado actual",true,"FFFFFF","1A1A1A",true,"center"),
+            nc("Sprints est.",true,"FFFFFF","1A1A1A",true,"center"),
+            nc("Semanas est.",true,"FFFFFF","1A1A1A",true,"center"),
+            nc("Prioridad Gerencia",true,"FFFFFF","1A1A1A",true,"center"),
+            nc("Prioridad (nro.)",true,"FFFFFF","1A1A1A",true,"center"),
+            nc("Complejidad",true,"FFFFFF","1A1A1A",true,"center"),
+            nc("Observaciones",true,"FFFFFF","1A1A1A",true,"center"),
+          ]
+        ];
+        state.projects.forEach(function(p,idx){
+          var enProg=state.sprints.some(function(s){return s.projId===p.id&&s.status==="active";});
+          var bg=enProg?"F3E5F5":idx%2===0?"FFFFFF":"F5F5F5";
+          var ns=state.sprints.filter(function(s){return s.projId===p.id;}).length||1;
+          var ptks=state.tickets.filter(function(t){return t.projId===p.id;});
+          var done=ptks.filter(function(t){return t.col==="Hecho";}).length;
+          var pct=ptks.length?Math.round(done/ptks.length*100):0;
+          var estado=enProg?"En progreso":{"planning":"Planeando","active":"Activo","paused":"Pausado"}[p.status]||"Planeando";
+          var sede=p.sede||""; var area=p.area||"";
+          aoa.push([
+            nc(idx+1,true,"1A1A1A",bg,false,"center"),
+            nc(p.name,true,"1A1A1A",bg,true,"left"),
+            nc(area||"—",false,"888888",bg,true,"left"),
+            nc(sede||"—",true,sedecol(sede),bg,false,"center"),
+            nc(p.desc||"Sin descripción",false,"333333",bg,true,"left"),
+            nc(estado,false,estcol(estado),bg,false,"center"),
+            nc(ns,true,scol(ns),bg,false,"center"),
+            nc(ns*2,false,"888888",bg,false,"center"),
+            nc("",false,"888888",bg,false,"center"),
+            nc(idx+1,false,"888888",bg,false,"center"),
+            nc(compFn(ns),false,"888888",bg,false,"center"),
+            nc(ptks.length+" tickets · "+pct+"% completado",false,"888888",bg,true,"left"),
+          ]);
+        });
+        var ws1=XLSX.utils.aoa_to_sheet(aoa);
+        ws1["!cols"]=[{wch:4},{wch:42},{wch:22},{wch:14},{wch:52},{wch:20},{wch:8},{wch:8},{wch:14},{wch:10},{wch:12},{wch:30}];
+        ws1["!merges"]=[{s:{r:0,c:0},e:{r:0,c:11}},{s:{r:1,c:0},e:{r:1,c:11}}];
+        ws1["!rows"]=[{hpt:28},{hpt:16},{hpt:20}];
+        XLSX.utils.book_append_sheet(wb,ws1,"Lista Maestra");
+      }
+
+      // ── HOJA 2: TICKETS ───────────────────────────────────────
+      if(tipo==="tickets"||tipo==="completo"){
+        var aoa2=[
+          [{v:"TODOS LOS TICKETS — SCRUM PIONIER",s:{fill:S.hdBg,font:{bold:true,color:{rgb:"F5C400"},sz:12,name:"Segoe UI"},alignment:{vertical:"center"}}}],
+          [
+            nc("ID",true,"FFFFFF","1A1A1A",false,"center"),
+            nc("Título",true,"FFFFFF","1A1A1A",false,"center"),
+            nc("Proyecto",true,"FFFFFF","1A1A1A",false,"center"),
+            nc("Sprint",true,"FFFFFF","1A1A1A",false,"center"),
+            nc("Estado",true,"FFFFFF","1A1A1A",false,"center"),
+            nc("Prioridad",true,"FFFFFF","1A1A1A",false,"center"),
+            nc("SP",true,"FFFFFF","1A1A1A",false,"center"),
+            nc("Asignado",true,"FFFFFF","1A1A1A",false,"center"),
+            nc("Fecha inicio",true,"FFFFFF","1A1A1A",false,"center"),
+          ]
+        ];
+        var pmap={},smap={};
+        state.projects.forEach(function(p){pmap[p.id]=p.name;});
+        state.sprints.forEach(function(s){smap[s.id]=s.name;});
+        state.tickets.forEach(function(t,idx){
+          var bg=idx%2===0?"FFFFFF":"F5F5F5";
+          aoa2.push([
+            nc(t.id,true,"1A1A1A",bg,false,"center"),
+            nc(t.title,true,"1A1A1A",bg,true,"left"),
+            nc(pmap[t.projId]||"",false,"888888",bg,false,"left"),
+            nc(smap[t.sprintId]||"Sin sprint",false,"888888",bg,false,"left"),
+            nc(t.col||"",false,estcol(t.col),bg,false,"center"),
+            nc(t.priority||"",false,"888888",bg,false,"center"),
+            nc(t.sp||0,true,"F5C400",bg,false,"center"),
+            nc(t.assignee||"",false,"888888",bg,false,"center"),
+            nc(t.fechaInicio||"",false,"888888",bg,false,"center"),
+          ]);
+        });
+        var ws2=XLSX.utils.aoa_to_sheet(aoa2);
+        ws2["!cols"]=[{wch:10},{wch:38},{wch:20},{wch:15},{wch:12},{wch:10},{wch:6},{wch:10},{wch:14}];
+        ws2["!merges"]=[{s:{r:0,c:0},e:{r:0,c:8}}];
+        XLSX.utils.book_append_sheet(wb,ws2,"Todos los Tickets");
+      }
+
+      // ── HOJA 3: RESUMEN EJECUTIVO ─────────────────────────────
+      if(tipo==="completo"||tipo==="roi"){
+        var activos=state.projects.filter(function(p){return state.sprints.some(function(s){return s.projId===p.id&&s.status==="active";});}).length;
+        var ts=state.sprints.length;
+        var aoa3=[
+          [{v:"RESUMEN EJECUTIVO — PROYECTOS PARA PRIORIZACIÓN",s:{fill:S.hdBg,font:{bold:true,color:{rgb:"FFFFFF"},sz:13,name:"Segoe UI"}}}],
+          [{v:"MODIPSA / MASISAC  ·  Gestión de Proyectos  ·  "+fecha,s:{fill:S.subBg,font:S.subFont}}],
+          [],
+          [
+            nc(state.projects.length,true,"F5C400","1A1A1A",false,"center"),
+            nc(activos,true,"6A1B9A","1A1A1A",false,"center"),
+            nc(state.projects.length-activos,true,"1565C0","1A1A1A",false,"center"),
+            nc(ts,true,"F5C400","1A1A1A",false,"center"),
+            nc(ts*2,true,"888888","1A1A1A",false,"center"),
+          ],
+          [
+            nc("Proyectos",false,"888888","1A1A1A",false,"center"),
+            nc("En progreso",false,"888888","1A1A1A",false,"center"),
+            nc("Planeando",false,"888888","1A1A1A",false,"center"),
+            nc("Sprints totales",false,"888888","1A1A1A",false,"center"),
+            nc("Semanas totales",false,"888888","1A1A1A",false,"center"),
+          ],
+          [],
+          [
+            nc("#",true,"FFFFFF","1A1A1A",false,"center"),
+            nc("Proyecto",true,"FFFFFF","1A1A1A",false,"center"),
+            nc("Área",true,"FFFFFF","1A1A1A",false,"center"),
+            nc("Sede",true,"FFFFFF","1A1A1A",false,"center"),
+            nc("Sprints",true,"FFFFFF","1A1A1A",false,"center"),
+            nc("Semanas",true,"FFFFFF","1A1A1A",false,"center"),
+            nc("Estado",true,"FFFFFF","1A1A1A",false,"center"),
+          ]
+        ];
+        state.projects.forEach(function(p,idx){
+          var enProg=state.sprints.some(function(s){return s.projId===p.id&&s.status==="active";});
+          var bg=enProg?"F3E5F5":idx%2===0?"FFFFFF":"F5F5F5";
+          var ns=state.sprints.filter(function(s){return s.projId===p.id;}).length||1;
+          var estado=enProg?"En progreso":"Planeando";
+          aoa3.push([
+            nc(idx+1,true,"1A1A1A",bg,false,"center"),
+            nc(p.name,true,"1A1A1A",bg,true,"left"),
+            nc(p.area||"—",false,"888888",bg,false,"left"),
+            nc(p.sede||"—",true,sedecol(p.sede),bg,false,"center"),
+            nc(ns,true,scol(ns),bg,false,"center"),
+            nc(ns*2,false,scol(ns),bg,false,"center"),
+            nc(estado,false,estcol(estado),bg,false,"left"),
+          ]);
+        });
+        var ws3=XLSX.utils.aoa_to_sheet(aoa3);
+        ws3["!cols"]=[{wch:4},{wch:40},{wch:22},{wch:14},{wch:10},{wch:10},{wch:25}];
+        ws3["!merges"]=[{s:{r:0,c:0},e:{r:0,c:6}},{s:{r:1,c:0},e:{r:1,c:6}}];
+        XLSX.utils.book_append_sheet(wb,ws3,"Resumen Ejecutivo");
+      }
+
+      // ── HOJA 4: ROI ───────────────────────────────────────────
+      if(tipo==="completo"||tipo==="roi"){
+        var aoa4=[
+          [{v:"ROI Y RENTABILIDAD ESTIMADA — PROYECTOS PIONIER",s:{fill:S.hdBg,font:{bold:true,color:{rgb:"F5C400"},sz:12,name:"Segoe UI"}}}],
+          [{v:"Estimaciones basadas en sprints planificados · Costo promedio S/ 2,000 por sprint",s:{fill:S.subBg,font:S.subFont}}],
+          [
+            nc("Proyecto",true,"FFFFFF","1A1A1A",false,"left"),
+            nc("Inversión est.",true,"FFFFFF","1A1A1A",false,"center"),
+            nc("Beneficio est.",true,"FFFFFF","1A1A1A",false,"center"),
+            nc("ROI estimado",true,"FFFFFF","1A1A1A",false,"center"),
+            nc("Semáforo",true,"FFFFFF","1A1A1A",false,"center"),
+            nc("Sprints / Semanas",true,"FFFFFF","1A1A1A",false,"center"),
+          ]
+        ];
+        state.projects.forEach(function(p,idx){
+          var bg=idx%2===0?"FFFFFF":"F5F5F5";
+          var ns=state.sprints.filter(function(s){return s.projId===p.id;}).length||1;
+          var inv=ns*2000; var benef=Math.round(inv*1.35); var roi=Math.round((benef-inv)/inv*100);
+          var scl=roi>25?"2E7D32":roi>0?"E65100":"C62828";
+          var sem=roi>25?"🟢 Positivo":roi>0?"🟡 Moderado":"🔴 Revisar";
+          aoa4.push([
+            nc(p.name,true,"1A1A1A",bg,true,"left"),
+            nc("S/ "+inv.toLocaleString("es-PE"),false,"888888",bg,false,"center"),
+            nc("S/ "+benef.toLocaleString("es-PE"),false,"2E7D32",bg,false,"center"),
+            nc(roi+"%",true,scl,bg,false,"center"),
+            nc(sem,false,"1A1A1A",bg,false,"center"),
+            nc(ns+" sprints · "+ns*2+" sem.",false,"888888",bg,false,"center"),
+          ]);
+        });
+        var ws4=XLSX.utils.aoa_to_sheet(aoa4);
+        ws4["!cols"]=[{wch:38},{wch:12},{wch:12},{wch:12},{wch:14},{wch:16}];
+        ws4["!merges"]=[{s:{r:0,c:0},e:{r:0,c:5}},{s:{r:1,c:0},e:{r:1,c:5}}];
+        XLSX.utils.book_append_sheet(wb,ws4,"ROI y Rentabilidad");
+      }
+
+      // ── HOJA GUÍA ─────────────────────────────────────────────
+      if(tipo==="proyectos"||tipo==="completo"){
+        var aoa5=[
+          [{v:"GUÍA PARA PRIORIZAR — CRITERIOS DE EVALUACIÓN",s:{fill:S.hdBg,font:{bold:true,color:{rgb:"FFFFFF"},sz:12,name:"Segoe UI"}}}],
+          [{v:"Complete la columna 'Prioridad Gerencia' en la Lista Maestra usando esta guía.",s:{fill:S.subBg,font:S.subFont}}],
+          [],
+          [nc("PRIORIDAD GERENCIA",true,"FFFFFF","1A1A1A",false,"left"),nc(""),nc("")],
+          [nc("Valor",true,"FFFFFF","333333",false,"center"),nc("Etiqueta",true,"FFFFFF","333333",false,"center"),nc("Descripción",true,"FFFFFF","333333",false,"left")],
+          [nc("Alta",true,"C62828","F5F5F5",false,"center"),nc("Alta",false,"1A1A1A","F5F5F5",true,"left"),nc("Crítico — debe arrancar lo antes posible. Impacta directamente la operación.",false,"1A1A1A","F5F5F5",true,"left")],
+          [nc("Media",true,"E65100","F5F5F5",false,"center"),nc("Media",false,"1A1A1A","F5F5F5",true,"left"),nc("Importante pero puede esperar a proyectos de alta prioridad.",false,"1A1A1A","F5F5F5",true,"left")],
+          [nc("Baja",true,"2E7D32","F5F5F5",false,"center"),nc("Baja",false,"1A1A1A","F5F5F5",true,"left"),nc("Válido pero su impacto es menor o puede diferirse.",false,"1A1A1A","F5F5F5",true,"left")],
+          [nc("En espera",true,"1565C0","F5F5F5",false,"center"),nc("En espera",false,"1A1A1A","F5F5F5",true,"left"),nc("Requiere información adicional o depende de otro proyecto.",false,"1A1A1A","F5F5F5",true,"left")],
+        ];
+        var ws5=XLSX.utils.aoa_to_sheet(aoa5);
+        ws5["!cols"]=[{wch:12},{wch:14},{wch:55}];
+        ws5["!merges"]=[{s:{r:0,c:0},e:{r:0,c:2}},{s:{r:1,c:0},e:{r:1,c:2}},{s:{r:3,c:0},e:{r:3,c:2}}];
+        XLSX.utils.book_append_sheet(wb,ws5,"Guia Priorizacion");
+      }
+
+      // ── DESCARGAR ─────────────────────────────────────────────
+      var nombres={"proyectos":"Proyectos_Priorizacion_Gerencia","tickets":"Tickets_SCRUM",
+                   "completo":"Reporte_Completo_Pionier","roi":"ROI_Rentabilidad_Pionier"};
+      var fecha2=new Date().toISOString().split("T")[0];
+      XLSX.writeFile(wb,nombres[tipo]+"_"+fecha2+".xlsx");
+
+      if(statusEl) statusEl.innerHTML='<span style="color:#16a34a">✅ Excel generado correctamente</span>';
+      setTimeout(function(){closeModal();},1500);
+
+    }catch(err){
+      if(statusEl) statusEl.innerHTML='<span style="color:#dc2626">❌ Error: '+err.message+'</span>';
+      console.error(err);
+    }
+  },100);
 }
 
 function _dlExcel(htmlContent,filename){
@@ -6016,6 +6727,128 @@ function qaEliminarAdj(i){
 function qaDropOver(e){e.preventDefault();document.getElementById('qa-dropzone').style.borderColor='#C9A227';}
 function qaDropLeave(e){document.getElementById('qa-dropzone').style.borderColor='#e5e0d0';}
 function qaDropDrop(e){e.preventDefault();document.getElementById('qa-dropzone').style.borderColor='#e5e0d0';qaHandleFiles(e.dataTransfer.files);}
+
+// ─── SPRINT SECTION DESPLEGABLE ──────────────────────────────
+function formatDate(s){
+  if(!s) return '-';
+  var p=s.split('-');
+  var mo=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+  return p[2]+' '+mo[parseInt(p[1])-1];
+}
+
+function toggleSection(id){
+  var sec=document.getElementById(id);
+  var icMap={'sec-activos':'ic-activos','sec-plan':'ic-plan'};
+  var ic=document.getElementById(icMap[id]);
+  if(!sec) return;
+  if(sec.style.display==='none'||sec.style.display===''){
+    sec.style.cssText='display:flex;flex-direction:column;gap:6px;margin-top:6px';
+    if(ic) ic.textContent='▼';
+  } else {
+    sec.style.display='none';
+    if(ic) ic.textContent='▶';
+  }
+}
+
+function iniciarSprintDirecto(sid){
+  var sp=state.sprints.find(function(s){return s.id===sid;});
+  if(!sp) return;
+  var act=state.sprints.find(function(s){return s.projId===sp.projId&&s.status==='active';});
+  if(act){alert('Ya hay un sprint activo: '+act.name+'. Ciérralo primero.');return;}
+  if(!confirm('Iniciar '+sp.name+'?')) return;
+  sp.status='active';
+  saveState();
+  renderProjects();
+}
+
+function renderSprintSection(){
+  var container=document.getElementById('sprint-section');
+  if(!container) return;
+  var projs=getProyectosFiltrados();
+  var activos=projs.filter(function(p){
+    return state.sprints.some(function(s){return s.projId===p.id&&s.status==='active';});
+  });
+  var planificados=projs.filter(function(p){
+    return state.sprints.some(function(s){return s.projId===p.id&&s.status==='planned';})
+      &&!state.sprints.some(function(s){return s.projId===p.id&&s.status==='active';});
+  });
+
+  function makeCard(p,sp,borderColor){
+    var pct=getProgress(p.id);
+    var tc=state.tickets.filter(function(t){return t.projId===p.id&&t.sprintId===sp.id;}).length;
+    var done2=state.tickets.filter(function(t){return t.projId===p.id&&t.sprintId===sp.id&&t.col==='Hecho';}).length;
+    var ec=p.empresa==='MODIPSA'?'#1d4ed8':'#15803d';
+    var div=document.createElement('div');
+    div.style.cssText='background:#141b24;border-radius:10px;padding:12px;cursor:pointer;border-left:4px solid '+borderColor+';transition:.15s';
+    div.addEventListener('mouseover',function(){this.style.background='#1a2535';});
+    div.addEventListener('mouseout',function(){this.style.background='#141b24';});
+    div.addEventListener('click',(function(pid){return function(){openProject(pid);};})(p.id));
+    div.innerHTML='<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">'
+      +'<span style="font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;background:'+ec+'20;color:'+ec+'">'+p.empresa+'</span>'
+      +'<span style="font-size:10px;font-weight:700;color:'+borderColor+';margin-left:auto">'+sp.name+'</span>'
+      +'</div>'
+      +'<div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:4px">'+p.name+'</div>'
+      +'<div style="font-size:10px;color:#64748b;margin-bottom:6px">'+done2+'/'+tc+' tickets · '+pct+'% · '+formatDate(sp.start)+' → '+formatDate(sp.end)+'</div>'
+      +'<div style="background:#263040;border-radius:4px;height:5px">'
+      +'<div style="background:'+borderColor+';height:5px;width:'+pct+'%;border-radius:4px;transition:.5s"></div>'
+      +'</div>';
+    return div;
+  }
+
+  // HTML de los headers desplegables
+  container.innerHTML='<div style="margin-bottom:8px">'
+    +'<div class="toggle-hdr" data-sec="sec-activos" style="display:flex;align-items:center;justify-content:space-between;background:#16a34a20;border:1px solid #16a34a40;border-radius:10px;padding:10px 14px;cursor:pointer">'
+    +'<div style="display:flex;align-items:center;gap:8px"><span>🟢</span>'
+    +'<span style="font-size:12px;font-weight:800;color:#4ade80">Sprints Activos</span>'
+    +'<span style="background:#16a34a;color:#fff;font-size:10px;font-weight:700;padding:1px 8px;border-radius:20px">'+activos.length+'</span>'
+    +'</div><span id="ic-activos" style="color:#4ade80">▼</span></div>'
+    +'<div id="sec-activos" style="display:flex;flex-direction:column;gap:6px;margin-top:6px"></div>'
+    +'</div>'
+    +'<div style="margin-bottom:8px">'
+    +'<div class="toggle-hdr" data-sec="sec-plan" style="display:flex;align-items:center;justify-content:space-between;background:#0ea5e920;border:1px solid #0ea5e940;border-radius:10px;padding:10px 14px;cursor:pointer">'
+    +'<div style="display:flex;align-items:center;gap:8px"><span>📋</span>'
+    +'<span style="font-size:12px;font-weight:800;color:#38bdf8">Sprints Planificados</span>'
+    +'<span style="background:#0ea5e9;color:#fff;font-size:10px;font-weight:700;padding:1px 8px;border-radius:20px">'+planificados.length+'</span>'
+    +'</div><span id="ic-plan" style="color:#38bdf8">▼</span></div>'
+    +'<div id="sec-plan" style="display:flex;flex-direction:column;gap:6px;margin-top:6px"></div>'
+    +'</div>';
+
+  var secAct=document.getElementById('sec-activos');
+  if(!activos.length){
+    secAct.innerHTML='<div style="text-align:center;padding:12px;color:#475569;font-size:12px;background:#141b24;border-radius:8px">Sin sprints activos aún</div>';
+  } else {
+    activos.forEach(function(p){
+      var sp=state.sprints.find(function(s){return s.projId===p.id&&s.status==='active';});
+      secAct.appendChild(makeCard(p,sp,'#16a34a'));
+    });
+  }
+
+  var secPlan=document.getElementById('sec-plan');
+  if(!planificados.length){
+    secPlan.innerHTML='<div style="text-align:center;padding:12px;color:#475569;font-size:12px;background:#141b24;border-radius:8px">Sin sprints planificados</div>';
+  } else {
+    planificados.forEach(function(p){
+      var sprints=state.sprints.filter(function(s){return s.projId===p.id&&s.status==='planned';});
+      sprints.forEach(function(sp){
+        var card=makeCard(p,sp,'#0ea5e9');
+        var btn=document.createElement('button');
+        btn.style.cssText='margin-top:6px;width:100%;background:#16a34a;color:#fff;border:none;border-radius:6px;padding:5px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit';
+        btn.textContent='▶ Iniciar este sprint';
+        btn.addEventListener('click',(function(sid){return function(e){e.stopPropagation();iniciarSprintDirecto(sid);};})(sp.id));
+        card.appendChild(btn);
+        secPlan.appendChild(card);
+      });
+    });
+  }
+}
+
+// Delegación para headers desplegables
+document.addEventListener('click',function(e){
+  var hdr=e.target.closest('.toggle-hdr');
+  if(hdr) toggleSection(hdr.getAttribute('data-sec'));
+});
+
+// Llamar renderSprintSection desde renderProjects
 </script>
 </body>
 </html>
