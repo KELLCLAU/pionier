@@ -812,9 +812,25 @@ function getProgress(pid){
   const ts=state.tickets.filter(t=>t.projId===pid);
   return ts.length?Math.round(ts.filter(t=>t.col==='Hecho').length/ts.length*100):0;
 }
-function _enEjecucion(p){
+function _enEjecucionAuto(p){
   if(state.sprints.some(function(s){return s.projId===p.id&&s.status==='active';})) return true;
   return state.tickets.some(function(t){return t.projId===p.id && t.col && t.col!=='Backlog';});
+}
+function _enEjecucion(p){
+  return _enEjecucionAuto(p) || p.enEjecucion===true;
+}
+function pasarAEjecucion(pid){
+  var p=state.projects.find(function(x){return x.id===pid;});
+  if(!p) return;
+  if(!confirm('¿Pasar "'+p.name+'" a ejecución?\n\nSe moverá al panel central. Podrás devolverlo a pendientes cuando quieras.')) return;
+  p.enEjecucion=true;
+  saveState(); renderProjects();
+}
+function volverAPendiente(pid){
+  var p=state.projects.find(function(x){return x.id===pid;});
+  if(!p) return;
+  p.enEjecucion=false;
+  saveState(); renderProjects();
 }
 function addDays(dateStr,n){const d=new Date(dateStr);d.setDate(d.getDate()+n);return d.toISOString().split('T')[0];}
 function getWeek(d){const onejan=new Date(d.getFullYear(),0,1);return Math.ceil((((d-onejan)/86400000)+onejan.getDay()+1)/7);}
@@ -865,7 +881,8 @@ function renderProjects(){
       <div class="meta" style="margin-top:8px">📋 ${tc} tickets &nbsp;·&nbsp; ${sp?'🏃 '+sp.name+' activo':'Sin sprint activo'}</div>
       <div class="meta" style="margin-top:4px">📅 ${fmtDate(p.start)} → ${fmtDate(p.end)}</div>
       <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
-      <div class="meta" style="margin-top:6px;text-align:right;font-weight:700;color:#d4a900">${pct}% completado</div>`;
+      <div class="meta" style="margin-top:6px;text-align:right;font-weight:700;color:#d4a900">${pct}% completado</div>
+      ${(p.enEjecucion===true && !_enEjecucionAuto(p))?'<button onclick="event.stopPropagation();volverAPendiente(\''+p.id+'\')" style="margin-top:8px;width:100%;background:#475569;color:#fff;border:none;border-radius:5px;font-size:10px;font-weight:700;padding:5px 0;cursor:pointer">↩ Volver a pendientes</button>':''}`;
     grid.appendChild(div);
   });
   if(empresaFiltro==='todas'){
@@ -939,7 +956,8 @@ function renderReqSidebar(){
       +'<div style="font-size:10px;color:#475569;margin-bottom:5px">'+tc+' tickets · '+pct+'%</div>'
       +'<div style="background:#263040;border-radius:3px;height:3px">'
       +'<div style="background:#C9A227;height:3px;width:'+pct+'%;border-radius:3px"></div>'
-      +'</div>';
+      +'</div>'
+      +'<button onclick="event.stopPropagation();pasarAEjecucion(\''+p.id+'\')" style="margin-top:8px;width:100%;background:#16a34a;color:#fff;border:none;border-radius:5px;font-size:10px;font-weight:700;padding:5px 0;cursor:pointer">▶ Pasar a ejecución</button>';
     sb.appendChild(div);
   });
 }
