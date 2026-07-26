@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard KPIs · Gestión de Proyectos · Pionier</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{
+  --canvas:#f3f2f1; --card:#ffffff; --line:#e1dfdd; --line2:#edebe9;
+  --gold:#C9A227; --yellow:#F5C400; --ink:#252423; --muted:#605e5c;
+  --modipsa:#2563eb; --masisac:#16a34a;
+  --c-back:#8a8886; --c-prog:#0ea5e9; --c-rev:#8b5cf6; --c-done:#22c55e;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--canvas);color:var(--ink);font-family:'Segoe UI',system-ui,-apple-system,sans-serif;font-size:14px}
+header{background:#111;padding:12px 22px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;position:sticky;top:0;z-index:10;border-bottom:3px solid var(--yellow)}
+.logo{background:var(--yellow);color:#111;font-weight:900;font-size:14px;letter-spacing:.5px;padding:5px 6px 5px 10px;border-radius:5px;white-space:nowrap}
+.logo .b{background:#111;color:var(--yellow);padding:3px 6px;border-radius:3px;margin-left:3px}
+.rtitle{color:#fff;font-size:17px;font-weight:700;line-height:1.1}
+.rsub{color:#c8c6c4;font-size:11px}
+.spacer{flex:1}
+.ctrl{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.btn{background:#2b2b2b;color:#fff;border:1px solid #444;border-radius:6px;padding:7px 13px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;transition:.15s}
+.btn:hover{border-color:var(--yellow)}
+.btn.on{background:var(--yellow);color:#111;border-color:var(--yellow)}
+.updated{font-size:11px;color:#c8c6c4}
+.wrap{padding:18px 22px;max-width:1520px;margin:0 auto}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:16px}
+.kpi{background:var(--card);border:1px solid var(--line);border-top:3px solid var(--gold);border-radius:6px;padding:14px 16px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.kpi .v{font-size:30px;font-weight:800;line-height:1;color:#111}
+.kpi .l{font-size:11px;color:var(--muted);margin-top:6px;text-transform:uppercase;letter-spacing:.4px;font-weight:600}
+.kpi.blue{border-top-color:var(--modipsa)} .kpi.green{border-top-color:var(--masisac)}
+.kpi.done{border-top-color:var(--c-done)} .kpi.money{border-top-color:var(--yellow)}
+.kpi.red{border-top-color:#ef4444} .kpi.amber{border-top-color:#f59e0b}
+.bd{width:100%;border-collapse:collapse;font-size:12px}
+.bd th{font-size:9px;padding:5px 6px;color:var(--muted)}
+.bd td{padding:6px;border-bottom:1px solid var(--line2)}
+.gl,.modal td{white-space:nowrap}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-bottom:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:15px 17px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.card h3{margin:0 0 12px;font-size:13px;font-weight:700;color:#111;display:flex;align-items:center;gap:7px;border-left:3px solid var(--yellow);padding-left:9px}
+.chart-box{position:relative;height:230px}
+.chart-box.tall{height:300px}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th,td{padding:8px 10px;text-align:left;border-bottom:1px solid var(--line2)}
+th{color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.4px;font-weight:700;position:sticky;top:0;background:#faf9f8}
+td.num{text-align:right;font-variant-numeric:tabular-nums}
+.tag{font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px}
+.bar-mini{height:6px;background:#edebe9;border-radius:3px;overflow:hidden;min-width:60px}
+.bar-mini i{display:block;height:100%;background:var(--gold)}
+.state{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:40px;text-align:center;color:var(--muted)}
+.full{grid-column:1/-1}
+@media(max-width:900px){.grid{grid-template-columns:1fr}}
+/* Modal detalle + cronograma */
+.tr-click{cursor:pointer}
+.tr-click:hover td{background:#fff9e6}
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:flex-start;justify-content:center;z-index:50;padding:30px 16px;overflow:auto}
+.ov.show{display:flex}
+.modal{background:#fff;border:1px solid var(--line);border-radius:10px;max-width:980px;width:100%;overflow:hidden;box-shadow:0 10px 40px rgba(0,0,0,.3)}
+.modal-h{background:#111;border-bottom:3px solid var(--yellow);padding:15px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0}
+.modal-h .brand{color:#fff;font-size:16px;font-weight:700}
+.modal-h .sub{color:#c8c6c4;font-size:11px}
+.modal-h .x{background:none;border:none;color:var(--yellow);font-size:22px;cursor:pointer;line-height:1}
+.modal-b{padding:20px}
+.gantt{margin:4px 0 18px}
+.gaxis{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);border-bottom:1px solid var(--line);padding-bottom:4px;margin-bottom:8px;margin-left:210px}
+.grow{display:flex;align-items:center;margin-bottom:5px}
+.gl{width:200px;min-width:200px;font-size:11px;padding-right:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gt{flex:1;position:relative;height:18px;background:#edebe9;border-radius:4px}
+.gb{position:absolute;top:2px;height:14px;border-radius:4px;min-width:4px}
+/* Login */
+.login{position:fixed;inset:0;z-index:100;background:radial-gradient(circle at 30% 30%,#1a1a1a,#0a0a0a);display:flex;align-items:center;justify-content:center;padding:20px}
+.login-card{background:#fff;border-radius:14px;padding:34px 30px;width:100%;max-width:360px;box-shadow:0 20px 60px rgba(0,0,0,.55);text-align:center}
+.login h2{margin:14px 0 3px;font-size:20px;color:#111}
+.login p{margin:0 0 22px;font-size:12px;color:#605e5c}
+.login input{width:100%;box-sizing:border-box;padding:12px 14px;border:1px solid #d0d0d0;border-radius:8px;font-size:14px;font-family:inherit;margin-bottom:12px;outline:none}
+.login input:focus{border-color:var(--yellow)}
+.login button{width:100%;padding:12px;background:#111;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit}
+.login button:hover{background:#000}
+.login .err{color:#dc2626;font-size:12px;min-height:16px;margin-top:8px}
+</style>
+</head>
+<body>
+<div class="login" id="login">
+  <div class="login-card">
+    <div style="font-size:18px"><span class="logo">GRUPO<span class="b">PIONIER</span></span></div>
+    <h2>Accede a tu cuenta</h2>
+    <p>Tablero de KPIs · Gestión de Proyectos</p>
+    <input type="password" id="pass" placeholder="Contraseña" onkeydown="if(event.key==='Enter')doLogin()" autocomplete="current-password">
+    <button onclick="doLogin()">Iniciar Sesión</button>
+    <div class="err" id="loginErr"></div>
+  </div>
+</div>
+<header>
+  <div class="logo">GRUPO<span class="b">PIONIER</span></div>
+  <div>
+    <div class="rtitle">Gestión de Proyectos · Tablero de KPIs</div>
+    <div class="rsub">Reporte ejecutivo — datos en vivo desde SCRUM</div>
+  </div>
+  <div class="spacer"></div>
+  <div class="ctrl">
+    <button class="btn on" data-emp="todas" onclick="setEmpresa('todas',this)">Todas</button>
+    <button class="btn" data-emp="MODIPSA" onclick="setEmpresa('MODIPSA',this)">MODIPSA</button>
+    <button class="btn" data-emp="MASISAC" onclick="setEmpresa('MASISAC',this)">MASISAC</button>
+    <button class="btn" onclick="cargar()" title="Actualizar">🔄</button>
+  </div>
+  <div class="updated" id="updated"></div>
+</header>
+
+<div class="wrap" id="app">
+  <div class="state">⏳ Cargando datos del SCRUM…</div>
+</div>
+
+<div class="ov" id="ov" onclick="if(event.target===this)closeProj()">
+  <div class="modal" id="modal"></div>
+</div>
+
+<script>
+const SB_URL='https://jsmryefxbjyxviopesgt.supabase.co';
+const SB_KEY='sb_publishable_1sxgjIf_jVz30FKBPjpMrQ_c8T0hyEu';
+const SB_ID='keiko_pionier';
+const DASH_PASS='pioner2026';  // ← contraseña del dashboard (cámbiala aquí)
+
+let STATE=null, empresa='todas', charts={};
+const fmt=n=>(n||0).toLocaleString('es-PE');
+const money=n=>'S/ '+fmt(Math.round(n||0));
+
+// Equipo: código -> nombre completo (mismo orden que el SCRUM)
+const MEMBERS=['CS','KB','OM','KP','OR','CL','MH','JH','LP','ST','CG','CB','CA','RT','JS','WR','ME','AC','DG','CH','MG','KA'];
+const MEMBER_NAMES=['Carlos Salas','Kelly Barrientos','Omar Muñoz','Keiko Palomino','Owen Rojas','Claudia López','Miguel Hernández','Jaime Halire','Luis Palomino','Saúl Tapia','Cleison Guevara','Claudio Barahona','Carla Arce','Rigoberto Timaná','Jean Sánchez','Wilder Rojas','Mauro Elías','Antony Chilquillo','Daniel Guerrero','Cristian Huaman','Maria Gracia La Torre','Karla Aguilar Chuquipoma'];
+function memberName(code){ if(!code) return '—'; const i=MEMBERS.indexOf(code); return i>=0?MEMBER_NAMES[i]:code; }
+// Fechas de tarea: propias o heredadas del sprint (igual que el Gantt del SCRUM)
+function taskDates(t){
+  let sp=null;
+  if(t.sprintId) sp=(STATE.sprints||[]).find(s=>s.id===t.sprintId);
+  const start=t.fechaInicio||t.start||t.startDate||(sp&&(sp.start||sp.startDate))||null;
+  const end  =t.fechaFin||t.end||t.endDate||(sp&&(sp.end||sp.endDate))||null;
+  return {start,end};
+}
+function durDays(s,e){ if(!s||!e) return null; const a=parseD(s),b=parseD(e); return Math.max(0,Math.round((b-a)/86400000)); }
+function esHoy(){ return new Date(new Date().toDateString()).getTime(); }
+function fechasInvalidas(d){ return d.start&&d.end&&parseD(d.end).getTime()<parseD(d.start).getTime(); }
+function diasFaltan(t){
+  var d=taskDates(t);
+  if(t.col==='Hecho') return {txt:'✓', color:'#22c55e'};
+  if(fechasInvalidas(d)) return {txt:'⚠️', color:'#ef4444'};
+  if(!d.end) return {txt:'—', color:'var(--muted)'};
+  var diff=Math.round((parseD(d.end).getTime()-esHoy())/86400000);
+  if(diff>0) return {txt:'faltan '+diff, color:'#0ea5e9'};
+  if(diff===0) return {txt:'hoy', color:'#f59e0b'};
+  return {txt:(-diff)+' vencido', color:'#ef4444'};
+}
+// Fecha corta legible: '2026-05-15' -> '15 may'
+function fmtF(s){ if(!s) return '—'; var d=parseD(s); return d.toLocaleDateString('es-PE',{day:'2-digit',month:'short'}); }
+// Tabla de desglose con cantidad y %
+function breakdownTable(items){
+  var total=items.reduce(function(a,x){return a+x.val;},0);
+  var t=total||1;
+  var rows=items.map(function(x){
+    return '<tr><td><span style="display:inline-block;width:11px;height:11px;border-radius:3px;background:'+x.color+';margin-right:8px;vertical-align:-1px"></span>'+x.label+'</td>'
+      +'<td class="num">'+x.val+'</td><td class="num" style="color:var(--muted)">'+Math.round(x.val/t*100)+'%</td></tr>';
+  }).join('');
+  return '<table class="bd"><thead><tr><th>Categoría</th><th class="num">Cant.</th><th class="num">%</th></tr></thead><tbody>'
+    +rows+'<tr style="font-weight:800;border-top:2px solid var(--line)"><td>Total</td><td class="num">'+total+'</td><td class="num">100%</td></tr></tbody></table>';
+}
+// Tiles ejecutivos "Lo que falta"
+function pendientesTiles(ps,tk){
+  var hoy=esHoy();
+  var porHacer=tk.filter(function(t){return t.col!=='Hecho';}).length;
+  var atras=tk.filter(function(t){var d=taskDates(t);return d.end&&t.col!=='Hecho'&&parseD(d.end).getTime()<hoy;}).length;
+  var sinFecha=tk.filter(function(t){var d=taskDates(t);return !d.start||!d.end;}).length;
+  var pendProy=ps.filter(function(p){return !enEjec(p);}).length;
+  var invalidas=tk.filter(function(t){return fechasInvalidas(taskDates(t));}).length;
+  var tile=function(label,val,cls){return '<div class="kpi '+cls+'"><div class="v">'+val+'</div><div class="l">'+label+'</div></div>';};
+  return '<div class="kpis" style="margin-top:2px">'
+    +tile('Tareas por hacer',porHacer,'blue')
+    +tile('Tareas atrasadas',atras,'red')
+    +tile('Tareas sin fecha',sinFecha,'amber')
+    +tile('Proyectos pendientes',pendProy,'')
+    +(invalidas?tile('Fechas invertidas ⚠️',invalidas,'red'):'')
+    +'</div>';
+}
+
+async function cargar(){
+  try{
+    const r=await fetch(SB_URL+'/rest/v1/scrum_state?id=eq.'+SB_ID+'&select=state_json,updated_at',
+      {headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY}});
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    const rows=await r.json();
+    if(!rows.length||!rows[0].state_json){ mostrarError('No hay datos guardados todavía en el SCRUM.'); return; }
+    STATE=rows[0].state_json;
+    STATE._updated=rows[0].updated_at;
+    render();
+  }catch(e){
+    mostrarError('No se pudo conectar con Supabase.<br><small>'+(e.message||e)+'</small><br><br>Si estás en la red de la empresa, puede ser el firewall bloqueando <b>supabase.co</b>.');
+  }
+}
+function mostrarError(msg){
+  document.getElementById('app').innerHTML='<div class="state">⚠️ '+msg+'</div>';
+}
+
+function projsFilt(){
+  const ps=(STATE.projects||[]);
+  return empresa==='todas'?ps:ps.filter(p=>p.empresa===empresa);
+}
+function ticketsOf(pid){ return (STATE.tickets||[]).filter(t=>t.projId===pid); }
+function progress(pid){ const ts=ticketsOf(pid); return ts.length?Math.round(ts.filter(t=>t.col==='Hecho').length/ts.length*100):0; }
+function enEjec(p){
+  if((STATE.sprints||[]).some(s=>s.projId===p.id&&s.status==='active')) return true;
+  if((STATE.tickets||[]).some(t=>t.projId===p.id&&t.col&&t.col!=='Backlog')) return true;
+  return p.enEjecucion===true;
+}
+function presuOf(p){ return Number(p.presupuesto)|| (p.roi&&Number(p.roi.presupuesto))||0; }
+function costoOf(p){ return (p.roi&&Number(p.roi.costoReal))||Number(p.costo)||0; }
+function benefOf(p){ return Number(p.beneficio)||(p.roi&&Number(p.roi.beneficioAnual))||0; }
+
+function render(){
+  const ps=projsFilt();
+  const pids=new Set(ps.map(p=>p.id));
+  const tk=(STATE.tickets||[]).filter(t=>pids.has(t.projId));
+  const done=tk.filter(t=>t.col==='Hecho').length;
+  const enej=ps.filter(enEjec);
+  const rechaz=ps.filter(p=>p.estadoReq==='rechazado').length;
+  const pend=ps.filter(p=>!enEjec(p)).length;
+  const avance=tk.length?Math.round(done/tk.length*100):0;
+  const presu=ps.reduce((a,p)=>a+presuOf(p),0);
+  const costo=ps.reduce((a,p)=>a+costoOf(p),0);
+
+  const hoy=esHoy();
+  const atras=tk.filter(t=>{const d=taskDates(t);return d.end&&t.col!=='Hecho'&&parseD(d.end).getTime()<hoy;}).length;
+  const activas=tk.filter(t=>t.col!=='Hecho').length;
+  const riesgo=activas?Math.round(atras/activas*100):0;
+  const benef=ps.reduce((a,p)=>a+benefOf(p),0);
+
+  const itEstado=[{label:'Backlog',val:tk.filter(t=>t.col==='Backlog').length,color:'#64748b'},
+    {label:'En progreso',val:tk.filter(t=>t.col==='En progreso').length,color:'#0ea5e9'},
+    {label:'En revisión',val:tk.filter(t=>t.col==='En revisión').length,color:'#8b5cf6'},
+    {label:'Hecho',val:tk.filter(t=>t.col==='Hecho').length,color:'#22c55e'}];
+  const itPrio=[{label:'Alta',val:tk.filter(t=>(t.prioridad||'Media')==='Alta').length,color:'#ef4444'},
+    {label:'Media',val:tk.filter(t=>(t.prioridad||'Media')==='Media').length,color:'#f59e0b'},
+    {label:'Baja',val:tk.filter(t=>(t.prioridad||'Media')==='Baja').length,color:'#22c55e'}];
+
+  const avProm=enej.length?Math.round(enej.reduce((a,p)=>a+progress(p.id),0)/enej.length):0;
+  const completados=enej.filter(p=>progress(p.id)>=100).length;
+  const enRiesgoProj=enej.filter(p=>ticketsOf(p.id).some(t=>{const d=taskDates(t);return d.end&&t.col!=='Hecho'&&parseD(d.end).getTime()<hoy;})).length;
+  const distBands=[
+    {label:'Completado (100%)',val:enej.filter(p=>progress(p.id)>=100).length,color:'#16a34a'},
+    {label:'Avanzado (60-99%)',val:enej.filter(p=>{const v=progress(p.id);return v>=60&&v<100;}).length,color:'#C9A227'},
+    {label:'En curso (1-59%)',val:enej.filter(p=>{const v=progress(p.id);return v>=1&&v<60;}).length,color:'#0ea5e9'},
+    {label:'Sin avance (0%)',val:enej.filter(p=>progress(p.id)===0).length,color:'#9aa0a6'}];
+
+  const up=STATE._updated?new Date(STATE._updated).toLocaleString('es-PE',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}):'';
+  document.getElementById('updated').textContent=up?('Actualizado: '+up):'';
+
+  document.getElementById('app').innerHTML=`
+    <div class="kpis">
+      <div class="kpi"><div class="v">${ps.length}</div><div class="l">Proyectos</div></div>
+      <div class="kpi green"><div class="v">${enej.length}</div><div class="l">En ejecución</div></div>
+      <div class="kpi done"><div class="v">${avance}%</div><div class="l">Avance global</div></div>
+      <div class="kpi blue"><div class="v">${done}/${tk.length}</div><div class="l">Tickets cerrados</div></div>
+      <div class="kpi red"><div class="v">${riesgo}%</div><div class="l">Tareas en riesgo</div></div>
+      <div class="kpi money"><div class="v" style="font-size:21px">${money(presu)}</div><div class="l">Presupuesto total</div></div>
+    </div>
+    <div class="grid">
+      <div class="card"><h3>🎯 Estado de tickets</h3>
+        <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap">
+          <div style="flex:1;min-width:150px"><div class="chart-box" style="height:190px"><canvas id="chEstado"></canvas></div></div>
+          <div style="flex:1;min-width:180px">${breakdownTable(itEstado)}</div>
+        </div></div>
+      <div class="card"><h3>⚡ Prioridad de tickets</h3>
+        <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap">
+          <div style="flex:1;min-width:150px"><div class="chart-box" style="height:190px"><canvas id="chPrio"></canvas></div></div>
+          <div style="flex:1;min-width:180px">${breakdownTable(itPrio)}</div>
+        </div></div>
+      <div class="card full"><h3>📈 Avance por proyecto (en ejecución)</h3>
+        <div style="display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start">
+          <div style="flex:2;min-width:320px"><div class="chart-box tall"><canvas id="chAvance"></canvas></div></div>
+          <div style="flex:1;min-width:260px">
+            <div style="display:flex;gap:9px;margin-bottom:14px">
+              <div style="flex:1;text-align:center;background:var(--canvas);border-radius:6px;padding:11px 4px"><div style="font-size:24px;font-weight:800;color:#111">${avProm}%</div><div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;margin-top:2px">Avance prom.</div></div>
+              <div style="flex:1;text-align:center;background:var(--canvas);border-radius:6px;padding:11px 4px"><div style="font-size:24px;font-weight:800;color:#16a34a">${completados}</div><div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;margin-top:2px">Completados</div></div>
+              <div style="flex:1;text-align:center;background:var(--canvas);border-radius:6px;padding:11px 4px"><div style="font-size:24px;font-weight:800;color:#ef4444">${enRiesgoProj}</div><div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;margin-top:2px">En riesgo</div></div>
+            </div>
+            <div style="font-size:12px;font-weight:700;color:#111;margin:0 0 4px">Proyectos por nivel de avance</div>
+            <div class="chart-box" style="height:210px"><canvas id="chAvanceDist"></canvas></div>
+          </div>
+        </div></div>
+      <div class="card"><h3>👥 Carga por responsable</h3><div class="chart-box tall"><canvas id="chCarga"></canvas></div></div>
+      <div class="card"><h3>💰 Presupuesto: Planificado vs Real</h3><div class="chart-box tall"><canvas id="chPresu"></canvas></div></div>
+    </div>
+    <h3 style="color:var(--gold);font-size:13px;margin:6px 2px 8px;display:flex;align-items:center;gap:7px">⏳ Lo que falta</h3>
+    ${pendientesTiles(ps,tk)}
+    <div class="grid" style="margin-top:16px">
+      <div class="card full"><h3>📋 Detalle de proyectos <span style="color:var(--muted);font-weight:400;font-size:11px">— clic para ver tareas</span></h3><div style="max-height:400px;overflow:auto">${tablaProyectos(ps)}</div></div>
+    </div>`;
+
+  chartEstado(itEstado); chartPrio(itPrio); chartAvance(enej); chartAvanceDist(distBands); chartPresu(ps); chartCarga(tk);
+}
+
+function destroy(id){ if(charts[id]){charts[id].destroy(); delete charts[id];} }
+const gridColor=()=>'#e8e6e4';
+const tickColor=()=>'#605e5c';
+
+function donut(canvasId,items){
+  destroy(canvasId);
+  charts[canvasId]=new Chart(document.getElementById(canvasId),{type:'doughnut',
+    data:{labels:items.map(i=>i.label),datasets:[{data:items.map(i=>i.val),backgroundColor:items.map(i=>i.color),borderWidth:0}]},
+    options:{plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>{
+      const tot=c.dataset.data.reduce((a,b)=>a+b,0)||1;return ' '+c.label+': '+c.raw+' ('+Math.round(c.raw/tot*100)+'%)';}}}},cutout:'64%'}});
+}
+function chartEstado(items){ donut('chEstado',items); }
+function chartPrio(items){ donut('chPrio',items); }
+function chartAvanceDist(bands){
+  destroy('chAvanceDist');
+  charts.chAvanceDist=new Chart(document.getElementById('chAvanceDist'),{type:'doughnut',
+    data:{labels:bands.map(b=>b.label),datasets:[{data:bands.map(b=>b.val),backgroundColor:bands.map(b=>b.color),borderWidth:0}]},
+    options:{plugins:{legend:{position:'bottom',labels:{color:tickColor(),font:{size:10},boxWidth:11,padding:8}},
+      tooltip:{callbacks:{label:c=>{const tot=c.dataset.data.reduce((a,b)=>a+b,0)||1;return ' '+c.label+': '+c.raw+' ('+Math.round(c.raw/tot*100)+'%)';}}}},cutout:'58%'}});
+}
+function chartAvance(ps){
+  const arr=ps.map(p=>({n:p.name,v:progress(p.id)})).sort((a,b)=>b.v-a.v).slice(0,12);
+  destroy('chAvance');
+  charts.chAvance=new Chart(chAvance,{type:'bar',
+    data:{labels:arr.map(a=>a.n.length>34?a.n.slice(0,32)+'…':a.n),
+      datasets:[{data:arr.map(a=>a.v),backgroundColor:arr.map(a=>a.v>=100?'#22c55e':a.v>=50?'#C9A227':'#0ea5e9'),borderRadius:5}]},
+    options:{indexAxis:'y',plugins:{legend:{display:false}},
+      scales:{x:{max:100,grid:{color:gridColor()},ticks:{color:tickColor(),callback:v=>v+'%'}},
+              y:{grid:{display:false},ticks:{color:tickColor(),font:{size:11}}}}}});
+}
+function chartPresu(ps){
+  const plan=ps.reduce((a,p)=>a+presuOf(p),0);
+  const real=ps.reduce((a,p)=>a+costoOf(p),0);
+  const benef=ps.reduce((a,p)=>a+benefOf(p),0);
+  destroy('chPresu');
+  charts.chPresu=new Chart(chPresu,{type:'bar',
+    data:{labels:['Planificado','Costo real','Beneficio est.'],
+      datasets:[{data:[plan,real,benef],backgroundColor:['#C9A227','#ef4444','#22c55e'],borderRadius:6}]},
+    options:{plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>'S/ '+fmt(c.raw)}}},
+      scales:{y:{grid:{color:gridColor()},ticks:{color:tickColor(),callback:v=>'S/ '+(v>=1000?(v/1000)+'k':v)}},
+              x:{grid:{display:false},ticks:{color:tickColor()}}}}});
+}
+function chartCarga(tk){
+  const m={};
+  tk.forEach(t=>{const code=t.assignee||t.responsable||'—';m[code]=(m[code]||0)+1;});
+  const arr=Object.entries(m).sort((a,b)=>b[1]-a[1]).slice(0,12);
+  destroy('chCarga');
+  charts.chCarga=new Chart(document.getElementById('chCarga'),{type:'bar',
+    data:{labels:arr.map(a=>memberName(a[0])),datasets:[{data:arr.map(a=>a[1]),backgroundColor:'#C9A227',borderRadius:5}]},
+    options:{indexAxis:'y',plugins:{legend:{display:false}},
+      scales:{x:{grid:{color:gridColor()},ticks:{color:tickColor(),precision:0}},
+              y:{grid:{display:false},ticks:{color:tickColor(),font:{size:11}}}}}});
+}
+
+function estadoTag(p){
+  if(progress(p.id)>=100) return '<span class="tag" style="background:#22c55e30;color:#22c55e">Completado</span>';
+  if(enEjec(p)) return '<span class="tag" style="background:#0ea5e930;color:#0ea5e9">En ejecución</span>';
+  if(p.estadoReq==='rechazado') return '<span class="tag" style="background:#ef444430;color:#ef4444">Rechazado</span>';
+  if(p.estadoReq==='aceptado') return '<span class="tag" style="background:#C9A22730;color:#C9A227">Aceptado</span>';
+  if(p.estadoReq==='levantamiento') return '<span class="tag" style="background:#16a34a30;color:#16a34a">Levantamiento</span>';
+  return '<span class="tag" style="background:#64748b30;color:#8a99ad">Pendiente</span>';
+}
+function tablaProyectos(ps){
+  const rows=ps.map(p=>{
+    const ts=ticketsOf(p.id), d=ts.filter(t=>t.col==='Hecho').length, pct=progress(p.id);
+    const ec=p.empresa==='MODIPSA'?'#3b82f6':'#22c55e';
+    return `<tr class="tr-click" onclick="openProj('${p.id}')">
+      <td>${escape(p.name)}</td>
+      <td><span class="tag" style="background:${ec}30;color:${ec}">${p.empresa||'—'}</span></td>
+      <td>${estadoTag(p)}</td>
+      <td style="min-width:110px"><div style="display:flex;align-items:center;gap:8px"><div class="bar-mini" style="flex:1"><i style="width:${pct}%"></i></div><span style="font-size:11px">${pct}%</span></div></td>
+      <td class="num">${d}/${ts.length}</td>
+      <td class="num">${presuOf(p)?money(presuOf(p)):'—'}</td>
+      <td class="num">${benefOf(p)?money(benefOf(p)):'—'}</td>
+    </tr>`;
+  }).join('');
+  return `<table><thead><tr><th>Proyecto</th><th>Empresa</th><th>Estado</th><th>Avance</th><th>Tickets</th><th>Presup.</th><th>Beneficio</th></tr></thead><tbody>${rows||'<tr><td colspan="7" style="text-align:center;color:var(--muted)">Sin proyectos</td></tr>'}</tbody></table>`;
+}
+function parseD(s){ if(!s) return null; var str=String(s); return new Date(str.length<=10?str+'T00:00:00':str); }
+function ganttHtml(ts){
+  var dated=ts.map(function(t){var d=taskDates(t);return {t:t,start:d.start,end:d.end};}).filter(function(x){return x.start&&x.end;})
+    .sort(function(a,b){return parseD(a.start).getTime()-parseD(b.start).getTime();});
+  if(!dated.length) return '<div style="color:var(--muted);font-size:12px;padding:8px 0">Ninguna tarea tiene fechas (ni propias ni de sprint). Cárgalas en el Gantt del SCRUM para ver el cronograma aquí.</div>';
+  var times=dated.map(function(x){return [parseD(x.start).getTime(),parseD(x.end).getTime()];});
+  var min=Math.min.apply(null,times.map(function(x){return x[0];}));
+  var max=Math.max.apply(null,times.map(function(x){return x[1];}));
+  var span=Math.max(1,max-min);
+  var cc={'Backlog':'#64748b','En progreso':'#0ea5e9','En revisión':'#8b5cf6','Hecho':'#22c55e'};
+  var rows=dated.map(function(x){
+    var t=x.t;
+    var s=parseD(x.start).getTime(), e=parseD(x.end).getTime();
+    var left=(s-min)/span*100, w=Math.max(2,(e-s)/span*100);
+    var c=cc[t.col]||'#C9A227';
+    return '<div class="grow"><div class="gl" title="'+escape(t.title)+'">'+escape(t.title||'—')+'</div>'
+      +'<div class="gt"><div class="gb" style="left:'+left+'%;width:'+w+'%;background:'+c+'" title="'+x.start+' → '+x.end+'"></div></div></div>';
+  }).join('');
+  var fd=function(ms){return new Date(ms).toLocaleDateString('es-PE',{day:'2-digit',month:'2-digit'});};
+  return '<div class="gantt"><div class="gaxis"><span>'+fd(min)+'</span><span>'+fd((min+max)/2)+'</span><span>'+fd(max)+'</span></div>'+rows+'</div>';
+}
+function openProj(pid){
+  var p=(STATE.projects||[]).find(function(x){return x.id===pid;});
+  if(!p) return;
+  var ts=ticketsOf(pid).slice().sort(function(a,b){
+    var da=taskDates(a).start, db=taskDates(b).start;
+    if(!da&&!db) return 0; if(!da) return 1; if(!db) return -1;
+    return parseD(da).getTime()-parseD(db).getTime();
+  });
+  var pct=progress(pid);
+  var byCol=['Backlog','En progreso','En revisión','Hecho'].map(function(c){
+    return '<span class="tag" style="background:var(--panel2);color:var(--txt);margin-right:6px">'+c+': '+ts.filter(function(t){return t.col===c;}).length+'</span>';
+  }).join('');
+  var pc={'Alta':'#ef4444','Media':'#f59e0b','Baja':'#22c55e'};
+  var hoy=esHoy();
+  var filas=ts.map(function(t){
+    var c={'Backlog':'#64748b','En progreso':'#0ea5e9','En revisión':'#8b5cf6','Hecho':'#22c55e'}[t.col]||'#8a99ad';
+    var pr=t.prioridad||'Media';
+    var d=taskDates(t);
+    var inval=fechasInvalidas(d);
+    var atras=(d.end&&t.col!=='Hecho'&&parseD(d.end).getTime()<hoy&&!inval);
+    var finCell=(d.end?fmtF(d.end):'—')+(inval?' <span title="Fin anterior al inicio" style="color:#ef4444">⚠️</span>':(atras?' <span title="Atrasado" style="color:#ef4444">⏰</span>':''));
+    var f=diasFaltan(t);
+    return '<tr><td style="white-space:normal">'+escape(t.title||'—')+'</td>'
+      +'<td>'+escape(memberName(t.assignee||t.responsable))+'</td>'
+      +'<td>'+(d.start?fmtF(d.start):'—')+'</td><td>'+finCell+'</td>'
+      +'<td class="num" style="color:'+f.color+';font-weight:700">'+f.txt+'</td>'
+      +'<td><span class="tag" style="background:'+c+'30;color:'+c+'">'+(t.col||'—')+'</span></td>'
+      +'<td><span class="tag" style="background:'+(pc[pr]||'#8a99ad')+'30;color:'+(pc[pr]||'#8a99ad')+'">'+pr+'</span></td></tr>';
+  }).join('');
+  document.getElementById('modal').innerHTML=
+    '<div class="modal-h"><div><div class="brand" style="font-size:16px">'+escape(p.name)+'</div>'
+      +'<div class="sub">'+escape(p.empresa||'')+(p.sede?' · 📍'+escape(p.sede):'')+' · '+ts.length+' tareas · '+pct+'% completado</div></div>'
+      +'<button class="x" onclick="closeProj()">✕</button></div>'
+    +'<div class="modal-b">'
+      +'<div style="margin-bottom:14px">'+byCol+'</div>'
+      +'<h3 style="color:var(--gold);font-size:13px;margin:0 0 8px">🗓️ Cronograma de tareas</h3>'
+      +ganttHtml(ts)
+      +'<h3 style="color:var(--gold);font-size:13px;margin:14px 0 8px">📋 Detalle de tareas</h3>'
+      +'<div style="max-height:300px;overflow:auto"><table><thead><tr><th>Tarea</th><th>Responsable</th><th>Inicio</th><th>Fin</th><th>Faltan</th><th>Estado</th><th>Prioridad</th></tr></thead><tbody>'
+      +(filas||'<tr><td colspan="7" style="text-align:center;color:var(--muted)">Sin tareas</td></tr>')
+      +'</tbody></table></div>'
+    +'</div>';
+  document.getElementById('ov').classList.add('show');
+}
+function closeProj(){ document.getElementById('ov').classList.remove('show'); }
+document.addEventListener('keydown',function(e){ if(e.key==='Escape')closeProj(); });
+
+function escape(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+function setEmpresa(e,btn){
+  empresa=e;
+  document.querySelectorAll('[data-emp]').forEach(b=>b.classList.toggle('on',b===btn));
+  if(STATE) render();
+}
+function doLogin(){
+  var v=document.getElementById('pass').value;
+  if(v===DASH_PASS){
+    try{sessionStorage.setItem('dash_auth','1');}catch(e){}
+    entrar();
+  }else{
+    document.getElementById('loginErr').textContent='Contraseña incorrecta';
+    document.getElementById('pass').value='';
+  }
+}
+function entrar(){
+  document.getElementById('login').style.display='none';
+  cargar();
+  if(!window._dashInt) window._dashInt=setInterval(cargar,60000);
+}
+(function(){
+  var ok=false; try{ok=sessionStorage.getItem('dash_auth')==='1';}catch(e){}
+  if(ok){ entrar(); }
+  else{ setTimeout(function(){var p=document.getElementById('pass'); if(p)p.focus();},100); }
+})();
+</script>
+</body>
+</html>
