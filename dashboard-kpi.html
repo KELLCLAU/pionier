@@ -354,6 +354,7 @@ function chartCarga(tk){
 
 function estadoTag(p){
   if(progress(p.id)>=100) return '<span class="tag" style="background:#22c55e30;color:#22c55e">Completado</span>';
+  if(p.estadoReq==='espera_usuario') return '<span class="tag" style="background:#ea580c30;color:#ea580c">En espera de usuario</span>';
   if(enEjec(p)) return '<span class="tag" style="background:#0ea5e930;color:#0ea5e9">En ejecución</span>';
   if(p.estadoReq==='rechazado') return '<span class="tag" style="background:#ef444430;color:#ef4444">Rechazado</span>';
   if(p.estadoReq==='aceptado') return '<span class="tag" style="background:#C9A22730;color:#C9A227">Aceptado</span>';
