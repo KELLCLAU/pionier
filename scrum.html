@@ -7,7 +7,7 @@
 <script>
 // LOGIN GLOBAL — se ejecuta antes de mostrar nada
 (function(){
-  const KEY = 'pionier_session';
+  const KEY = 'pionier_session_v2';
   const PASSWORDS = ['K3iko-Scrum26'];
   if(sessionStorage.getItem(KEY) !== '1'){
     document.addEventListener('DOMContentLoaded', function(){
@@ -992,7 +992,8 @@ var REQ_ESTADOS={
   '':            {label:'⚪ Pendiente (sin revisar)', color:'#94a3b8'},
   'aceptado':    {label:'🟡 Aceptado (viable)',       color:'#C9A227'},
   'rechazado':   {label:'🔴 Rechazado (no viable)',   color:'#dc2626'},
-  'levantamiento':{label:'🟢 Levantamiento listo',    color:'#16a34a'}
+  'levantamiento':{label:'🟢 Levantamiento listo',    color:'#16a34a'},
+  'espera_usuario':{label:'🟠 En espera de usuario',  color:'#ea580c'}
 };
 function setEstadoReq(pid,val){
   var p=state.projects.find(function(x){return x.id===pid;});
@@ -4905,6 +4906,13 @@ function exportarExcelGeneral(){
     +'<div style="font-size:13px;color:#64748b;margin-bottom:20px">Elige qué información exportar — formato para Gerencia:</div>'
     +'<div style="display:flex;flex-direction:column;gap:10px">'
 
+    // Opción 0: Lista simple para Gerencia
+    +'<div onclick="closeModal();exportarProyectosLista()" style="display:flex;align-items:center;gap:16px;background:#fffdf0;border:2px solid #C9A227;border-radius:12px;padding:16px 20px;cursor:pointer;transition:.15s" onmouseover="this.style.background=\'#fff8e1\'" onmouseout="this.style.background=\'#fffdf0\'">'
+    +'<span style="font-size:28px">📋</span>'
+    +'<div><div style="font-weight:700;font-size:14px;color:#1e2530">Lista de proyectos (Gerencia)</div>'
+    +'<div style="font-size:12px;color:#64748b;margin-top:2px">'+state.projects.length+' proyectos — Nombre, Estado, % Avance, Área, Empresa, Complejidad, Asignado a</div></div>'
+    +'</div>'
+
     // Opción 1: Todos los proyectos
     +'<div onclick="exportarExcelTipo(\'proyectos\')" style="display:flex;align-items:center;gap:16px;background:#fff;border:2px solid #e2e8f0;border-radius:12px;padding:16px 20px;cursor:pointer;transition:.15s" onmouseover="this.style.borderColor=\'#C9A227\';this.style.background=\'#fffdf0\'" onmouseout="this.style.borderColor=\'#e2e8f0\';this.style.background=\'#fff\'">'
     +'<span style="font-size:28px">📁</span>'
@@ -4937,6 +4945,52 @@ function exportarExcelGeneral(){
     +'<div id="export-status" style="margin-top:16px;text-align:center;font-size:12px;color:#64748b"></div>'
     +'</div>';
   showModal(html);
+}
+
+function _nombreMiembro(cod){
+  if(!cod) return '';
+  var i=MEMBERS.indexOf(cod);
+  return i>=0?MEMBER_NAMES[i]:cod;
+}
+function _areaMiembro(cod){
+  if(!cod) return '';
+  var i=MEMBERS.indexOf(cod);
+  return (i>=0 && typeof MEMBER_ROLES!=='undefined')?MEMBER_ROLES[i]:cod;
+}
+function _estadoProyectoTxt(p){
+  var pct=getProgress(p.id);
+  if(pct>=100) return 'Completado';
+  if(typeof _enEjecucion==='function' && _enEjecucion(p)) return 'En ejecución';
+  var m={'':'Pendiente (sin revisar)','aceptado':'Aceptado (viable)','rechazado':'Rechazado (no viable)','levantamiento':'Levantamiento listo','espera_usuario':'En espera de usuario'};
+  return m[p.estadoReq||'']||'Pendiente (sin revisar)';
+}
+function exportarProyectosLista(){
+  var XLSX=window.XLSX||window.xlsx;
+  if(!XLSX){
+    var s=document.createElement('script');
+    s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+    s.onload=function(){exportarProyectosLista();};
+    document.head.appendChild(s);
+    return;
+  }
+  var headers=['Nombre del Proyecto','Estado','% Avance','Área Solicitante','Empresa','Complejidad','Asignado a'];
+  var rows=state.projects.map(function(p){
+    var ts=state.tickets.filter(function(t){return t.projId===p.id;});
+    var sps=ts.map(function(t){return Number(t.sp||t.points||0);}).filter(function(n){return n>0;});
+    var compl=sps.length?(Math.round(sps.reduce(function(a,b){return a+b;},0)/sps.length*10)/10)+' SP prom.':'';
+    var set={};
+    ts.forEach(function(t){var c=t.assignee||t.responsable; if(c) set[c]=1;});
+    var asig=Object.keys(set).map(_areaMiembro).filter(Boolean);
+    asig=asig.filter(function(a,i){return asig.indexOf(a)===i;}).join(' / ');
+    return [p.name||'', _estadoProyectoTxt(p), getProgress(p.id)+'%', p.area||'', p.empresa||'', compl, asig];
+  });
+  var aoa=[headers].concat(rows);
+  var ws=XLSX.utils.aoa_to_sheet(aoa);
+  ws['!cols']=[{wch:42},{wch:22},{wch:10},{wch:26},{wch:12},{wch:18},{wch:30}];
+  var wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'Proyectos');
+  var fecha=new Date().toISOString().split('T')[0];
+  XLSX.writeFile(wb,'Proyectos_Pionier_'+fecha+'.xlsx');
 }
 
 function exportarExcelTipo(tipo){
