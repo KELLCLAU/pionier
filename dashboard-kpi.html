@@ -104,6 +104,7 @@ td.num{text-align:right;font-variant-numeric:tabular-nums}
     <button class="btn" data-emp="MODIPSA" onclick="setEmpresa('MODIPSA',this)">MODIPSA</button>
     <button class="btn" data-emp="MASISAC" onclick="setEmpresa('MASISAC',this)">MASISAC</button>
     <button class="btn" onclick="cargar()" title="Actualizar">🔄</button>
+    <button class="btn" onclick="abrirExport()" title="Exportar a Excel" style="background:#217346;border-color:#217346">⬇ Exportar</button>
   </div>
   <div class="updated" id="updated"></div>
 </header>
@@ -130,6 +131,170 @@ const money=n=>'S/ '+fmt(Math.round(n||0));
 const MEMBERS=['CS','KB','OM','KP','OR','CL','MH','JH','LP','ST','CG','CB','CA','RT','JS','WR','ME','AC','DG','CH','MG','KA'];
 const MEMBER_NAMES=['Carlos Salas','Kelly Barrientos','Omar Muñoz','Keiko Palomino','Owen Rojas','Claudia López','Miguel Hernández','Jaime Halire','Luis Palomino','Saúl Tapia','Cleison Guevara','Claudio Barahona','Carla Arce','Rigoberto Timaná','Jean Sánchez','Wilder Rojas','Mauro Elías','Antony Chilquillo','Daniel Guerrero','Cristian Huaman','Maria Gracia La Torre','Karla Aguilar Chuquipoma'];
 function memberName(code){ if(!code) return '—'; const i=MEMBERS.indexOf(code); return i>=0?MEMBER_NAMES[i]:code; }
+const MEMBER_ROLES=['Coord. Desarrollo SW & Web','Ing. Datos / Arquitectura','Jefe de TI','Jefe de Proyectos','Analista BI','Enc. Desarrollo Web','Prog. ERP','Prog. ERP','Prog. ERP','Prog. ERP','Prog. ERP','Prog. ERP','Prog. ERP','Desarrollador Web','Desarrollador Web','Desarrollador Web','Analista Helpdesk','Adm. Redes y Ciberseguridad','Analista de Soporte','Asistente de Ciberseguridad','Analista BI','Analista QA'];
+function areaMiembro(code){ if(!code) return ''; const i=MEMBERS.indexOf(code); return i>=0?MEMBER_ROLES[i]:code; }
+
+// ─── EXPORTACIÓN A EXCEL ─────────────────────────────────
+function hoyStr(){ return new Date().toISOString().split('T')[0]; }
+function safeName(s){ return String(s||'').replace(/[^a-zA-Z0-9]+/g,'_').slice(0,40); }
+function estadoTxt(p){
+  if(progress(p.id)>=100) return 'Completado';
+  if(p.estadoReq==='espera_usuario') return 'En espera de usuario';
+  if(enEjec(p)) return 'En ejecución';
+  var m={'rechazado':'Rechazado','aceptado':'Aceptado','levantamiento':'Levantamiento listo'};
+  return m[p.estadoReq]||'Pendiente';
+}
+function ensureXLSX(cb){
+  if(window.XLSX){cb();return;}
+  var s=document.createElement('script');
+  s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+  s.onload=cb; s.onerror=function(){alert('No se pudo cargar el generador de Excel. Revisa la conexión.');};
+  document.head.appendChild(s);
+}
+function descargarXLSX(sheets, filename){
+  ensureXLSX(function(){
+    var wb=XLSX.utils.book_new();
+    var emp=(empresa==='todas'?'Todas las empresas':empresa);
+    var f=new Date().toLocaleDateString('es-PE',{day:'2-digit',month:'long',year:'numeric'});
+    sheets.forEach(function(sh){
+      var nc=(sh.cols&&sh.cols.length)||(sh.aoa[0]?sh.aoa[0].length:1);
+      var head=[['GRUPO PIONIER · Gestión de Proyectos'],[sh.titulo||sh.name],['Empresa: '+emp+'     Generado: '+f],[]];
+      var ws=XLSX.utils.aoa_to_sheet(head.concat(sh.aoa));
+      if(sh.cols) ws['!cols']=sh.cols;
+      ws['!merges']=[
+        {s:{r:0,c:0},e:{r:0,c:nc-1}},
+        {s:{r:1,c:0},e:{r:1,c:nc-1}},
+        {s:{r:2,c:0},e:{r:2,c:nc-1}}
+      ];
+      XLSX.utils.book_append_sheet(wb,ws,sh.name);
+    });
+    XLSX.writeFile(wb, filename);
+  });
+}
+function _taskRows(ps){
+  var rows=[];
+  ps.forEach(function(p){
+    ticketsOf(p.id).forEach(function(t){
+      var dd=taskDates(t), cod=t.assignee||t.responsable;
+      rows.push([p.name||'',p.empresa||'',t.title||'',memberName(cod),areaMiembro(cod),dd.start?fmtF(dd.start):'—',dd.end?fmtF(dd.end):'—',diasFaltan(t).txt,t.col||'',t.prioridad||'Media']);
+    });
+  });
+  return rows;
+}
+function expProyectosGeneral(){
+  var ps=projsFilt();
+  var aoa=[['N°','Proyecto','Empresa','Sede','Área Solicitante','Estado','% Avance','Hechos','Total tickets','Presupuesto (S/)','Beneficio (S/)']];
+  ps.forEach(function(p,i){ var ts=ticketsOf(p.id), d=ts.filter(function(t){return t.col==='Hecho';}).length;
+    aoa.push([i+1,p.name||'',p.empresa||'',p.sede||'',p.area||'',estadoTxt(p),progress(p.id)+'%',d,ts.length,presuOf(p)||'',benefOf(p)||'']); });
+  descargarXLSX([{name:'Proyectos',aoa:aoa,cols:[{wch:5},{wch:42},{wch:12},{wch:14},{wch:24},{wch:20},{wch:9},{wch:8},{wch:12},{wch:15},{wch:15}]}],'Pionier_Proyectos_General_'+hoyStr()+'.xlsx');
+  closeProj();
+}
+function expProyectosDetalle(){
+  var aoa=[['Proyecto','Empresa','Tarea','Responsable','Área','Inicio','Fin','Faltan','Estado','Prioridad']].concat(_taskRows(projsFilt()));
+  descargarXLSX([{name:'Detalle de tareas',aoa:aoa,cols:[{wch:38},{wch:12},{wch:40},{wch:20},{wch:22},{wch:10},{wch:10},{wch:12},{wch:14},{wch:10}]}],'Pionier_Proyectos_Detalle_'+hoyStr()+'.xlsx');
+  closeProj();
+}
+function _respStats(){
+  var ps=projsFilt(), pids={}; ps.forEach(function(p){pids[p.id]=1;});
+  var map={};
+  (STATE.tickets||[]).filter(function(t){return pids[t.projId];}).forEach(function(t){
+    var c=t.assignee||t.responsable||'—';
+    if(!map[c]) map[c]={cod:c,total:0,hecho:0,prog:0,rev:0,back:0};
+    map[c].total++;
+    if(t.col==='Hecho')map[c].hecho++; else if(t.col==='En progreso')map[c].prog++;
+    else if(t.col==='En revisión')map[c].rev++; else map[c].back++;
+  });
+  return Object.keys(map).map(function(k){return map[k];}).sort(function(a,b){return b.total-a.total;});
+}
+function expResponsablesGeneral(){
+  var aoa=[['Responsable','Área','Total tareas','Hechas','En progreso','En revisión','Pendientes','% Avance']];
+  _respStats().forEach(function(r){ var pct=r.total?Math.round(r.hecho/r.total*100):0;
+    aoa.push([memberName(r.cod),areaMiembro(r.cod),r.total,r.hecho,r.prog,r.rev,r.back,pct+'%']); });
+  descargarXLSX([{name:'Responsables',aoa:aoa,cols:[{wch:24},{wch:24},{wch:12},{wch:9},{wch:12},{wch:12},{wch:12},{wch:10}]}],'Pionier_Responsables_General_'+hoyStr()+'.xlsx');
+  closeProj();
+}
+function expResponsablesDetalle(){
+  var ps=projsFilt(), pn={}; ps.forEach(function(p){pn[p.id]=p.name;});
+  var pids={}; ps.forEach(function(p){pids[p.id]=1;});
+  var tk=(STATE.tickets||[]).filter(function(t){return pids[t.projId];}).slice()
+    .sort(function(a,b){return memberName(a.assignee||a.responsable).localeCompare(memberName(b.assignee||b.responsable));});
+  var aoa=[['Responsable','Área','Proyecto','Tarea','Estado','Prioridad','Inicio','Fin','Faltan']];
+  tk.forEach(function(t){ var dd=taskDates(t), cod=t.assignee||t.responsable;
+    aoa.push([memberName(cod),areaMiembro(cod),pn[t.projId]||'',t.title||'',t.col||'',t.prioridad||'Media',dd.start?fmtF(dd.start):'—',dd.end?fmtF(dd.end):'—',diasFaltan(t).txt]); });
+  descargarXLSX([{name:'Tareas por responsable',aoa:aoa,cols:[{wch:22},{wch:22},{wch:34},{wch:40},{wch:14},{wch:10},{wch:10},{wch:10},{wch:12}]}],'Pionier_Responsables_Detalle_'+hoyStr()+'.xlsx');
+  closeProj();
+}
+function expProyecto(pid,tipo){
+  var p=(STATE.projects||[]).find(function(x){return x.id===pid;}); if(!p)return;
+  if(tipo==='detalle'){
+    var aoa=[['Tarea','Responsable','Área','Inicio','Fin','Faltan','Estado','Prioridad']];
+    ticketsOf(pid).forEach(function(t){var dd=taskDates(t),cod=t.assignee||t.responsable;
+      aoa.push([t.title||'',memberName(cod),areaMiembro(cod),dd.start?fmtF(dd.start):'—',dd.end?fmtF(dd.end):'—',diasFaltan(t).txt,t.col||'',t.prioridad||'Media']);});
+    descargarXLSX([{name:'Tareas',aoa:aoa,cols:[{wch:42},{wch:20},{wch:22},{wch:10},{wch:10},{wch:12},{wch:14},{wch:10}]}],'Pionier_'+safeName(p.name)+'_Detalle_'+hoyStr()+'.xlsx');
+  } else {
+    var ts=ticketsOf(pid), d=ts.filter(function(t){return t.col==='Hecho';}).length;
+    var aoa=[['RESUMEN DE PROYECTO',''],['Proyecto',p.name||''],['Empresa',p.empresa||''],['Sede',p.sede||''],['Área Solicitante',p.area||''],
+      ['Estado',estadoTxt(p)],['% Avance',progress(pid)+'%'],['',''],
+      ['Backlog',ts.filter(function(t){return t.col==='Backlog';}).length],['En progreso',ts.filter(function(t){return t.col==='En progreso';}).length],
+      ['En revisión',ts.filter(function(t){return t.col==='En revisión';}).length],['Hecho',d],['Total tickets',ts.length],['',''],
+      ['Presupuesto (S/)',presuOf(p)||''],['Beneficio (S/)',benefOf(p)||'']];
+    descargarXLSX([{name:'Resumen',aoa:aoa,cols:[{wch:24},{wch:46}]}],'Pionier_'+safeName(p.name)+'_General_'+hoyStr()+'.xlsx');
+  }
+}
+function abrirExport(){
+  var card=function(icon,titulo,desc,fn){
+    return '<div onclick="'+fn+'" style="display:flex;align-items:center;gap:14px;background:#faf9f8;border:1px solid var(--line);border-radius:10px;padding:14px 16px;cursor:pointer;transition:.15s" onmouseover="this.style.borderColor=\'var(--yellow)\';this.style.background=\'#fff9e6\'" onmouseout="this.style.borderColor=\'var(--line)\';this.style.background=\'#faf9f8\'">'
+      +'<span style="font-size:24px">'+icon+'</span><div><div style="font-weight:700;font-size:13px;color:#111">'+titulo+'</div><div style="font-size:11px;color:var(--muted);margin-top:2px">'+desc+'</div></div></div>';
+  };
+  document.getElementById('modal').innerHTML=
+    '<div class="modal-h"><div class="brand">⬇ Exportar a Excel</div><button class="x" onclick="closeProj()">✕</button></div>'
+    +'<div class="modal-b" style="display:flex;flex-direction:column;gap:10px">'
+    +'<div style="font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Proyectos</div>'
+    +card('📊','Proyectos — General','Lista de proyectos: estado, % avance, área, presupuesto','expProyectosGeneral()')
+    +card('📋','Proyectos — Detalle','Todas las tareas de todos los proyectos, con responsable y fechas','expProyectosDetalle()')
+    +'<div style="font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-top:6px">Responsables</div>'
+    +card('👥','Responsables — General','Carga y avance por persona: hechas, en progreso, pendientes, % avance','expResponsablesGeneral()')
+    +card('🧑‍💻','Responsables — Detalle','Todas las tareas agrupadas por persona','expResponsablesDetalle()')
+    +'</div>';
+  document.getElementById('ov').classList.add('show');
+}
+function openResp(cod){
+  var ps=projsFilt(), pids={}; ps.forEach(function(p){pids[p.id]=1;});
+  var pn={}; ps.forEach(function(p){pn[p.id]=p.name;});
+  var tk=(STATE.tickets||[]).filter(function(t){return pids[t.projId] && (t.assignee||t.responsable)===cod;});
+  var hechas=tk.filter(function(t){return t.col==='Hecho';});
+  var enprog=tk.filter(function(t){return t.col==='En progreso'||t.col==='En revisión';});
+  var faltan=tk.filter(function(t){return t.col==='Backlog';});
+  var pct=tk.length?Math.round(hechas.length/tk.length*100):0;
+  var lista=function(arr,color){
+    if(!arr.length) return '<div style="font-size:12px;color:var(--muted);padding:4px 0">—</div>';
+    return arr.map(function(t){return '<div style="display:flex;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line2);font-size:12px"><span style="width:8px;height:8px;border-radius:50%;background:'+color+';flex:none"></span><span style="flex:1">'+escape(t.title||'—')+'</span><span style="color:var(--muted);font-size:11px">'+escape(pn[t.projId]||'')+'</span></div>';}).join('');
+  };
+  document.getElementById('modal').innerHTML=
+    '<div class="modal-h"><div><div class="brand">'+escape(memberName(cod))+'</div><div class="sub">'+escape(areaMiembro(cod))+' · '+tk.length+' tareas · '+pct+'% avance</div></div><button class="x" onclick="closeProj()">✕</button></div>'
+    +'<div class="modal-b">'
+    +'<div style="display:flex;gap:9px;margin-bottom:16px">'
+      +'<div style="flex:1;text-align:center;background:#f0fdf4;border-radius:8px;padding:12px"><div style="font-size:24px;font-weight:800;color:#16a34a">'+hechas.length+'</div><div style="font-size:10px;color:var(--muted);text-transform:uppercase">Hechas</div></div>'
+      +'<div style="flex:1;text-align:center;background:#eff6ff;border-radius:8px;padding:12px"><div style="font-size:24px;font-weight:800;color:#0ea5e9">'+enprog.length+'</div><div style="font-size:10px;color:var(--muted);text-transform:uppercase">En curso</div></div>'
+      +'<div style="flex:1;text-align:center;background:#f8fafc;border-radius:8px;padding:12px"><div style="font-size:24px;font-weight:800;color:#64748b">'+faltan.length+'</div><div style="font-size:10px;color:var(--muted);text-transform:uppercase">Le falta</div></div>'
+    +'</div>'
+    +'<div style="font-size:12px;font-weight:700;color:#16a34a;margin:0 0 4px">✓ Ya hizo</div>'+lista(hechas,'#16a34a')
+    +'<div style="font-size:12px;font-weight:700;color:#0ea5e9;margin:14px 0 4px">▸ En curso</div>'+lista(enprog,'#0ea5e9')
+    +'<div style="font-size:12px;font-weight:700;color:#64748b;margin:14px 0 4px">◻ Le falta hacer</div>'+lista(faltan,'#64748b')
+    +'<button onclick="expResponsableUno(\''+cod+'\')" style="margin-top:18px;width:100%;background:#217346;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;padding:11px 0;cursor:pointer;font-family:inherit">⬇ Descargar tareas de '+escape(memberName(cod))+' (Excel)</button>'
+    +'</div>';
+  document.getElementById('ov').classList.add('show');
+}
+function expResponsableUno(cod){
+  var ps=projsFilt(), pn={}; ps.forEach(function(p){pn[p.id]=p.name;});
+  var pids={}; ps.forEach(function(p){pids[p.id]=1;});
+  var tk=(STATE.tickets||[]).filter(function(t){return pids[t.projId] && (t.assignee||t.responsable)===cod;});
+  var orden={'En progreso':0,'En revisión':1,'Backlog':2,'Hecho':3};
+  tk.sort(function(a,b){return (orden[a.col]==null?9:orden[a.col])-(orden[b.col]==null?9:orden[b.col]);});
+  var aoa=[['Proyecto','Tarea','Estado','Prioridad','Inicio','Fin','Faltan']];
+  tk.forEach(function(t){var dd=taskDates(t);aoa.push([pn[t.projId]||'',t.title||'',t.col||'',t.prioridad||'Media',dd.start?fmtF(dd.start):'—',dd.end?fmtF(dd.end):'—',diasFaltan(t).txt]);});
+  descargarXLSX([{name:safeName(memberName(cod)).slice(0,28)||'Tareas',aoa:aoa,cols:[{wch:36},{wch:42},{wch:14},{wch:10},{wch:10},{wch:10},{wch:12}]}],'Pionier_'+safeName(memberName(cod))+'_'+hoyStr()+'.xlsx');
+}
 // Fechas de tarea: propias o heredadas del sprint (igual que el Gantt del SCRUM)
 function taskDates(t){
   let sp=null;
@@ -319,12 +484,14 @@ function chartAvanceDist(bands){
       tooltip:{callbacks:{label:c=>{const tot=c.dataset.data.reduce((a,b)=>a+b,0)||1;return ' '+c.label+': '+c.raw+' ('+Math.round(c.raw/tot*100)+'%)';}}}},cutout:'58%'}});
 }
 function chartAvance(ps){
-  const arr=ps.map(p=>({n:p.name,v:progress(p.id)})).sort((a,b)=>b.v-a.v).slice(0,12);
+  const arr=ps.map(p=>({id:p.id,n:p.name,v:progress(p.id)})).sort((a,b)=>b.v-a.v).slice(0,12);
   destroy('chAvance');
   charts.chAvance=new Chart(chAvance,{type:'bar',
     data:{labels:arr.map(a=>a.n.length>34?a.n.slice(0,32)+'…':a.n),
       datasets:[{data:arr.map(a=>a.v),backgroundColor:arr.map(a=>a.v>=100?'#22c55e':a.v>=50?'#C9A227':'#0ea5e9'),borderRadius:5}]},
     options:{indexAxis:'y',plugins:{legend:{display:false}},
+      onClick:(e,els)=>{ if(els.length){ const a=arr[els[0].index]; if(a) openProj(a.id); } },
+      onHover:(e,els)=>{ e.native.target.style.cursor=els.length?'pointer':'default'; },
       scales:{x:{max:100,grid:{color:gridColor()},ticks:{color:tickColor(),callback:v=>v+'%'}},
               y:{grid:{display:false},ticks:{color:tickColor(),font:{size:11}}}}}});
 }
@@ -348,6 +515,8 @@ function chartCarga(tk){
   charts.chCarga=new Chart(document.getElementById('chCarga'),{type:'bar',
     data:{labels:arr.map(a=>memberName(a[0])),datasets:[{data:arr.map(a=>a[1]),backgroundColor:'#C9A227',borderRadius:5}]},
     options:{indexAxis:'y',plugins:{legend:{display:false}},
+      onClick:(e,els)=>{ if(els.length){ const a=arr[els[0].index]; if(a&&a[0]!=='—') openResp(a[0]); } },
+      onHover:(e,els)=>{ e.native.target.style.cursor=els.length?'pointer':'default'; },
       scales:{x:{grid:{color:gridColor()},ticks:{color:tickColor(),precision:0}},
               y:{grid:{display:false},ticks:{color:tickColor(),font:{size:11}}}}}});
 }
@@ -432,6 +601,10 @@ function openProj(pid){
       +'<div class="sub">'+escape(p.empresa||'')+(p.sede?' · 📍'+escape(p.sede):'')+' · '+ts.length+' tareas · '+pct+'% completado</div></div>'
       +'<button class="x" onclick="closeProj()">✕</button></div>'
     +'<div class="modal-b">'
+      +'<div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">'
+        +'<button onclick="expProyecto(\''+p.id+'\',\'general\')" style="background:#217346;color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:700;padding:8px 14px;cursor:pointer;font-family:inherit">⬇ Excel — General</button>'
+        +'<button onclick="expProyecto(\''+p.id+'\',\'detalle\')" style="background:#fff;color:#217346;border:1px solid #217346;border-radius:7px;font-size:12px;font-weight:700;padding:8px 14px;cursor:pointer;font-family:inherit">⬇ Excel — Detalle de tareas</button>'
+      +'</div>'
       +'<div style="margin-bottom:14px">'+byCol+'</div>'
       +'<h3 style="color:var(--gold);font-size:13px;margin:0 0 8px">🗓️ Cronograma de tareas</h3>'
       +ganttHtml(ts)
