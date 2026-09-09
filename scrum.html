@@ -2219,6 +2219,9 @@ function showNewProject(){
   showModal(`<h2>➕ Nuevo Proyecto</h2>
     <div class="form-row"><label>Nombre del proyecto</label><input id="np-name" placeholder="Ej: Control de Inventario" autofocus></div>
     <div class="form-row"><label>Empresa</label><select id="np-empresa">${empresaOpts}</select></div>
+    <div class="form-row"><label>Origen del desarrollo</label><select id="np-origen"><option value="">— Selecciona —</option><option value="Interno">Interno (recursos propios)</option><option value="Externo">Externo (proveedor)</option></select></div>
+    <div class="form-row"><label>Proveedor externo (si aplica)</label><input id="np-proveedor" placeholder="Ej: Pepito SAC"></div>
+    <div class="form-row"><label>Desarrollado por (área)</label><select id="np-sistema"><option value="">— Selecciona —</option><option value="Desarrollo Web">Desarrollo Web</option><option value="Power BI">Power BI</option><option value="Sistema (ERP)">Sistema (ERP)</option><option value="Calidad">Calidad</option><option value="Otro">Otro</option></select></div>
     <div class="form-row"><label>Sede / Local</label><select id="np-sede"><option value="">Sin sede especifica</option><option>Jicamarca</option><option>Azangaro</option><option>Zarate</option><option>Campoy</option><option>Huachipa</option><option>Todas las sedes</option></select></div>
     <div class="form-row"><label>Área solicitante</label><select id="np-area"><option value="">— Selecciona el área —</option>
 <optgroup label="── GERENCIA ──">
@@ -2411,8 +2414,11 @@ function createProject(){
   };
   var _npSede=(document.getElementById('np-sede')||{value:''}).value||'';
   var _npArea=(document.getElementById('np-area')||{value:''}).value||'';
+  var _npOrigen=(document.getElementById('np-origen')||{value:''}).value||'';
+  var _npSistema=(document.getElementById('np-sistema')||{value:''}).value||'';
+  var _npProveedor=(document.getElementById('np-proveedor')||{value:''}).value||'';
   state.projects.push({id:pid,name,color:'#C9A227',empresa:document.getElementById('np-empresa').value,
-    sede:_npSede, area:_npArea,
+    sede:_npSede, area:_npArea, origen:_npOrigen, sistema:_npSistema, proveedor:_npProveedor,
     status:'planning',start:document.getElementById('np-start').value,end:document.getElementById('np-end').value,
     desc:document.getElementById('np-desc').value||'Sin descripción',prefix,roi:_npRoi});
   state.sprints.push({id:'s'+state.nextId.s++,projId:pid,name:'Sprint 1',
@@ -2434,6 +2440,9 @@ function editProject(pid){
   showModal(`<h2>✏️ Editar Proyecto</h2>
     <div class="form-row"><label>Nombre del proyecto</label><input id="ep-name" value="${p.name}"></div>
     <div class="form-row"><label>Empresa</label><select id="ep-empresa">${empresaOpts}</select></div>
+    <div class="form-row"><label>Origen del desarrollo</label><select id="ep-origen"><option value="">— Selecciona —</option><option ${(p.origen||'')==='Interno'?'selected':''}>Interno</option><option ${(p.origen||'')==='Externo'?'selected':''}>Externo</option></select></div>
+    <div class="form-row"><label>Proveedor externo (si aplica)</label><input id="ep-proveedor" value="${(p.proveedor||'').replace(/"/g,'&quot;')}" placeholder="Ej: Pepito SAC"></div>
+    <div class="form-row"><label>Desarrollado por (área)</label><select id="ep-sistema"><option value="">— Selecciona —</option>${['Desarrollo Web','Power BI','Sistema (ERP)','Calidad','Otro'].map(function(s){return '<option '+((p.sistema||'')===s?'selected':'')+'>'+s+'</option>';}).join('')}</select></div>
     <div class="form-row"><label>Estado</label><select id="ep-status">${statusOpts}</select></div>
     <div class="form-row"><label>Sede / Local</label><select id="ep-sede"><option value="">Sin sede especifica</option><option ${(p.sede||'')==='Jicamarca'?'selected':''}>Jicamarca</option><option ${(p.sede||'')==='Azangaro'?'selected':''}>Azangaro</option><option ${(p.sede||'')==='Zarate'?'selected':''}>Zarate</option><option ${(p.sede||'')==='Campoy'?'selected':''}>Campoy</option><option ${(p.sede||'')==='Huachipa'?'selected':''}>Huachipa</option><option ${(p.sede||'')==='Todas las sedes'?'selected':''}>Todas las sedes</option></select></div>
     <div class="form-row"><label>Área solicitante</label><select id="ep-area"><option value="">— Selecciona el área —</option>
@@ -2617,6 +2626,9 @@ function saveEditProject(pid){
   p.start=document.getElementById('ep-start').value;
   p.end=document.getElementById('ep-end').value;
   p.sede=(document.getElementById('ep-sede')||{value:''}).value||'';
+  p.origen=(document.getElementById('ep-origen')||{value:''}).value||'';
+  p.sistema=(document.getElementById('ep-sistema')||{value:''}).value||'';
+  p.proveedor=(document.getElementById('ep-proveedor')||{value:''}).value||'';
   p.area=(document.getElementById('ep-area')||{value:''}).value||'';
   // Guardar ROI si hay campos disponibles
   if(!p.roi) p.roi={notas:[]};
