@@ -415,17 +415,41 @@ function render(){
     {label:'En curso (1-59%)',val:enej.filter(p=>{const v=progress(p.id);return v>=1&&v<60;}).length,color:'#0ea5e9'},
     {label:'Sin avance (0%)',val:enej.filter(p=>progress(p.id)===0).length,color:'#9aa0a6'}];
 
+  // === Nuevas métricas para Gerencia ===
+  const realizados=ps.filter(p=>progress(p.id)>=100).length;
+  function _group(arr,keyFn){var m={};arr.forEach(function(x){var k=(keyFn(x)||'').toString().trim()||'Sin definir';m[k]=(m[k]||0)+1;});return Object.keys(m).map(function(k){return {label:k,val:m[k]};}).sort(function(a,b){return b.val-a.val;});}
+  const byArea=_group(ps,p=>p.area);
+  const byOrigen=_group(ps,p=>p.origen).map(function(o){o.color=/extern/i.test(o.label)?'#ea580c':(/intern|propi/i.test(o.label)?'#16a34a':'#9aa0a6');return o;});
+  const PAL=['#C9A227','#0ea5e9','#8b5cf6','#16a34a','#ef4444','#e67e22','#14b8a6','#6366f1','#9aa0a6'];
+  const bySistema=_group(ps,p=>p.sistema).map(function(s,i){s.color=PAL[i%PAL.length];return s;});
+  const nModipsa=ps.filter(p=>p.empresa==='MODIPSA').length, nMasisac=ps.filter(p=>p.empresa==='MASISAC').length;
+  const topArea=byArea[0];
+  const pctReal=ps.length?Math.round(realizados/ps.length*100):0;
+  const nExterno=ps.filter(p=>/extern/i.test(p.origen||'')).length;
+  const nInterno=ps.filter(p=>/intern|propi/i.test(p.origen||'')).length;
+  // Storytelling — frases de impacto
+  var _hist=[];
+  _hist.push('<b>'+realizados+' de '+ps.length+'</b> proyectos ya están <b>realizados</b> ('+pctReal+'%), con <b>'+enej.length+'</b> en ejecución y <b>'+pend+'</b> aún por iniciar.');
+  if(topArea) _hist.push('El área que más demanda proyectos es <b>'+escape(topArea.label)+'</b> con <b>'+topArea.val+'</b> solicitud'+(topArea.val>1?'es':'')+'.');
+  _hist.push('<b>MODIPSA</b> concentra <b>'+nModipsa+'</b> proyectos y <b>MASISAC</b> <b>'+nMasisac+'</b>.');
+  if(nInterno+nExterno>0) _hist.push('<b>'+nInterno+'</b> se desarrollaron con <b>recursos propios</b> y <b>'+nExterno+'</b> con <b>apoyo externo</b>.');
+  if(enRiesgoProj>0) _hist.push('⚠️ <b>'+enRiesgoProj+'</b> proyecto'+(enRiesgoProj>1?'s':'')+' con tareas atrasadas requieren atención.');
+
   const up=STATE._updated?new Date(STATE._updated).toLocaleString('es-PE',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}):'';
   document.getElementById('updated').textContent=up?('Actualizado: '+up):'';
 
   document.getElementById('app').innerHTML=`
     <div class="kpis">
       <div class="kpi"><div class="v">${ps.length}</div><div class="l">Proyectos</div></div>
+      <div class="kpi done"><div class="v">${realizados}/${ps.length}</div><div class="l">Realizados</div></div>
       <div class="kpi green"><div class="v">${enej.length}</div><div class="l">En ejecución</div></div>
-      <div class="kpi done"><div class="v">${avance}%</div><div class="l">Avance global</div></div>
       <div class="kpi blue"><div class="v">${done}/${tk.length}</div><div class="l">Tickets cerrados</div></div>
       <div class="kpi red"><div class="v">${riesgo}%</div><div class="l">Tareas en riesgo</div></div>
       <div class="kpi money"><div class="v" style="font-size:21px">${money(presu)}</div><div class="l">Presupuesto total</div></div>
+    </div>
+    <div style="background:linear-gradient(90deg,#111,#1d1d1d);border-left:5px solid var(--yellow);border-radius:10px;padding:15px 20px;margin-bottom:16px;color:#fff">
+      <div style="font-size:11px;font-weight:800;color:var(--yellow);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">📖 Resumen ejecutivo</div>
+      <ul style="margin:0;padding-left:18px;line-height:1.85;font-size:13px">${_hist.map(h=>'<li>'+h+'</li>').join('')}</ul>
     </div>
     <div class="grid">
       <div class="card"><h3>🎯 Estado de tickets</h3>
@@ -454,6 +478,19 @@ function render(){
       <div class="card"><h3>👥 Carga por responsable</h3><div class="chart-box tall"><canvas id="chCarga"></canvas></div></div>
       <div class="card"><h3>💰 Presupuesto: Planificado vs Real</h3><div class="chart-box tall"><canvas id="chPresu"></canvas></div></div>
     </div>
+    <div class="grid">
+      <div class="card full"><h3>🏢 Proyectos por área solicitante</h3><div class="chart-box tall"><canvas id="chAreas"></canvas></div></div>
+      <div class="card"><h3>🏭 Interno vs Externo</h3>
+        <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap">
+          <div style="flex:1;min-width:150px"><div class="chart-box" style="height:200px"><canvas id="chOrigen"></canvas></div></div>
+          <div style="flex:1;min-width:160px">${breakdownTable(byOrigen)}</div>
+        </div></div>
+      <div class="card"><h3>🛠️ Tipo de desarrollo (área)</h3>
+        <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap">
+          <div style="flex:1;min-width:150px"><div class="chart-box" style="height:200px"><canvas id="chSistema"></canvas></div></div>
+          <div style="flex:1;min-width:160px">${breakdownTable(bySistema)}</div>
+        </div></div>
+    </div>
     <h3 style="color:var(--gold);font-size:13px;margin:6px 2px 8px;display:flex;align-items:center;gap:7px">⏳ Lo que falta</h3>
     ${pendientesTiles(ps,tk)}
     <div class="grid" style="margin-top:16px">
@@ -461,6 +498,7 @@ function render(){
     </div>`;
 
   chartEstado(itEstado); chartPrio(itPrio); chartAvance(enej); chartAvanceDist(distBands); chartPresu(ps); chartCarga(tk);
+  chartAreas(byArea); donut('chOrigen',byOrigen); donut('chSistema',bySistema);
 }
 
 function destroy(id){ if(charts[id]){charts[id].destroy(); delete charts[id];} }
@@ -476,6 +514,15 @@ function donut(canvasId,items){
 }
 function chartEstado(items){ donut('chEstado',items); }
 function chartPrio(items){ donut('chPrio',items); }
+function chartAreas(items){
+  const top=items.slice(0,12);
+  destroy('chAreas');
+  charts.chAreas=new Chart(document.getElementById('chAreas'),{type:'bar',
+    data:{labels:top.map(a=>a.label.length>38?a.label.slice(0,36)+'…':a.label),datasets:[{data:top.map(a=>a.val),backgroundColor:'#C9A227',borderRadius:5}]},
+    options:{indexAxis:'y',plugins:{legend:{display:false}},
+      scales:{x:{grid:{color:gridColor()},ticks:{color:tickColor(),precision:0}},
+              y:{grid:{display:false},ticks:{color:tickColor(),font:{size:11}}}}}});
+}
 function chartAvanceDist(bands){
   destroy('chAvanceDist');
   charts.chAvanceDist=new Chart(document.getElementById('chAvanceDist'),{type:'doughnut',
@@ -605,7 +652,10 @@ function openProj(pid){
         +'<button onclick="expProyecto(\''+p.id+'\',\'general\')" style="background:#217346;color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:700;padding:8px 14px;cursor:pointer;font-family:inherit">⬇ Excel — General</button>'
         +'<button onclick="expProyecto(\''+p.id+'\',\'detalle\')" style="background:#fff;color:#217346;border:1px solid #217346;border-radius:7px;font-size:12px;font-weight:700;padding:8px 14px;cursor:pointer;font-family:inherit">⬇ Excel — Detalle de tareas</button>'
       +'</div>'
-      +'<div style="margin-bottom:14px">'+byCol+'</div>'
+      +'<div style="margin-bottom:14px">'+byCol
+        +(p.origen?' <span class="tag" style="background:'+(/extern/i.test(p.origen)?'#ea580c':'#16a34a')+'22;color:'+(/extern/i.test(p.origen)?'#ea580c':'#16a34a')+'">'+escape(p.origen)+(p.proveedor?': '+escape(p.proveedor):'')+'</span>':'')
+        +(p.sistema?' <span class="tag" style="background:#0ea5e922;color:#0ea5e9">🛠️ '+escape(p.sistema)+'</span>':'')
+      +'</div>'
       +'<h3 style="color:var(--gold);font-size:13px;margin:0 0 8px">🗓️ Cronograma de tareas</h3>'
       +ganttHtml(ts)
       +'<h3 style="color:var(--gold);font-size:13px;margin:14px 0 8px">📋 Detalle de tareas</h3>'
