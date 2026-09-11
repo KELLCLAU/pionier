@@ -30,13 +30,16 @@ header{background:#111;padding:12px 22px;display:flex;align-items:center;gap:16p
 .kpi{background:var(--card);border:1px solid var(--line);border-top:3px solid var(--gold);border-radius:6px;padding:14px 16px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
 .kpi .v{font-size:30px;font-weight:800;line-height:1;color:#111}
 .kpi .l{font-size:11px;color:var(--muted);margin-top:6px;text-transform:uppercase;letter-spacing:.4px;font-weight:600}
-.kpi.blue{border-top-color:var(--modipsa)} .kpi.green{border-top-color:var(--masisac)}
-.kpi.done{border-top-color:var(--c-done)} .kpi.money{border-top-color:var(--yellow)}
-.kpi.red{border-top-color:#ef4444} .kpi.amber{border-top-color:#f59e0b}
+.kpi.blue{border-top-color:var(--modipsa);background:#f2f7ff} .kpi.green{border-top-color:var(--masisac);background:#f1fdf5}
+.kpi.done{border-top-color:var(--c-done);background:#f1fdf5} .kpi.money{border-top-color:var(--yellow);background:#fffdf2}
+.kpi.red{border-top-color:#ef4444;background:#fff5f5} .kpi.amber{border-top-color:#f59e0b;background:#fffaf0}
+.kpi.blue .v{color:#1d4ed8} .kpi.green .v{color:#15803d} .kpi.done .v{color:#15803d}
+.kpi.red .v{color:#dc2626} .kpi.money .v{color:#b8860b}
 .bd{width:100%;border-collapse:collapse;font-size:12px}
 .bd th{font-size:9px;padding:5px 6px;color:var(--muted)}
 .bd td{padding:6px;border-bottom:1px solid var(--line2)}
 .gl,.modal td{white-space:nowrap}
+.hist b{color:#F5C400}
 .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-bottom:14px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:15px 17px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
 .card h3{margin:0 0 12px;font-size:13px;font-weight:700;color:#111;display:flex;align-items:center;gap:7px;border-left:3px solid var(--yellow);padding-left:9px}
@@ -123,7 +126,7 @@ const SB_KEY='sb_publishable_1sxgjIf_jVz30FKBPjpMrQ_c8T0hyEu';
 const SB_ID='keiko_pionier';
 const DASH_PASS='pioner2026';  // ← contraseña del dashboard (cámbiala aquí)
 
-let STATE=null, empresa='todas', charts={};
+let STATE=null, empresa='todas', estadoFiltro='', charts={};
 const fmt=n=>(n||0).toLocaleString('es-PE');
 const money=n=>'S/ '+fmt(Math.round(n||0));
 
@@ -278,6 +281,12 @@ function openResp(cod){
       +'<div style="flex:1;text-align:center;background:#eff6ff;border-radius:8px;padding:12px"><div style="font-size:24px;font-weight:800;color:#0ea5e9">'+enprog.length+'</div><div style="font-size:10px;color:var(--muted);text-transform:uppercase">En curso</div></div>'
       +'<div style="flex:1;text-align:center;background:#f8fafc;border-radius:8px;padding:12px"><div style="font-size:24px;font-weight:800;color:#64748b">'+faltan.length+'</div><div style="font-size:10px;color:var(--muted);text-transform:uppercase">Le falta</div></div>'
     +'</div>'
+    +(tk.length?'<div style="margin-bottom:16px"><div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:5px"><span>Avance</span><span style="font-weight:700;color:#16a34a">'+pct+'% completado</span></div>'
+      +'<div style="display:flex;height:16px;border-radius:8px;overflow:hidden;background:#eef1f6">'
+      +(hechas.length?'<div style="width:'+(hechas.length/tk.length*100)+'%;background:#16a34a" title="Hechas: '+hechas.length+'"></div>':'')
+      +(enprog.length?'<div style="width:'+(enprog.length/tk.length*100)+'%;background:#0ea5e9" title="En curso: '+enprog.length+'"></div>':'')
+      +(faltan.length?'<div style="width:'+(faltan.length/tk.length*100)+'%;background:#cbd2da" title="Le falta: '+faltan.length+'"></div>':'')
+      +'</div></div>':'')
     +'<div style="font-size:12px;font-weight:700;color:#16a34a;margin:0 0 4px">✓ Ya hizo</div>'+lista(hechas,'#16a34a')
     +'<div style="font-size:12px;font-weight:700;color:#0ea5e9;margin:14px 0 4px">▸ En curso</div>'+lista(enprog,'#0ea5e9')
     +'<div style="font-size:12px;font-weight:700;color:#64748b;margin:14px 0 4px">◻ Le falta hacer</div>'+lista(faltan,'#64748b')
@@ -440,16 +449,24 @@ function render(){
 
   document.getElementById('app').innerHTML=`
     <div class="kpis">
-      <div class="kpi"><div class="v">${ps.length}</div><div class="l">Proyectos</div></div>
-      <div class="kpi done"><div class="v">${realizados}/${ps.length}</div><div class="l">Realizados</div></div>
-      <div class="kpi green"><div class="v">${enej.length}</div><div class="l">En ejecución</div></div>
+      <div class="kpi" onclick="filtrarPorKPI('')" style="cursor:pointer" title="Ver todos los proyectos"><div class="v">${ps.length}</div><div class="l">Proyectos ▾</div></div>
+      <div class="kpi done" onclick="filtrarPorKPI('Completado')" style="cursor:pointer" title="Ver proyectos realizados"><div class="v">${realizados}/${ps.length}</div><div class="l">Realizados ▾</div></div>
+      <div class="kpi green" onclick="filtrarPorKPI('En ejecución')" style="cursor:pointer" title="Ver proyectos en ejecución"><div class="v">${enej.length}</div><div class="l">En ejecución ▾</div></div>
       <div class="kpi blue"><div class="v">${done}/${tk.length}</div><div class="l">Tickets cerrados</div></div>
       <div class="kpi red"><div class="v">${riesgo}%</div><div class="l">Tareas en riesgo</div></div>
       <div class="kpi money"><div class="v" style="font-size:21px">${money(presu)}</div><div class="l">Presupuesto total</div></div>
     </div>
-    <div style="background:linear-gradient(90deg,#111,#1d1d1d);border-left:5px solid var(--yellow);border-radius:10px;padding:15px 20px;margin-bottom:16px;color:#fff">
-      <div style="font-size:11px;font-weight:800;color:var(--yellow);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">📖 Resumen ejecutivo</div>
-      <ul style="margin:0;padding-left:18px;line-height:1.85;font-size:13px">${_hist.map(h=>'<li>'+h+'</li>').join('')}</ul>
+    <div style="background:linear-gradient(120deg,#0c0c0c,#232323);border-radius:12px;padding:20px 24px;margin-bottom:18px;color:#fff;box-shadow:0 4px 18px rgba(0,0,0,.18)">
+      <div style="display:flex;align-items:center;gap:22px;flex-wrap:wrap">
+        <div style="flex:none;text-align:center;padding:4px 20px 4px 4px;border-right:2px solid #383838">
+          <div style="font-size:46px;font-weight:900;color:var(--yellow);line-height:1">${pctReal}%</div>
+          <div style="font-size:10px;color:#c8c6c4;text-transform:uppercase;letter-spacing:.5px;margin-top:3px">Portafolio realizado</div>
+        </div>
+        <div style="flex:1;min-width:280px">
+          <div style="font-size:11px;font-weight:800;color:var(--yellow);text-transform:uppercase;letter-spacing:1px;margin-bottom:7px">📖 Resumen ejecutivo</div>
+          <ul class="hist" style="margin:0;padding-left:18px;line-height:1.75;font-size:13px">${_hist.map(h=>'<li>'+h+'</li>').join('')}</ul>
+        </div>
+      </div>
     </div>
     <div class="grid">
       <div class="card"><h3>🎯 Estado de tickets</h3>
@@ -494,7 +511,8 @@ function render(){
     <h3 style="color:var(--gold);font-size:13px;margin:6px 2px 8px;display:flex;align-items:center;gap:7px">⏳ Lo que falta</h3>
     ${pendientesTiles(ps,tk)}
     <div class="grid" style="margin-top:16px">
-      <div class="card full"><h3>📋 Detalle de proyectos <span style="color:var(--muted);font-weight:400;font-size:11px">— clic para ver tareas</span></h3><div style="max-height:400px;overflow:auto">${tablaProyectos(ps)}</div></div>
+      <div class="card full"><h3>📋 Detalle de proyectos <span style="color:var(--muted);font-weight:400;font-size:11px">— clic para ver tareas · filtra en la columna Estado ▾</span></h3>
+        <div id="tablaWrap" style="max-height:400px;overflow:auto">${tablaProyectos(estadoFiltro?ps.filter(function(p){return estadoCat(p)===estadoFiltro;}):ps)}</div></div>
     </div>`;
 
   chartEstado(itEstado); chartPrio(itPrio); chartAvance(enej); chartAvanceDist(distBands); chartPresu(ps); chartCarga(tk);
@@ -568,7 +586,42 @@ function chartCarga(tk){
               y:{grid:{display:false},ticks:{color:tickColor(),font:{size:11}}}}}});
 }
 
+function filtrarTabla(){
+  var el=document.getElementById('fEstado');
+  estadoFiltro=el?el.value:'';
+  var ps=projsFilt();
+  if(estadoFiltro) ps=ps.filter(function(p){return estadoCat(p)===estadoFiltro;});
+  var w=document.getElementById('tablaWrap');
+  if(w) w.innerHTML=tablaProyectos(ps);
+}
+function setEmpresaSel(v){
+  empresa=v||'todas';
+  document.querySelectorAll('[data-emp]').forEach(function(b){b.classList.toggle('on',b.getAttribute('data-emp')===empresa);});
+  render();
+  var w=document.getElementById('tablaWrap'); if(w) w.scrollIntoView({behavior:'smooth',block:'center'});
+}
+function filtrarPorKPI(estado){
+  estadoFiltro=estado;
+  var ps=projsFilt();
+  if(estadoFiltro) ps=ps.filter(function(p){return estadoCat(p)===estadoFiltro;});
+  var w=document.getElementById('tablaWrap');
+  if(w){ w.innerHTML=tablaProyectos(ps); w.scrollIntoView({behavior:'smooth',block:'center'}); }
+}
+function estadoCat(p){
+  if(progress(p.id)>=100) return 'Completado';
+  if(p.estadoReq==='espera_usuario') return 'En espera de usuario';
+  if(enEjec(p)) return 'En ejecución';
+  if(p.estadoReq==='rechazado') return 'Rechazado';
+  if(p.estadoReq==='aceptado') return 'Aceptado';
+  if(p.estadoReq==='levantamiento') return 'Levantamiento';
+  return 'Pendiente';
+}
+var _ESTCOL={'Completado':'#22c55e','En espera de usuario':'#ea580c','En ejecución':'#0ea5e9','Rechazado':'#ef4444','Aceptado':'#C9A227','Levantamiento':'#16a34a','Pendiente':'#8a99ad'};
 function estadoTag(p){
+  var c=estadoCat(p), col=_ESTCOL[c]||'#8a99ad';
+  return '<span class="tag" style="background:'+col+'30;color:'+col+'">'+c+'</span>';
+}
+function _oldEstadoTag(p){
   if(progress(p.id)>=100) return '<span class="tag" style="background:#22c55e30;color:#22c55e">Completado</span>';
   if(p.estadoReq==='espera_usuario') return '<span class="tag" style="background:#ea580c30;color:#ea580c">En espera de usuario</span>';
   if(enEjec(p)) return '<span class="tag" style="background:#0ea5e930;color:#0ea5e9">En ejecución</span>';
@@ -591,7 +644,15 @@ function tablaProyectos(ps){
       <td class="num">${benefOf(p)?money(benefOf(p)):'—'}</td>
     </tr>`;
   }).join('');
-  return `<table><thead><tr><th>Proyecto</th><th>Empresa</th><th>Estado</th><th>Avance</th><th>Tickets</th><th>Presup.</th><th>Beneficio</th></tr></thead><tbody>${rows||'<tr><td colspan="7" style="text-align:center;color:var(--muted)">Sin proyectos</td></tr>'}</tbody></table>`;
+  var _all=projsFilt();
+  var _c={}; _all.forEach(function(p){var k=estadoCat(p);_c[k]=(_c[k]||0)+1;});
+  var _estSel=['','Completado','En ejecución','Pendiente','En espera de usuario','Aceptado','Rechazado','Levantamiento'].map(function(v){var lbl=v?(v+' ('+(_c[v]||0)+')'):('Todos ('+_all.length+')');return '<option value="'+v+'"'+(v===estadoFiltro?' selected':'')+'>'+lbl+'</option>';}).join('');
+  var _thEstado='<th>Estado<br><select id="fEstado" onclick="event.stopPropagation()" onchange="filtrarTabla()" style="margin-top:4px;font-size:10px;font-weight:700;border:1px solid var(--line);border-radius:5px;padding:3px 5px;font-family:inherit;background:#fff;color:var(--ink);cursor:pointer;max-width:150px">'+_estSel+'</select></th>';
+  var _emps=(STATE.projects||[]);
+  var _ce={MODIPSA:0,MASISAC:0}; _emps.forEach(function(p){if(_ce[p.empresa]!=null)_ce[p.empresa]++;});
+  var _empSel=[['todas','Todas ('+_emps.length+')'],['MODIPSA','MODIPSA ('+_ce.MODIPSA+')'],['MASISAC','MASISAC ('+_ce.MASISAC+')']].map(function(o){return '<option value="'+o[0]+'"'+(o[0]===empresa?' selected':'')+'>'+o[1]+'</option>';}).join('');
+  var _thEmp='<th>Empresa<br><select id="fEmpresa" onclick="event.stopPropagation()" onchange="setEmpresaSel(this.value)" style="margin-top:4px;font-size:10px;font-weight:700;border:1px solid var(--line);border-radius:5px;padding:3px 5px;font-family:inherit;background:#fff;color:var(--ink);cursor:pointer">'+_empSel+'</select></th>';
+  return `<table><thead><tr><th>Proyecto</th>${_thEmp}${_thEstado}<th>Avance</th><th>Tickets</th><th>Presup.</th><th>Beneficio</th></tr></thead><tbody>${rows||'<tr><td colspan="7" style="text-align:center;color:var(--muted)">Sin proyectos</td></tr>'}</tbody></table>`;
 }
 function parseD(s){ if(!s) return null; var str=String(s); return new Date(str.length<=10?str+'T00:00:00':str); }
 function ganttHtml(ts){
