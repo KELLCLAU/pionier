@@ -137,6 +137,19 @@ function openResp(nombre){
   document.getElementById('ov').classList.add('show');
 }
 document.addEventListener('keydown',function(e){if(e.key==='Escape')closeProj();});
+function openPersonaProy(cod){
+  var nombre=mName(cod);
+  var pn={}; (ST.projects||[]).forEach(function(p){pn[p.id]=p.name;});
+  var ts=(ST.tickets||[]).filter(function(t){return (t.assignee||t.responsable)===cod;});
+  var content;
+  if(!ts.length){ content='<div style="color:var(--muted);padding:10px 0">Sin tareas registradas.</div>'; }
+  else{
+    var rows=ts.map(function(t){var cc={'Backlog':'#8a8886','En progreso':'#0ea5e9','En revisión':'#8b5cf6','Hecho':'#16a34a'}[t.col]||'#8a8886';return '<tr><td style="white-space:normal;font-weight:600">'+esc(t.title||'—')+'</td><td>'+esc(pn[t.projId]||'—')+'</td><td class="c"><span class="tg" style="background:'+cc+'22;color:'+cc+'">'+esc(t.col||'—')+'</span></td></tr>';}).join('');
+    content='<table class="ctab"><thead><tr><th>Tarea</th><th>Proyecto</th><th class="c">Estado</th></tr></thead><tbody>'+rows+'</tbody></table>';
+  }
+  document.getElementById('modal').innerHTML='<div class="modal-h"><div><div class="t">'+esc(nombre)+'</div><div class="s">'+ts.length+' tarea'+(ts.length===1?'':'s')+' en proyectos</div></div><button class="x" onclick="closeProj()">✕</button></div><div class="modal-b">'+content+'</div>';
+  document.getElementById('ov').classList.add('show');
+}
 function openLista(cat){
   var ps=projsFiltrados().filter(function(p){return estadoCat(p)===cat;}).sort(function(a,b){return progress(b.id)-progress(a.id);});
   var rows=ps.length?ps.map(function(p){var ec=p.empresa==='MODIPSA'?'#2563eb':'#16a34a';return '<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--line);font-size:13px"><span class="tg" style="background:'+ec+'22;color:'+ec+'">'+esc(p.empresa||'—')+'</span><span style="flex:1;font-weight:600">'+esc(p.name)+'</span><span style="color:var(--muted);font-size:12px">'+esc(p.area||'')+'</span><span style="font-weight:700;font-size:12px">'+progress(p.id)+'%</span></div>';}).join(''):'<div style="color:var(--muted);padding:12px 0">Sin proyectos.</div>';
@@ -198,6 +211,10 @@ function render(){
   var hoyMs=new Date(new Date().toDateString()).getTime();
   var enRiesgo=ps.filter(function(p){return ticketsOf(p.id).some(function(t){var d=taskDates(t);return d.end&&t.col!=='Hecho'&&parseD(d.end).getTime()<hoyMs;});});
   var enEjecCount=ps.filter(function(p){return estadoCat(p)==='En ejecución';}).length;
+  var cargaProy={};
+  ps.forEach(function(p){ ticketsOf(p.id).forEach(function(t){ var c=t.assignee||t.responsable; if(c) cargaProy[c]=(cargaProy[c]||0)+1; }); });
+  var cargaProyArr=Object.keys(cargaProy).map(function(c){return {cod:c,val:cargaProy[c]};}).sort(function(a,b){return b.val-a.val;});
+  var maxCP=Math.max.apply(null,cargaProyArr.map(function(x){return x.val;}).concat([1]));
 
   // tickets
   var k=(HD&&HD.rs1_kpis&&HD.rs1_kpis[0])||{};
@@ -279,6 +296,8 @@ function render(){
         +'<div style="font-size:11px;font-weight:700;color:var(--ink);margin-bottom:10px">Proyectos por empresa</div>'
         +barRow('MODIPSA',ps.filter(function(p){return p.empresa==='MODIPSA';}).length,Math.max(ps.filter(function(p){return p.empresa==='MODIPSA';}).length,ps.filter(function(p){return p.empresa==='MASISAC';}).length,1),'#2563eb')
         +barRow('MASISAC',ps.filter(function(p){return p.empresa==='MASISAC';}).length,Math.max(ps.filter(function(p){return p.empresa==='MODIPSA';}).length,ps.filter(function(p){return p.empresa==='MASISAC';}).length,1),'#16a34a')
+        +'<div style="font-size:11px;font-weight:700;color:var(--ink);margin:18px 0 10px">Quién trabaja en proyectos · clic para ver sus tareas</div>'
+        +'<div class="scroller" style="max-height:220px">'+ (cargaProyArr.length?cargaProyArr.map(function(x){return barRowClk(mName(x.cod),x.val,maxCP,'#7c5cbf',"openPersonaProy('"+x.cod+"')");}).join(''):'<div style="color:var(--muted)">Sin tareas asignadas</div>') +'</div>'
       +'</div>'
     +'</div>'
 
