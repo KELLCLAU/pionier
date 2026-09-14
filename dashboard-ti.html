@@ -151,6 +151,9 @@ function render(){
   var tend=(HD&&HD.rs5_tendencia)||[];
   var prio=(HD&&HD.rs3_prioridad)||[];
   var maxR=Math.max.apply(null,resp.map(function(a){return a.TotalTickets;}).concat([1]));
+  var reapPct=tTotal?(k.TotalReaperturas||0)/tTotal*100:0;
+  var areaEf=((HD&&HD.rs2_area)||[]).slice().sort(function(a,b){return (b.PctResolucion||0)-(a.PctResolucion||0);})[0]||null;
+  var topResp=resp[0]||null;
 
   // señal integral
   var sig=(tRes>=90&&avance>=50)?{t:'TI en marcha',c:'#16a34a'}:(tRes>=80?{t:'Operación estable',c:'#d4a017'}:{t:'Requiere atención',c:'#ef4444'});
@@ -188,7 +191,17 @@ function render(){
       +'<div class="kpi p"><div class="l">Conformidad</div><div class="v">'+tConf.toFixed(0)+'%</div><div class="s">del servicio</div></div>'
     +'</div>'
 
-    +'<div class="card signal" style="border-left-color:'+sig.c+';margin-bottom:20px"><h3>Señal gerencial de TI</h3><div class="badge" style="background:'+sig.c+'">'+sig.t+'</div><ul>'+señal.map(function(s){return '<li>'+s+'</li>';}).join('')+'</ul></div>'
+    +'<div style="background:linear-gradient(120deg,#0c0c0c,#242424);border-radius:14px;padding:20px 24px;margin-bottom:20px;box-shadow:0 4px 18px rgba(0,0,0,.15)">'
+      +'<div style="font-size:11px;font-weight:800;color:var(--yellow);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:16px">🔢 Cifras de impacto de TI</div>'
+      +'<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:20px;text-align:center">'
+        +'<div><div style="font-size:32px;font-weight:900;color:#F5C400;line-height:1">'+fmt(tCerr)+'</div><div style="font-size:11px;color:#c8c6c4;margin-top:6px">Tickets resueltos<br><b style="color:#16a34a">'+tRes+'% de resolución</b></div></div>'
+        +'<div><div style="font-size:32px;font-weight:900;color:#fff;line-height:1">'+(k.PromHorasResolucion||0).toFixed(1)+'<span style="font-size:16px"> h</span></div><div style="font-size:11px;color:#c8c6c4;margin-top:6px">Tiempo medio<br>de resolución</div></div>'
+        +'<div><div style="font-size:32px;font-weight:900;color:#F5C400;line-height:1">'+(k.PromPuntajeColaborador||0).toFixed(0)+'<span style="font-size:16px">/300</span></div><div style="font-size:11px;color:#c8c6c4;margin-top:6px">Puntaje de<br>servicio</div></div>'
+        +'<div><div style="font-size:32px;font-weight:900;color:#fff;line-height:1">'+reapPct.toFixed(1)+'%</div><div style="font-size:11px;color:#c8c6c4;margin-top:6px">Reaperturas<br><b style="color:#16a34a">alta calidad</b></div></div>'
+        +(topResp?'<div><div style="font-size:32px;font-weight:900;color:#F5C400;line-height:1">'+fmt(topResp.TotalTickets)+'</div><div style="font-size:11px;color:#c8c6c4;margin-top:6px">'+cap(topResp.NO_USR_RESPONSABLE)+'<br>colaborador top</div></div>':'')
+        +(areaEf?'<div><div style="font-size:32px;font-weight:900;color:#fff;line-height:1">'+(areaEf.PctResolucion||0).toFixed(0)+'%</div><div style="font-size:11px;color:#c8c6c4;margin-top:6px">'+cap(areaEf.NO_AREA)+'<br>área más eficiente</div></div>':'')
+      +'</div>'
+    +'</div>'
 
     +'<div class="zone">📁 Proyectos (SCRUM)</div>'
     +'<div class="grid g2">'
