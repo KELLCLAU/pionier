@@ -137,6 +137,14 @@ function openResp(nombre){
   document.getElementById('ov').classList.add('show');
 }
 document.addEventListener('keydown',function(e){if(e.key==='Escape')closeProj();});
+function openSubtipo(sub){
+  var lista=((HD&&HD.tickets)||[]).filter(function(t){return (((t.subtipo||'')+'').trim()||'Sin clasificar')===sub;});
+  lista.sort(function(a,b){return (b.fecha||'').localeCompare(a.fecha||'');});
+  var rows=lista.length?lista.map(function(t){var ce={'Cerrado':'#16a34a','Nuevo':'#8a8886','Asignado':'#0ea5e9','En proceso':'#0ea5e9','Rechazado':'#ef4444','Cancelado':'#8a8886','Reabierto':'#ea580c'}[t.estado]||'#6b7280';return '<tr><td style="white-space:nowrap;font-weight:600">'+esc(t.ticket)+'</td><td style="white-space:normal">'+esc(t.titulo||'—')+'</td><td>'+esc(t.solicitante||'—')+'</td><td class="c"><span class="tg" style="background:'+ce+'22;color:'+ce+'">'+esc(t.estado||'—')+'</span></td><td class="c" style="white-space:nowrap">'+esc(t.fecha||'')+'</td></tr>';}).join(''):'<div style="color:var(--muted)">Sin tickets.</div>';
+  var content=lista.length?'<table class="ctab"><thead><tr><th>Ticket</th><th>Título</th><th>Solicitante</th><th class="c">Estado</th><th class="c">Fecha</th></tr></thead><tbody>'+rows+'</tbody></table>':rows;
+  document.getElementById('modal').innerHTML='<div class="modal-h"><div><div class="t">'+esc(sub)+'</div><div class="s">'+lista.length+' ticket'+(lista.length===1?'':'s')+' de este tipo</div></div><button class="x" onclick="closeProj()">✕</button></div><div class="modal-b">'+content+'</div>';
+  document.getElementById('ov').classList.add('show');
+}
 function openPersonaProy(cod){
   var nombre=mName(cod);
   var pn={}; (ST.projects||[]).forEach(function(p){pn[p.id]=p.name;});
@@ -321,7 +329,16 @@ function render(){
 
     +'<div class="zone">🎫 Mesa de Ayuda (Tickets)</div>'
     +'<div class="grid g2">'
-      +'<div class="card"><h3>Tendencia de tickets</h3><div class="hint">Creados vs cerrados por mes.</div><div class="chart-box"><canvas id="chTend"></canvas></div></div>'
+      +'<div class="card"><h3>Qué se solicita más</h3><div class="hint">Tipos de requerimiento más frecuentes · clic para ver los tickets.</div><div class="scroller">'
+        +(function(){
+          var m={}; ((HD&&HD.tickets)||[]).forEach(function(t){var st=((t.subtipo||'')+'').trim()||'Sin clasificar';m[st]=(m[st]||0)+1;});
+          var arr=Object.keys(m).map(function(k){return{label:k,val:m[k]};}).sort(function(a,b){return b.val-a.val;});
+          if(!arr.length) return '<div style="color:var(--muted)">Sin datos de tickets.</div>';
+          if(arr.length===1 && arr[0].label==='Sin clasificar') return '<div style="color:var(--muted);font-size:12px">Corre el script actualizado (helpdesk_export.py) y sube el helpdesk.json para ver el desglose por tipo.</div>';
+          var mx=Math.max.apply(null,arr.map(function(x){return x.val;}).concat([1]));
+          return arr.map(function(a){return barRowClk(a.label,a.val,mx,'#0ea5e9',"openSubtipo('"+String(a.label).replace(/'/g,"\\'")+"')");}).join('');
+        })()
+      +'</div></div>'
       +'<div class="card"><h3>Tickets por prioridad</h3><div class="hint">Distribución del volumen.</div>'+ (prio.length?prio.map(function(p){var c={'Crítica':'#ef4444','Alta':'#ea580c','Media':'#d4a017','Baja':'#16a34a'}[p.NO_PRIORITY]||'#9aa0a6';return barRow(p.NO_PRIORITY,p.TotalTickets,Math.max.apply(null,prio.map(function(x){return x.TotalTickets;}).concat([1])),c);}).join(''):'<div style="color:var(--muted)">Sin datos</div>') +'</div>'
     +'</div>'
     +'<div class="grid g2">'
@@ -330,13 +347,6 @@ function render(){
     +'</div>';
 
   var pc={'Crítica':'#ef4444','Alta':'#ea580c','Media':'#d4a017','Baja':'#16a34a'};
-  if(charts.chTend)charts.chTend.destroy();
-  charts.chTend=new Chart(document.getElementById('chTend'),{type:'line',
-    data:{labels:tend.map(function(t){return t.MesAnio;}),datasets:[
-      {label:'Creados',data:tend.map(function(t){return t.Creados;}),borderColor:'#2563eb',backgroundColor:'rgba(37,99,235,.10)',fill:true,tension:.35,borderWidth:2,pointRadius:4,pointBackgroundColor:'#2563eb'},
-      {label:'Cerrados',data:tend.map(function(t){return t.Cerrados;}),borderColor:'#16a34a',backgroundColor:'rgba(22,163,74,.10)',fill:true,tension:.35,borderWidth:2,pointRadius:4,pointBackgroundColor:'#16a34a'}
-    ]},
-    options:{plugins:{legend:{position:'bottom',labels:{color:'#6b7280',boxWidth:12,font:{size:11}}}},scales:{x:{grid:{display:false},ticks:{color:'#6b7280'}},y:{grid:{color:'#eef0f3'},ticks:{color:'#6b7280',precision:0}}}}});
 }
 
 function doLogin(){ if(document.getElementById('pass').value===DASH_PASS){try{sessionStorage.setItem('ti_auth','1');}catch(e){}entrar();}else{document.getElementById('loginErr').textContent='Contraseña incorrecta';document.getElementById('pass').value='';} }
