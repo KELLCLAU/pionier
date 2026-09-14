@@ -1,0 +1,46 @@
+{
+  "generado": "2026-09-13",
+  "rs1_kpis": [
+    {"TotalTickets":1459,"Nuevos":0,"Asignados":20,"EnProceso":19,"Reabiertos":0,"Cerrados":1397,"CerradosSatisfactoriamente":1341,"Rechazados":46,"Cancelados":10,"Abiertos":62,"Criticos":9,"TotalReaperturas":25,"PromHorasResolucion":29.64,"PromPuntajeColaborador":282.52,"PctConConformidad":81.58}
+  ],
+  "rs2_area": [
+    {"NO_AREA":"SOPORTE TI","TotalTickets":1064,"Cerrados":1010,"Rechazados":35,"Criticos":1,"PctResolucion":94.92,"PromHorasResolucion":15.93,"PromPuntajeColaborador":279.82},
+    {"NO_AREA":"DESARROLLO WEB","TotalTickets":156,"Cerrados":131,"Rechazados":2,"Criticos":2,"PctResolucion":83.97,"PromHorasResolucion":56.72,"PromPuntajeColaborador":287.42},
+    {"NO_AREA":"SISTEMA ACTIVITY","TotalTickets":143,"Cerrados":115,"Rechazados":6,"Criticos":5,"PctResolucion":80.42,"PromHorasResolucion":106.29,"PromPuntajeColaborador":291.82},
+    {"NO_AREA":"POWER BI","TotalTickets":72,"Cerrados":62,"Rechazados":3,"Criticos":1,"PctResolucion":86.11,"PromHorasResolucion":39.29,"PromPuntajeColaborador":295.16},
+    {"NO_AREA":"MESA DE AYUDA","TotalTickets":14,"Cerrados":14,"Rechazados":0,"Criticos":0,"PctResolucion":100,"PromHorasResolucion":34.19,"PromPuntajeColaborador":300},
+    {"NO_AREA":"INGENIERÍA DE DATOS","TotalTickets":10,"Cerrados":9,"Rechazados":0,"Criticos":0,"PctResolucion":90,"PromHorasResolucion":159.39,"PromPuntajeColaborador":286.67}
+  ],
+  "rs3_prioridad": [
+    {"NO_PRIORITY":"Crítica","TotalTickets":167,"Cerrados":145,"PctResolucion":86.83},
+    {"NO_PRIORITY":"Alta","TotalTickets":722,"Cerrados":655,"PctResolucion":90.72},
+    {"NO_PRIORITY":"Media","TotalTickets":486,"Cerrados":462,"PctResolucion":95.06},
+    {"NO_PRIORITY":"Baja","TotalTickets":84,"Cerrados":79,"PctResolucion":94.05}
+  ],
+  "rs4_responsable": [
+    {"NO_USR_RESPONSABLE":"ALEX AGUIRRE","NO_AREA":"Soporte TI","TotalTickets":484,"TicketsActivos":4,"TicketsCerrados":478},
+    {"NO_USR_RESPONSABLE":"JAMILTHON SANCHEZ","NO_AREA":"Soporte TI","TotalTickets":239,"TicketsActivos":1,"TicketsCerrados":237},
+    {"NO_USR_RESPONSABLE":"ANTONY CHILQUILLO","NO_AREA":"Soporte TI","TotalTickets":111,"TicketsActivos":0,"TicketsCerrados":111},
+    {"NO_USR_RESPONSABLE":"FRANCO VASQUEZ","NO_AREA":"Soporte TI","TotalTickets":82,"TicketsActivos":2,"TicketsCerrados":79},
+    {"NO_USR_RESPONSABLE":"DANIEL GUERRERO","NO_AREA":"Soporte TI","TotalTickets":65,"TicketsActivos":0,"TicketsCerrados":64},
+    {"NO_USR_RESPONSABLE":"RIGOBERTO TIMANA","NO_AREA":"Desarrollo Web","TotalTickets":58,"TicketsActivos":7,"TicketsCerrados":51},
+    {"NO_USR_RESPONSABLE":"WILDER ENRIQUE ROJAS","NO_AREA":"Power BI","TotalTickets":48,"TicketsActivos":2,"TicketsCerrados":45},
+    {"NO_USR_RESPONSABLE":"CRISTIAN EDEN HUAMAN","NO_AREA":"Soporte TI","TotalTickets":41,"TicketsActivos":0,"TicketsCerrados":41}
+  ],
+  "rs5_tendencia": [
+    {"MesAnio":"Junio 2026","Creados":502,"Cerrados":472,"PctResolucion":94.02},
+    {"MesAnio":"Julio 2026","Creados":384,"Cerrados":354,"PctResolucion":92.19},
+    {"MesAnio":"Agosto 2026","Creados":425,"Cerrados":397,"PctResolucion":93.41},
+    {"MesAnio":"Septiembre 2026","Creados":148,"Cerrados":118,"PctResolucion":79.73}
+  ],
+  "rs6_solicitantes": [
+    {"NO_USR_SOLICITANTE":"ALEX AGUIRRE","AREA_DESTINO":"Soporte TI","TotalTickets":26,"TicketsCerrados":25},
+    {"NO_USR_SOLICITANTE":"MARTIN ALEXANDER","AREA_DESTINO":"Soporte TI","TotalTickets":23,"TicketsCerrados":23},
+    {"NO_USR_SOLICITANTE":"MAURO ARMANDO","AREA_DESTINO":"Desarrollo Web","TotalTickets":22,"TicketsCerrados":19},
+    {"NO_USR_SOLICITANTE":"WILDER ENRIQUE","AREA_DESTINO":"Soporte TI","TotalTickets":22,"TicketsCerrados":22},
+    {"NO_USR_SOLICITANTE":"ALEXANDRA YAHAIRA","AREA_DESTINO":"Sistema Activity","TotalTickets":21,"TicketsCerrados":21},
+    {"NO_USR_SOLICITANTE":"SANCHEZ CHILLIHUA","AREA_DESTINO":"Soporte TI","TotalTickets":18,"TicketsCerrados":17},
+    {"NO_USR_SOLICITANTE":"JOSE FERNANDEZ","AREA_DESTINO":"Soporte TI","TotalTickets":16,"TicketsCerrados":14},
+    {"NO_USR_SOLICITANTE":"RIGOBERTO TIMANA","AREA_DESTINO":"Soporte TI","TotalTickets":14,"TicketsCerrados":14}
+  ]
+}
