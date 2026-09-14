@@ -138,7 +138,7 @@ function openResp(nombre){
 }
 document.addEventListener('keydown',function(e){if(e.key==='Escape')closeProj();});
 function openSubtipo(sub){
-  var lista=((HD&&HD.tickets)||[]).filter(function(t){return (((t.subtipo||'')+'').trim()||'Sin clasificar')===sub;});
+  var lista=((HD&&HD.tickets)||[]).filter(function(t){return normSubtipo(t.subtipo)===sub;});
   lista.sort(function(a,b){return (b.fecha||'').localeCompare(a.fecha||'');});
   var rows=lista.length?lista.map(function(t){var ce={'Cerrado':'#16a34a','Nuevo':'#8a8886','Asignado':'#0ea5e9','En proceso':'#0ea5e9','Rechazado':'#ef4444','Cancelado':'#8a8886','Reabierto':'#ea580c'}[t.estado]||'#6b7280';return '<tr><td style="white-space:nowrap;font-weight:600">'+esc(t.ticket)+'</td><td style="white-space:normal">'+esc(t.titulo||'—')+'</td><td>'+esc(t.solicitante||'—')+'</td><td class="c"><span class="tg" style="background:'+ce+'22;color:'+ce+'">'+esc(t.estado||'—')+'</span></td><td class="c" style="white-space:nowrap">'+esc(t.fecha||'')+'</td></tr>';}).join(''):'<div style="color:var(--muted)">Sin tickets.</div>';
   var content=lista.length?'<table class="ctab"><thead><tr><th>Ticket</th><th>Título</th><th>Solicitante</th><th class="c">Estado</th><th class="c">Fecha</th></tr></thead><tbody>'+rows+'</tbody></table>':rows;
@@ -171,6 +171,22 @@ function setF(k,v){if(k==='emp')fEmp=v;else fEst=v;render();}
 const fmt=n=>(n==null?0:n).toLocaleString('es-PE');
 const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 const cap=s=>String(s||'').toLowerCase().replace(/\b\w/g,c=>c.toUpperCase());
+function normSubtipo(s){
+  var x=(s||'').toString().toLowerCase().trim();
+  if(!x) return 'Sin clasificar';
+  if(/acces|permis|usuario|clave|contrase/.test(x)) return 'Accesos y permisos';
+  if(/mejora|cambio visual|visual|ajuste|modific/.test(x)) return 'Mejoras / cambios';
+  if(/impresor/.test(x)) return 'Impresoras';
+  if(/mouse|tecl|perif|esc\u00e1ner|escaner|c\u00e1mara|camara/.test(x)) return 'Periféricos';
+  if(/correo|email|outlook/.test(x)) return 'Correo';
+  if(/report|power ?bi|indicador|dashboard|tablero/.test(x)) return 'Reportes / BI';
+  if(/red|internet|wifi|vpn|conectiv/.test(x)) return 'Red / conectividad';
+  if(/laptop|equipo|monitor|pantalla|\bpc\b|computador|estabiliz|hardware/.test(x)) return 'Equipos / hardware';
+  if(/instal|software|programa|aplicativo|licencia/.test(x)) return 'Software / instalaciones';
+  if(/desarroll|requerim|sistema|app|web/.test(x)) return 'Desarrollo / sistemas';
+  if(/soporte|error|falla|no funciona|problema/.test(x)) return 'Soporte / incidencias';
+  return cap(x);
+}
 
 // ---- proyectos (Supabase) ----
 const projs=()=>ST.projects||[];
@@ -331,7 +347,7 @@ function render(){
     +'<div class="grid g2">'
       +'<div class="card"><h3>Qué se solicita más</h3><div class="hint">Tipos de requerimiento más frecuentes · clic para ver los tickets.</div><div class="scroller">'
         +(function(){
-          var m={}; ((HD&&HD.tickets)||[]).forEach(function(t){var st=((t.subtipo||'')+'').trim()||'Sin clasificar';m[st]=(m[st]||0)+1;});
+          var m={}; ((HD&&HD.tickets)||[]).forEach(function(t){var st=normSubtipo(t.subtipo);m[st]=(m[st]||0)+1;});
           var arr=Object.keys(m).map(function(k){return{label:k,val:m[k]};}).sort(function(a,b){return b.val-a.val;});
           if(!arr.length) return '<div style="color:var(--muted)">Sin datos de tickets.</div>';
           if(arr.length===1 && arr[0].label==='Sin clasificar') return '<div style="color:var(--muted);font-size:12px">Corre el script actualizado (helpdesk_export.py) y sube el helpdesk.json para ver el desglose por tipo.</div>';
