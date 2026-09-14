@@ -100,6 +100,8 @@ function estadoCat(p){
   return 'Pendiente';
 }
 function grp(arr,fn){var m={};arr.forEach(function(x){var k=(fn(x)||'').toString().trim()||'Sin definir';m[k]=(m[k]||0)+1;});return Object.keys(m).map(function(k){return{label:k,val:m[k]};}).sort((a,b)=>b.val-a.val);}
+function parseD(s){if(!s)return null;var x=String(s);return new Date(x.length<=10?x+'T00:00:00':x);}
+function taskDates(t){var sp=t.sprintId?(ST.sprints||[]).find(function(s){return s.id===t.sprintId;}):null;return {start:t.fechaInicio||t.start||t.startDate||(sp&&(sp.start||sp.startDate))||null,end:t.fechaFin||t.end||t.endDate||(sp&&(sp.end||sp.endDate))||null};}
 
 async function cargar(){
   try{
@@ -125,6 +127,9 @@ function render(){
   var byArea=grp(ps.filter(function(p){return p.area&&p.area!=='Sin definir';}),function(p){return p.area;}).slice(0,7);
   var maxArea=Math.max.apply(null,byArea.map(function(a){return a.val;}).concat([1]));
   var avProy=ps.filter(enEjec).map(function(p){return{n:p.name,v:progress(p.id)};}).sort(function(a,b){return b.v-a.v;}).slice(0,7);
+  var hoyMs=new Date(new Date().toDateString()).getTime();
+  var enRiesgo=ps.filter(function(p){return ticketsOf(p.id).some(function(t){var d=taskDates(t);return d.end&&t.col!=='Hecho'&&parseD(d.end).getTime()<hoyMs;});});
+  var enEjecCount=ps.filter(function(p){return estadoCat(p)==='En ejecución';}).length;
 
   // tickets
   var k=(HD&&HD.rs1_kpis&&HD.rs1_kpis[0])||{};
@@ -168,23 +173,37 @@ function render(){
     +'<div class="zone">📁 Proyectos (SCRUM)</div>'
     +'<div class="grid g2">'
       +'<div class="card"><h3>Estado del portafolio</h3><div class="hint">Distribución de los proyectos por estado.</div><div class="chart-box"><canvas id="chEstP"></canvas></div></div>'
+      +'<div class="card"><h3>Avance por proyecto</h3><div class="hint">Proyectos en ejecución (top 7).</div><div class="chart-box"><canvas id="chAvP"></canvas></div></div>'
+    +'</div>'
+    +'<div class="grid g2">'
       +'<div class="card"><h3>Áreas que más solicitan proyectos</h3><div class="hint">Volumen por área solicitante.</div>'+ (byArea.length?byArea.map(function(a){return barRow(cap(a.label),a.val,maxArea,'#F5C400');}).join(''):'<div style="color:var(--muted)">Sin datos</div>') +'</div>'
+      +'<div class="card"><h3>Proyectos en riesgo</h3><div class="hint">Con tareas vencidas · resumen de la cartera.</div>'
+        +'<div style="display:flex;gap:10px;margin-bottom:14px">'
+          +'<div style="flex:1;text-align:center;background:var(--bg);border-radius:8px;padding:10px"><div style="font-size:22px;font-weight:800;color:var(--green)">'+realizados+'</div><div style="font-size:10px;color:var(--muted);text-transform:uppercase">Realizados</div></div>'
+          +'<div style="flex:1;text-align:center;background:var(--bg);border-radius:8px;padding:10px"><div style="font-size:22px;font-weight:800;color:var(--blue)">'+enEjecCount+'</div><div style="font-size:10px;color:var(--muted);text-transform:uppercase">En ejecución</div></div>'
+          +'<div style="flex:1;text-align:center;background:var(--bg);border-radius:8px;padding:10px"><div style="font-size:22px;font-weight:800;color:var(--red)">'+enRiesgo.length+'</div><div style="font-size:10px;color:var(--muted);text-transform:uppercase">En riesgo</div></div>'
+        +'</div>'
+        +(enRiesgo.length?enRiesgo.slice(0,6).map(function(p){return '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--line);font-size:12.5px"><span style="width:8px;height:8px;border-radius:50%;background:var(--red);flex:none"></span><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(p.name)+'</span><span style="color:var(--muted);font-size:11px">'+progress(p.id)+'%</span></div>';}).join(''):'<div style="color:var(--green);font-size:13px">✅ Ningún proyecto con tareas vencidas.</div>')
+      +'</div>'
     +'</div>'
 
     +'<div class="zone">🎫 Mesa de Ayuda (Tickets)</div>'
     +'<div class="grid g2">'
       +'<div class="card"><h3>Tendencia de tickets</h3><div class="hint">Creados vs cerrados por mes.</div><div class="chart-box"><canvas id="chTend"></canvas></div></div>'
-      +'<div class="card"><h3>Quién atiende más tickets</h3><div class="hint">Carga por responsable (top 7).</div>'+ (resp.length?resp.slice(0,7).map(function(r){return barRow(cap(r.NO_USR_RESPONSABLE),r.TotalTickets,maxR,'#26324f');}).join(''):'<div style="color:var(--muted)">Sin datos</div>') +'</div>'
-    +'</div>'
-
-    +'<div class="grid g2">'
-      +'<div class="card"><h3>Tickets por área de TI</h3><div class="hint">Carga que atiende cada equipo.</div>'+ (areasT.length?areasT.map(function(a){return barRow(cap(a.NO_AREA),a.TotalTickets,Math.max.apply(null,areasT.map(function(x){return x.TotalTickets;})),'#0ea5e9');}).join(''):'<div style="color:var(--muted)">Sin datos</div>') +'</div>'
       +'<div class="card"><h3>Tickets por prioridad</h3><div class="hint">Distribución del volumen.</div><div class="chart-box"><canvas id="chPri"></canvas></div></div>'
+    +'</div>'
+    +'<div class="grid g2">'
+      +'<div class="card"><h3>Quién atiende más tickets</h3><div class="hint">Carga por responsable (top 7).</div>'+ (resp.length?resp.slice(0,7).map(function(r){return barRow(cap(r.NO_USR_RESPONSABLE),r.TotalTickets,maxR,'#26324f');}).join(''):'<div style="color:var(--muted)">Sin datos</div>') +'</div>'
+      +'<div class="card"><h3>Tickets por área de TI</h3><div class="hint">Carga que atiende cada equipo.</div>'+ (areasT.length?areasT.map(function(a){return barRow(cap(a.NO_AREA),a.TotalTickets,Math.max.apply(null,areasT.map(function(x){return x.TotalTickets;})),'#0ea5e9');}).join(''):'<div style="color:var(--muted)">Sin datos</div>') +'</div>'
     +'</div>';
 
   donut('chEstP',estP.map(function(e){return e.label;}),estP.map(function(e){return e.val;}),estP.map(function(e){return ECOL[e.label]||'#9aa0a6';}));
   var pc={'Crítica':'#ef4444','Alta':'#ea580c','Media':'#d4a017','Baja':'#16a34a'};
   donut('chPri',prio.map(function(p){return p.NO_PRIORITY;}),prio.map(function(p){return p.TotalTickets;}),prio.map(function(p){return pc[p.NO_PRIORITY]||'#9aa0a6';}));
+  if(charts.chAvP)charts.chAvP.destroy();
+  charts.chAvP=new Chart(document.getElementById('chAvP'),{type:'bar',
+    data:{labels:avProy.map(function(a){return a.n.length>26?a.n.slice(0,24)+'…':a.n;}),datasets:[{data:avProy.map(function(a){return a.v;}),backgroundColor:avProy.map(function(a){return a.v>=100?'#16a34a':(a.v>=50?'#d4a017':'#2563eb');}),borderRadius:5}]},
+    options:{indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{max:100,grid:{color:'#eef0f3'},ticks:{color:'#6b7280',callback:function(v){return v+'%';}}},y:{grid:{display:false},ticks:{color:'#6b7280',font:{size:11}}}}}});
   if(charts.chTend)charts.chTend.destroy();
   charts.chTend=new Chart(document.getElementById('chTend'),{type:'line',
     data:{labels:tend.map(function(t){return t.MesAnio;}),datasets:[
