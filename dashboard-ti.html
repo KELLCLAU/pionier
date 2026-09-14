@@ -197,13 +197,15 @@ function render(){
     +'</div>'
     +'<div class="grid g2">'
       +'<div class="card"><h3>Áreas que más solicitan proyectos</h3><div class="hint">Volumen por área solicitante.</div>'+ (byArea.length?byArea.map(function(a){return barRow(cap(a.label),a.val,maxArea,'#F5C400');}).join(''):'<div style="color:var(--muted)">Sin datos</div>') +'</div>'
-      +'<div class="card"><h3>Proyectos en riesgo</h3><div class="hint">Con tareas vencidas · resumen de la cartera.</div>'
-        +'<div style="display:flex;gap:10px;margin-bottom:14px">'
-          +'<div style="flex:1;text-align:center;background:var(--bg);border-radius:8px;padding:10px"><div style="font-size:22px;font-weight:800;color:var(--green)">'+realizados+'</div><div style="font-size:10px;color:var(--muted);text-transform:uppercase">Realizados</div></div>'
-          +'<div style="flex:1;text-align:center;background:var(--bg);border-radius:8px;padding:10px"><div style="font-size:22px;font-weight:800;color:var(--blue)">'+enEjecCount+'</div><div style="font-size:10px;color:var(--muted);text-transform:uppercase">En ejecución</div></div>'
-          +'<div style="flex:1;text-align:center;background:var(--bg);border-radius:8px;padding:10px"><div style="font-size:22px;font-weight:800;color:var(--red)">'+enRiesgo.length+'</div><div style="font-size:10px;color:var(--muted);text-transform:uppercase">En riesgo</div></div>'
+      +'<div class="card"><h3>Resumen de la cartera</h3><div class="hint">Estado general y reparto por empresa.</div>'
+        +'<div style="display:flex;gap:10px;margin-bottom:16px">'
+          +'<div style="flex:1;text-align:center;background:var(--bg);border-radius:8px;padding:11px 4px"><div style="font-size:23px;font-weight:800;color:var(--green)">'+realizados+'</div><div style="font-size:10px;color:var(--muted);text-transform:uppercase">Realizados</div></div>'
+          +'<div style="flex:1;text-align:center;background:var(--bg);border-radius:8px;padding:11px 4px"><div style="font-size:23px;font-weight:800;color:var(--blue)">'+enEjecCount+'</div><div style="font-size:10px;color:var(--muted);text-transform:uppercase">En ejecución</div></div>'
+          +'<div style="flex:1;text-align:center;background:var(--bg);border-radius:8px;padding:11px 4px"><div style="font-size:23px;font-weight:800;color:#b8860b">'+ps.filter(function(p){return estadoCat(p)==='Levantamiento';}).length+'</div><div style="font-size:10px;color:var(--muted);text-transform:uppercase">Levantamiento</div></div>'
         +'</div>'
-        +(enRiesgo.length?enRiesgo.slice(0,6).map(function(p){return '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--line);font-size:12.5px"><span style="width:8px;height:8px;border-radius:50%;background:var(--red);flex:none"></span><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(p.name)+'</span><span style="color:var(--muted);font-size:11px">'+progress(p.id)+'%</span></div>';}).join(''):'<div style="color:var(--green);font-size:13px">✅ Ningún proyecto con tareas vencidas.</div>')
+        +'<div style="font-size:11px;font-weight:700;color:var(--ink);margin-bottom:10px">Proyectos por empresa</div>'
+        +barRow('MODIPSA',ps.filter(function(p){return p.empresa==='MODIPSA';}).length,Math.max(ps.filter(function(p){return p.empresa==='MODIPSA';}).length,ps.filter(function(p){return p.empresa==='MASISAC';}).length,1),'#2563eb')
+        +barRow('MASISAC',ps.filter(function(p){return p.empresa==='MASISAC';}).length,Math.max(ps.filter(function(p){return p.empresa==='MODIPSA';}).length,ps.filter(function(p){return p.empresa==='MASISAC';}).length,1),'#16a34a')
       +'</div>'
     +'</div>'
 
