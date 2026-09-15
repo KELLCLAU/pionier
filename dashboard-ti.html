@@ -58,6 +58,21 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:'Segoe UI',syste
 .scroller{max-height:300px;overflow-y:auto;padding-right:4px}
 .bar-row.clk{cursor:pointer;border-radius:6px;padding:3px 5px;margin-left:-5px}
 .bar-row.clk:hover{background:#f5f6f8}
+.bar-row.mute .bf{background:#c9d2dc !important}
+.bar-row .bl .uni{display:block;font-size:9.5px;color:#b08900;font-weight:600;letter-spacing:.2px}
+.bar-row .bv .pc{display:block;font-size:10px;color:var(--muted);font-weight:600}
+.lede{font-size:14.5px;line-height:1.5;color:#2b3340;margin:2px 0 4px}
+.lede b{font-weight:800;color:var(--ink)}
+.lede-s{font-size:11.5px;color:var(--muted);margin:0 0 16px}
+.cierre{margin:16px 0 0;padding:11px 13px;background:#fffbec;border-left:3px solid var(--yellow);border-radius:0 6px 6px 0;font-size:12px;line-height:1.55;color:#4a5460}
+.cierre b{color:var(--ink);font-weight:800}
+.aviso{margin:9px 0 0;font-size:10.5px;color:#9aa3ae}
+.mini-area{display:flex;align-items:center;gap:10px;font-size:12px;margin-bottom:6px}
+.mini-area .n{width:140px;min-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mini-area .t{flex:1;height:9px;background:#eef0f3;border-radius:5px;overflow:hidden}
+.mini-area .f{height:100%;background:var(--yellow);border-radius:5px}
+.mini-area .v{width:64px;text-align:right;color:var(--muted);font-size:11px}
+.bloq{font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin:0 0 9px}
 .tr-clk{cursor:pointer}
 .tr-clk:hover td{background:#f6f7f9}
 .ov{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:flex-start;justify-content:center;z-index:60;padding:30px 16px;overflow:auto}
@@ -137,12 +152,52 @@ function openResp(nombre){
   document.getElementById('ov').classList.add('show');
 }
 document.addEventListener('keydown',function(e){if(e.key==='Escape')closeProj();});
+var SM_INCLUIR_DESCARTADOS=false;
 function openSubtipo(sub){
-  var lista=((HD&&HD.tickets)||[]).filter(function(t){return normSubtipo(t.subtipo)===sub;});
+  var base=((HD&&HD.tickets)||[]).filter(function(t){
+    return SM_INCLUIR_DESCARTADOS || ['Cancelado','Rechazado'].indexOf(t.estado)<0;
+  });
+  var lista, titulo;
+  if(sub==='__OTROS__'){
+    var m={}; base.forEach(function(t){var s=normSubtipo(t.subtipo);m[s]=(m[s]||0)+1;});
+    var orden=Object.keys(m).sort(function(a,b){return m[b]-m[a];}).slice(8);
+    lista=base.filter(function(t){return orden.indexOf(normSubtipo(t.subtipo))>=0;});
+    titulo='Otros tipos de requerimiento';
+  } else {
+    lista=base.filter(function(t){return normSubtipo(t.subtipo)===sub;});
+    titulo=sub;
+  }
   lista.sort(function(a,b){return (b.fecha||'').localeCompare(a.fecha||'');});
-  var rows=lista.length?lista.map(function(t){var ce={'Cerrado':'#16a34a','Nuevo':'#8a8886','Asignado':'#0ea5e9','En proceso':'#0ea5e9','Rechazado':'#ef4444','Cancelado':'#8a8886','Reabierto':'#ea580c'}[t.estado]||'#6b7280';return '<tr><td style="white-space:nowrap;font-weight:600">'+esc(t.ticket)+'</td><td style="white-space:normal">'+esc(t.titulo||'—')+'</td><td>'+esc(t.solicitante||'—')+'</td><td class="c"><span class="tg" style="background:'+ce+'22;color:'+ce+'">'+esc(t.estado||'—')+'</span></td><td class="c" style="white-space:nowrap">'+esc(t.fecha||'')+'</td></tr>';}).join(''):'<div style="color:var(--muted)">Sin tickets.</div>';
-  var content=lista.length?'<table class="ctab"><thead><tr><th>Ticket</th><th>Título</th><th>Solicitante</th><th class="c">Estado</th><th class="c">Fecha</th></tr></thead><tbody>'+rows+'</tbody></table>':rows;
-  document.getElementById('modal').innerHTML='<div class="modal-h"><div><div class="t">'+esc(sub)+'</div><div class="s">'+lista.length+' ticket'+(lista.length===1?'':'s')+' de este tipo</div></div><button class="x" onclick="closeProj()">✕</button></div><div class="modal-b">'+content+'</div>';
+
+  var content;
+  if(!lista.length){
+    content='<div style="color:var(--muted);padding:10px 0">Sin tickets.</div>';
+  } else {
+    /* distribución por área — el subtipo solo tiene sentido dentro de su área */
+    var pa={}; lista.forEach(function(t){var a=cap(t.area||'Sin área');pa[a]=(pa[a]||0)+1;});
+    var areas=Object.keys(pa).map(function(k){return{a:k,n:pa[k]};}).sort(function(x,y){return y.n-x.n;});
+    var mxa=areas[0].n;
+    var blocA='<p class="bloq">Distribución por área</p>'+areas.map(function(x){
+      return '<div class="mini-area"><span class="n" title="'+esc(x.a)+'">'+esc(x.a)+'</span>'
+        +'<span class="t"><span class="f" style="width:'+(x.n/mxa*100)+'%"></span></span>'
+        +'<span class="v">'+x.n+' · '+Math.round(x.n/lista.length*100)+'%</span></div>';
+    }).join('');
+
+    var rows=lista.map(function(t){
+      var ce={'Cerrado':'#16a34a','Nuevo':'#8a8886','Asignado':'#0ea5e9','En desarrollo':'#0ea5e9','En proceso':'#0ea5e9','Pendiente Aprobación':'#7c5cbf','Aprobado':'#7c5cbf','Rechazado':'#ef4444','Cancelado':'#8a8886','Pausado':'#8a8886','Reabierto':'#ea580c'}[t.estado]||'#6b7280';
+      return '<tr><td style="white-space:nowrap;font-weight:600">'+esc(t.ticket)+'</td>'
+        +'<td style="white-space:normal">'+esc(t.titulo||'—')+'</td>'
+        +'<td>'+esc(cap(t.area||'—'))+'</td>'
+        +'<td>'+esc(t.solicitante||'—')+'</td>'
+        +'<td class="c"><span class="tg" style="background:'+ce+'22;color:'+ce+'">'+esc(t.estado||'—')+'</span></td>'
+        +'<td class="c" style="white-space:nowrap">'+esc(t.fecha||'')+'</td></tr>';
+    }).join('');
+    content=blocA
+      +'<p class="bloq" style="margin-top:20px">Tickets</p>'
+      +'<table class="ctab"><thead><tr><th>Ticket</th><th>Título</th><th>Área</th><th>Solicitante</th><th class="c">Estado</th><th class="c">Fecha</th></tr></thead><tbody>'+rows+'</tbody></table>';
+  }
+  var abiertos=lista.filter(function(t){return ['Cerrado','Rechazado','Cancelado'].indexOf(t.estado)<0;}).length;
+  document.getElementById('modal').innerHTML='<div class="modal-h"><div><div class="t">'+esc(titulo)+'</div><div class="s">'+lista.length+' ticket'+(lista.length===1?'':'s')+' · '+abiertos+' sin cerrar</div></div><button class="x" onclick="closeProj()">✕</button></div><div class="modal-b">'+content+'</div>';
   document.getElementById('ov').classList.add('show');
 }
 function openPersonaProy(cod){
@@ -171,21 +226,23 @@ function setF(k,v){if(k==='emp')fEmp=v;else fEst=v;render();}
 const fmt=n=>(n==null?0:n).toLocaleString('es-PE');
 const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 const cap=s=>String(s||'').toLowerCase().replace(/\b\w/g,c=>c.toUpperCase());
+/* Catálogo canónico: solo une etiquetas que significan lo mismo.
+   MEJORA y MEJORA INTERNA NO se unen: en Sistema Activity se usan por igual
+   los cuatro meses, falta confirmarlo con el área antes de fusionarlas. */
+var CONCEPTO={
+  'ACCESOS':'Accesos y permisos',
+  'ACCESOS Y PERMISOS':'Accesos y permisos',
+  'INCIDENCIAS':'Incidencias',
+  'INCONVENIENTES TECNICOS':'Incidencias',
+  'CAMBIO VISUAL':'Cambio visual',
+  'MEJORA / CAMBIO VISUAL':'Cambio visual'
+};
+/* Cuántas etiquetas de origen agrupa cada concepto (para la nota bajo la barra) */
+var UNIFICA={'Accesos y permisos':2,'Incidencias':2,'Cambio visual':2};
 function normSubtipo(s){
-  var x=(s||'').toString().toLowerCase().trim();
-  if(!x) return 'Sin clasificar';
-  if(/acces|permis|usuario|clave|contrase/.test(x)) return 'Accesos y permisos';
-  if(/mejora|cambio visual|visual|ajuste|modific/.test(x)) return 'Mejoras / cambios';
-  if(/impresor/.test(x)) return 'Impresoras';
-  if(/mouse|tecl|perif|esc\u00e1ner|escaner|c\u00e1mara|camara/.test(x)) return 'Periféricos';
-  if(/correo|email|outlook/.test(x)) return 'Correo';
-  if(/report|power ?bi|indicador|dashboard|tablero/.test(x)) return 'Reportes / BI';
-  if(/red|internet|wifi|vpn|conectiv/.test(x)) return 'Red / conectividad';
-  if(/laptop|equipo|monitor|pantalla|\bpc\b|computador|estabiliz|hardware/.test(x)) return 'Equipos / hardware';
-  if(/instal|software|programa|aplicativo|licencia/.test(x)) return 'Software / instalaciones';
-  if(/desarroll|requerim|sistema|app|web/.test(x)) return 'Desarrollo / sistemas';
-  if(/soporte|error|falla|no funciona|problema/.test(x)) return 'Soporte / incidencias';
-  return cap(x);
+  var k=(s||'').toString().trim().toUpperCase();
+  if(!k) return 'Sin clasificar';
+  return CONCEPTO[k] || cap(k.toLowerCase());
 }
 
 // ---- proyectos (Supabase) ----
@@ -345,16 +402,48 @@ function render(){
 
     +'<div class="zone">🎫 Mesa de Ayuda (Tickets)</div>'
     +'<div class="grid g2">'
-      +'<div class="card"><h3>Qué se solicita más</h3><div class="hint">Tipos de requerimiento más frecuentes · clic para ver los tickets.</div><div class="scroller">'
-        +(function(){
-          var m={}; ((HD&&HD.tickets)||[]).forEach(function(t){var st=normSubtipo(t.subtipo);m[st]=(m[st]||0)+1;});
+      +(function(){
+          var TOP=8, tk=((HD&&HD.tickets)||[]).filter(function(t){
+            return SM_INCLUIR_DESCARTADOS || ['Cancelado','Rechazado'].indexOf(t.estado)<0;
+          });
+          if(!tk.length) return '<div class="card"><h3>Qué se solicita más</h3><div class="hint">Tipos de requerimiento más frecuentes.</div><div style="color:var(--muted)">Sin datos de tickets.</div></div>';
+
+          var m={}; tk.forEach(function(t){var st=normSubtipo(t.subtipo);m[st]=(m[st]||0)+1;});
           var arr=Object.keys(m).map(function(k){return{label:k,val:m[k]};}).sort(function(a,b){return b.val-a.val;});
-          if(!arr.length) return '<div style="color:var(--muted)">Sin datos de tickets.</div>';
-          if(arr.length===1 && arr[0].label==='Sin clasificar') return '<div style="color:var(--muted);font-size:12px">Corre el script actualizado (helpdesk_export.py) y sube el helpdesk.json para ver el desglose por tipo.</div>';
-          var mx=Math.max.apply(null,arr.map(function(x){return x.val;}).concat([1]));
-          return arr.map(function(a){return barRowClk(a.label,a.val,mx,'#0ea5e9',"openSubtipo('"+String(a.label).replace(/'/g,"\\'")+"')");}).join('');
+          var total=tk.length, top=arr.slice(0,TOP), cola=arr.slice(TOP);
+          var mx=top[0].val, pc=function(v){return Math.round(v/total*100);};
+
+          /* semanas cubiertas, para proyectar a un año */
+          var fs=tk.map(function(t){return t.fecha||'';}).filter(Boolean).sort();
+          var sem=Math.max(1,Math.round((new Date(fs[fs.length-1])-new Date(fs[0]))/6048e5));
+          var anual=function(v){return fmt(Math.round(v/sem*52));};
+
+          var filas=top.map(function(a,i){
+            var w=(a.val/mx*100), u=UNIFICA[a.label];
+            return '<div class="bar-row clk'+(i<2?'':' mute')+'" onclick="openSubtipo(\''+String(a.label).replace(/'/g,"\\'")+'\')">'
+              +'<div class="bl" title="'+esc(a.label)+'">'+esc(a.label)+(u?'<span class="uni">une '+u+' etiquetas</span>':'')+'</div>'
+              +'<div class="bt"><div class="bf" style="width:'+w+'%;background:#0ea5e9"></div></div>'
+              +'<div class="bv">'+fmt(a.val)+'<span class="pc">'+pc(a.val)+'%</span></div></div>';
+          }).join('');
+
+          if(cola.length){
+            var nc=cola.reduce(function(s,x){return s+x.val;},0);
+            filas+='<div class="bar-row clk mute" onclick="openSubtipo(\'__OTROS__\')">'
+              +'<div class="bl" style="color:var(--muted);font-style:italic">Otros ('+cola.length+' tipos)</div>'
+              +'<div class="bt"><div class="bf" style="width:'+(nc/mx*100)+'%;background:#0ea5e9"></div></div>'
+              +'<div class="bv">'+fmt(nc)+'<span class="pc">'+pc(nc)+'%</span></div></div>';
+          }
+
+          var top4=top.slice(0,4).reduce(function(s,x){return s+x.val;},0);
+          return '<div class="card"><h3>Qué se solicita más</h3>'
+            +'<div class="hint">Clic en cualquier barra para ver los tickets.</div>'
+            +'<p class="lede"><b>'+esc(top[0].label)+'</b> y <b>'+esc(top[1].label.toLowerCase())+'</b> son <b>'+pc(top[0].val+top[1].val)+'%</b> de todo lo que llega a la mesa.</p>'
+            +'<p class="lede-s">Los cuatro primeros tipos concentran '+pc(top4)+'% de los '+fmt(total)+' tickets.</p>'
+            +filas
+            +'<p class="cierre">A este ritmo son <b>'+anual(top[0].val)+'</b> tickets de '+esc(top[0].label.toLowerCase())+' y <b>'+anual(top[1].val)+'</b> de '+esc(top[1].label.toLowerCase())+' al año. Ninguno de los dos se resuelve atendiendo más rápido: uno apunta al parque de impresión, el otro al proceso de altas y bajas.</p>'
+            +'<p class="aviso">'+fmt(total)+' tickets · '+sem+' semanas'+(SM_INCLUIR_DESCARTADOS?' · incluye cancelados y rechazados':' · excluye cancelados y rechazados')+'</p>'
+            +'</div>';
         })()
-      +'</div></div>'
       +'<div class="card"><h3>Tickets por prioridad</h3><div class="hint">Distribución del volumen.</div>'+ (prio.length?prio.map(function(p){var c={'Crítica':'#ef4444','Alta':'#ea580c','Media':'#d4a017','Baja':'#16a34a'}[p.NO_PRIORITY]||'#9aa0a6';return barRow(p.NO_PRIORITY,p.TotalTickets,Math.max.apply(null,prio.map(function(x){return x.TotalTickets;}).concat([1])),c);}).join(''):'<div style="color:var(--muted)">Sin datos</div>') +'</div>'
     +'</div>'
     +'<div class="grid g2">'
