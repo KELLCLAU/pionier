@@ -60,13 +60,12 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:'Segoe UI',syste
 .bar-row.clk:hover{background:#f5f6f8}
 .bar-row.mute .bf{background:#c9d2dc !important}
 .bar-row .bl .uni{display:block;font-size:9.5px;color:#b08900;font-weight:600;letter-spacing:.2px}
-.bar-row .bv .pc{display:block;font-size:10px;color:var(--muted);font-weight:600}
-.lede{font-size:14.5px;line-height:1.5;color:#2b3340;margin:2px 0 4px}
-.lede b{font-weight:800;color:var(--ink)}
-.lede-s{font-size:11.5px;color:var(--muted);margin:0 0 16px}
-.cierre{margin:16px 0 0;padding:11px 13px;background:#fffbec;border-left:3px solid var(--yellow);border-radius:0 6px 6px 0;font-size:12px;line-height:1.55;color:#4a5460}
-.cierre b{color:var(--ink);font-weight:800}
-.aviso{margin:9px 0 0;font-size:10.5px;color:#9aa3ae}
+.bar-row .bv .pc{display:block;font-size:9.5px;color:var(--muted);font-weight:600;margin-top:-1px}
+.card.compacta .bar-row{margin-bottom:7px}
+.card.compacta .bar-row .bl{width:150px;min-width:150px;line-height:1.15}
+.card.compacta .bar-row .bt{height:11px}
+.card.compacta .bar-row .bv{width:52px;font-size:12px;line-height:1.15}
+.card.compacta .scroller{max-height:none;overflow:visible}
 .mini-area{display:flex;align-items:center;gap:10px;font-size:12px;margin-bottom:6px}
 .mini-area .n{width:140px;min-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .mini-area .t{flex:1;height:9px;background:#eef0f3;border-radius:5px;overflow:hidden}
@@ -197,7 +196,8 @@ function openSubtipo(sub){
       +'<table class="ctab"><thead><tr><th>Ticket</th><th>Título</th><th>Área</th><th>Solicitante</th><th class="c">Estado</th><th class="c">Fecha</th></tr></thead><tbody>'+rows+'</tbody></table>';
   }
   var abiertos=lista.filter(function(t){return ['Cerrado','Rechazado','Cancelado'].indexOf(t.estado)<0;}).length;
-  document.getElementById('modal').innerHTML='<div class="modal-h"><div><div class="t">'+esc(titulo)+'</div><div class="s">'+lista.length+' ticket'+(lista.length===1?'':'s')+' · '+abiertos+' sin cerrar</div></div><button class="x" onclick="closeProj()">✕</button></div><div class="modal-b">'+content+'</div>';
+  var proy=(window.SM_SEM&&lista.length)?' · a este ritmo, ~'+fmt(Math.round(lista.length/window.SM_SEM*52))+' al año':'';
+  document.getElementById('modal').innerHTML='<div class="modal-h"><div><div class="t">'+esc(titulo)+'</div><div class="s">'+lista.length+' ticket'+(lista.length===1?'':'s')+' · '+abiertos+' sin cerrar'+proy+'</div></div><button class="x" onclick="closeProj()">✕</button></div><div class="modal-b">'+content+'</div>';
   document.getElementById('ov').classList.add('show');
 }
 function openPersonaProy(cod){
@@ -417,6 +417,7 @@ function render(){
           var fs=tk.map(function(t){return t.fecha||'';}).filter(Boolean).sort();
           var sem=Math.max(1,Math.round((new Date(fs[fs.length-1])-new Date(fs[0]))/6048e5));
           var anual=function(v){return fmt(Math.round(v/sem*52));};
+          window.SM_SEM=sem;
 
           var filas=top.map(function(a,i){
             var w=(a.val/mx*100), u=UNIFICA[a.label];
@@ -435,13 +436,9 @@ function render(){
           }
 
           var top4=top.slice(0,4).reduce(function(s,x){return s+x.val;},0);
-          return '<div class="card"><h3>Qué se solicita más</h3>'
-            +'<div class="hint">Clic en cualquier barra para ver los tickets.</div>'
-            +'<p class="lede"><b>'+esc(top[0].label)+'</b> y <b>'+esc(top[1].label.toLowerCase())+'</b> son <b>'+pc(top[0].val+top[1].val)+'%</b> de todo lo que llega a la mesa.</p>'
-            +'<p class="lede-s">Los cuatro primeros tipos concentran '+pc(top4)+'% de los '+fmt(total)+' tickets.</p>'
-            +filas
-            +'<p class="cierre">A este ritmo son <b>'+anual(top[0].val)+'</b> tickets de '+esc(top[0].label.toLowerCase())+' y <b>'+anual(top[1].val)+'</b> de '+esc(top[1].label.toLowerCase())+' al año. Ninguno de los dos se resuelve atendiendo más rápido: uno apunta al parque de impresión, el otro al proceso de altas y bajas.</p>'
-            +'<p class="aviso">'+fmt(total)+' tickets · '+sem+' semanas'+(SM_INCLUIR_DESCARTADOS?' · incluye cancelados y rechazados':' · excluye cancelados y rechazados')+'</p>'
+          return '<div class="card compacta"><h3>Qué se solicita más</h3>'
+            +'<div class="hint">'+fmt(total)+' tickets · los 4 primeros tipos son '+pc(top4)+'% · clic para ver el detalle.</div>'
+            +'<div class="scroller">'+filas+'</div>'
             +'</div>';
         })()
       +'<div class="card"><h3>Tickets por prioridad</h3><div class="hint">Distribución del volumen.</div>'+ (prio.length?prio.map(function(p){var c={'Crítica':'#ef4444','Alta':'#ea580c','Media':'#d4a017','Baja':'#16a34a'}[p.NO_PRIORITY]||'#9aa0a6';return barRow(p.NO_PRIORITY,p.TotalTickets,Math.max.apply(null,prio.map(function(x){return x.TotalTickets;}).concat([1])),c);}).join(''):'<div style="color:var(--muted)">Sin datos</div>') +'</div>'
