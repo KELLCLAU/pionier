@@ -58,20 +58,6 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:'Segoe UI',syste
 .scroller{max-height:300px;overflow-y:auto;padding-right:4px}
 .bar-row.clk{cursor:pointer;border-radius:6px;padding:3px 5px;margin-left:-5px}
 .bar-row.clk:hover{background:#f5f6f8}
-.bar-row.mute .bf{background:#c9d2dc !important}
-.bar-row .bl .uni{display:block;font-size:9.5px;color:#b08900;font-weight:600;letter-spacing:.2px}
-.bar-row .bv .pc{display:block;font-size:9.5px;color:var(--muted);font-weight:600;margin-top:-1px}
-.card.compacta .bar-row{margin-bottom:7px}
-.card.compacta .bar-row .bl{width:150px;min-width:150px;line-height:1.15}
-.card.compacta .bar-row .bt{height:11px}
-.card.compacta .bar-row .bv{width:52px;font-size:12px;line-height:1.15}
-.card.compacta .scroller{max-height:none;overflow:visible}
-.mini-area{display:flex;align-items:center;gap:10px;font-size:12px;margin-bottom:6px}
-.mini-area .n{width:140px;min-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.mini-area .t{flex:1;height:9px;background:#eef0f3;border-radius:5px;overflow:hidden}
-.mini-area .f{height:100%;background:var(--yellow);border-radius:5px}
-.mini-area .v{width:64px;text-align:right;color:var(--muted);font-size:11px}
-.bloq{font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin:0 0 9px}
 .tr-clk{cursor:pointer}
 .tr-clk:hover td{background:#f6f7f9}
 .ov{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:flex-start;justify-content:center;z-index:60;padding:30px 16px;overflow:auto}
@@ -151,53 +137,12 @@ function openResp(nombre){
   document.getElementById('ov').classList.add('show');
 }
 document.addEventListener('keydown',function(e){if(e.key==='Escape')closeProj();});
-var SM_INCLUIR_DESCARTADOS=false;
 function openSubtipo(sub){
-  var base=((HD&&HD.tickets)||[]).filter(function(t){
-    return SM_INCLUIR_DESCARTADOS || ['Cancelado','Rechazado'].indexOf(t.estado)<0;
-  });
-  var lista, titulo;
-  if(sub==='__OTROS__'){
-    var m={}; base.forEach(function(t){var s=normSubtipo(t.subtipo);m[s]=(m[s]||0)+1;});
-    var orden=Object.keys(m).sort(function(a,b){return m[b]-m[a];}).slice(8);
-    lista=base.filter(function(t){return orden.indexOf(normSubtipo(t.subtipo))>=0;});
-    titulo='Otros tipos de requerimiento';
-  } else {
-    lista=base.filter(function(t){return normSubtipo(t.subtipo)===sub;});
-    titulo=sub;
-  }
+  var lista=((HD&&HD.tickets)||[]).filter(function(t){return normSubtipo(t.subtipo)===sub;});
   lista.sort(function(a,b){return (b.fecha||'').localeCompare(a.fecha||'');});
-
-  var content;
-  if(!lista.length){
-    content='<div style="color:var(--muted);padding:10px 0">Sin tickets.</div>';
-  } else {
-    /* distribución por área — el subtipo solo tiene sentido dentro de su área */
-    var pa={}; lista.forEach(function(t){var a=cap(t.area||'Sin área');pa[a]=(pa[a]||0)+1;});
-    var areas=Object.keys(pa).map(function(k){return{a:k,n:pa[k]};}).sort(function(x,y){return y.n-x.n;});
-    var mxa=areas[0].n;
-    var blocA='<p class="bloq">Distribución por área</p>'+areas.map(function(x){
-      return '<div class="mini-area"><span class="n" title="'+esc(x.a)+'">'+esc(x.a)+'</span>'
-        +'<span class="t"><span class="f" style="width:'+(x.n/mxa*100)+'%"></span></span>'
-        +'<span class="v">'+x.n+' · '+Math.round(x.n/lista.length*100)+'%</span></div>';
-    }).join('');
-
-    var rows=lista.map(function(t){
-      var ce={'Cerrado':'#16a34a','Nuevo':'#8a8886','Asignado':'#0ea5e9','En desarrollo':'#0ea5e9','En proceso':'#0ea5e9','Pendiente Aprobación':'#7c5cbf','Aprobado':'#7c5cbf','Rechazado':'#ef4444','Cancelado':'#8a8886','Pausado':'#8a8886','Reabierto':'#ea580c'}[t.estado]||'#6b7280';
-      return '<tr><td style="white-space:nowrap;font-weight:600">'+esc(t.ticket)+'</td>'
-        +'<td style="white-space:normal">'+esc(t.titulo||'—')+'</td>'
-        +'<td>'+esc(cap(t.area||'—'))+'</td>'
-        +'<td>'+esc(t.solicitante||'—')+'</td>'
-        +'<td class="c"><span class="tg" style="background:'+ce+'22;color:'+ce+'">'+esc(t.estado||'—')+'</span></td>'
-        +'<td class="c" style="white-space:nowrap">'+esc(t.fecha||'')+'</td></tr>';
-    }).join('');
-    content=blocA
-      +'<p class="bloq" style="margin-top:20px">Tickets</p>'
-      +'<table class="ctab"><thead><tr><th>Ticket</th><th>Título</th><th>Área</th><th>Solicitante</th><th class="c">Estado</th><th class="c">Fecha</th></tr></thead><tbody>'+rows+'</tbody></table>';
-  }
-  var abiertos=lista.filter(function(t){return ['Cerrado','Rechazado','Cancelado'].indexOf(t.estado)<0;}).length;
-  var proy=(window.SM_SEM&&lista.length)?' · a este ritmo, ~'+fmt(Math.round(lista.length/window.SM_SEM*52))+' al año':'';
-  document.getElementById('modal').innerHTML='<div class="modal-h"><div><div class="t">'+esc(titulo)+'</div><div class="s">'+lista.length+' ticket'+(lista.length===1?'':'s')+' · '+abiertos+' sin cerrar'+proy+'</div></div><button class="x" onclick="closeProj()">✕</button></div><div class="modal-b">'+content+'</div>';
+  var rows=lista.length?lista.map(function(t){var ce={'Cerrado':'#16a34a','Nuevo':'#8a8886','Asignado':'#0ea5e9','En proceso':'#0ea5e9','Rechazado':'#ef4444','Cancelado':'#8a8886','Reabierto':'#ea580c'}[t.estado]||'#6b7280';return '<tr><td style="white-space:nowrap;font-weight:600">'+esc(t.ticket)+'</td><td style="white-space:normal">'+esc(t.titulo||'—')+'</td><td>'+esc(t.solicitante||'—')+'</td><td class="c"><span class="tg" style="background:'+ce+'22;color:'+ce+'">'+esc(t.estado||'—')+'</span></td><td class="c" style="white-space:nowrap">'+esc(t.fecha||'')+'</td></tr>';}).join(''):'<div style="color:var(--muted)">Sin tickets.</div>';
+  var content=lista.length?'<table class="ctab"><thead><tr><th>Ticket</th><th>Título</th><th>Solicitante</th><th class="c">Estado</th><th class="c">Fecha</th></tr></thead><tbody>'+rows+'</tbody></table>':rows;
+  document.getElementById('modal').innerHTML='<div class="modal-h"><div><div class="t">'+esc(sub)+'</div><div class="s">'+lista.length+' ticket'+(lista.length===1?'':'s')+' de este tipo</div></div><button class="x" onclick="closeProj()">✕</button></div><div class="modal-b">'+content+'</div>';
   document.getElementById('ov').classList.add('show');
 }
 function openPersonaProy(cod){
@@ -226,23 +171,23 @@ function setF(k,v){if(k==='emp')fEmp=v;else fEst=v;render();}
 const fmt=n=>(n==null?0:n).toLocaleString('es-PE');
 const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 const cap=s=>String(s||'').toLowerCase().replace(/\b\w/g,c=>c.toUpperCase());
-/* Catálogo canónico: solo une etiquetas que significan lo mismo.
-   MEJORA y MEJORA INTERNA NO se unen: en Sistema Activity se usan por igual
-   los cuatro meses, falta confirmarlo con el área antes de fusionarlas. */
-var CONCEPTO={
-  'ACCESOS':'Accesos y permisos',
-  'ACCESOS Y PERMISOS':'Accesos y permisos',
-  'INCIDENCIAS':'Incidencias',
-  'INCONVENIENTES TECNICOS':'Incidencias',
-  'CAMBIO VISUAL':'Cambio visual',
-  'MEJORA / CAMBIO VISUAL':'Cambio visual'
-};
-/* Cuántas etiquetas de origen agrupa cada concepto (para la nota bajo la barra) */
-var UNIFICA={'Accesos y permisos':2,'Incidencias':2,'Cambio visual':2};
 function normSubtipo(s){
-  var k=(s||'').toString().trim().toUpperCase();
-  if(!k) return 'Sin clasificar';
-  return CONCEPTO[k] || cap(k.toLowerCase());
+  var x=(s||'').toString().toLowerCase().trim();
+  if(!x) return 'Sin clasificar';
+  if(/impresor/.test(x)) return 'Impresoras';
+  if(/soporte software/.test(x)) return 'Soporte de software';
+  if(/soporte equipos|pos y lector/.test(x)) return 'Soporte de equipos';
+  if(/soporte app/.test(x)) return 'Soporte de app y datos';
+  if(/acces|permis/.test(x)) return 'Accesos y permisos';
+  if(/correo/.test(x)) return 'Correo corporativo';
+  if(/red|internet/.test(x)) return 'Red e internet';
+  if(/incidencia|inconvenient/.test(x)) return 'Incidencias técnicas';
+  if(/desarrollo|\bbd\b|optimizaci|administraci|integraci/.test(x)) return 'Desarrollo / BD';
+  if(/mejora|cambio visual/.test(x)) return 'Mejoras / cambios';
+  if(/informaci|consulta|reporte/.test(x)) return 'Información / consultas';
+  if(/capacita/.test(x)) return 'Capacitación';
+  if(/help ?desk/.test(x)) return 'Mesa de ayuda';
+  return cap(x);
 }
 
 // ---- proyectos (Supabase) ----
@@ -354,8 +299,6 @@ function render(){
         +'<div><div style="font-size:32px;font-weight:900;color:#fff;line-height:1">'+(k.PromHorasResolucion||0).toFixed(1)+'<span style="font-size:16px"> h</span></div><div style="font-size:11px;color:#c8c6c4;margin-top:6px">Tiempo medio<br>de resolución</div></div>'
         +'<div><div style="font-size:32px;font-weight:900;color:#F5C400;line-height:1">'+(k.PromPuntajeColaborador||0).toFixed(0)+'<span style="font-size:16px">/300</span></div><div style="font-size:11px;color:#c8c6c4;margin-top:6px">Puntaje de<br>servicio</div></div>'
         +'<div><div style="font-size:32px;font-weight:900;color:#fff;line-height:1">'+reapPct.toFixed(1)+'%</div><div style="font-size:11px;color:#c8c6c4;margin-top:6px">Reaperturas<br><b style="color:#16a34a">alta calidad</b></div></div>'
-        +(topResp?'<div><div style="font-size:32px;font-weight:900;color:#F5C400;line-height:1">'+fmt(topResp.TotalTickets)+'</div><div style="font-size:11px;color:#c8c6c4;margin-top:6px">'+cap(topResp.NO_USR_RESPONSABLE)+'<br>colaborador top</div></div>':'')
-        +(areaEf?'<div><div style="font-size:32px;font-weight:900;color:#fff;line-height:1">'+(areaEf.PctResolucion||0).toFixed(0)+'%</div><div style="font-size:11px;color:#c8c6c4;margin-top:6px">'+cap(areaEf.NO_AREA)+'<br>área más eficiente</div></div>':'')
       +'</div>'
     +'</div>'
 
@@ -402,45 +345,7 @@ function render(){
 
     +'<div class="zone">🎫 Mesa de Ayuda (Tickets)</div>'
     +'<div class="grid g2">'
-      +(function(){
-          var TOP=8, tk=((HD&&HD.tickets)||[]).filter(function(t){
-            return SM_INCLUIR_DESCARTADOS || ['Cancelado','Rechazado'].indexOf(t.estado)<0;
-          });
-          if(!tk.length) return '<div class="card"><h3>Qué se solicita más</h3><div class="hint">Tipos de requerimiento más frecuentes.</div><div style="color:var(--muted)">Sin datos de tickets.</div></div>';
-
-          var m={}; tk.forEach(function(t){var st=normSubtipo(t.subtipo);m[st]=(m[st]||0)+1;});
-          var arr=Object.keys(m).map(function(k){return{label:k,val:m[k]};}).sort(function(a,b){return b.val-a.val;});
-          var total=tk.length, top=arr.slice(0,TOP), cola=arr.slice(TOP);
-          var mx=top[0].val, pc=function(v){return Math.round(v/total*100);};
-
-          /* semanas cubiertas, para proyectar a un año */
-          var fs=tk.map(function(t){return t.fecha||'';}).filter(Boolean).sort();
-          var sem=Math.max(1,Math.round((new Date(fs[fs.length-1])-new Date(fs[0]))/6048e5));
-          var anual=function(v){return fmt(Math.round(v/sem*52));};
-          window.SM_SEM=sem;
-
-          var filas=top.map(function(a,i){
-            var w=(a.val/mx*100), u=UNIFICA[a.label];
-            return '<div class="bar-row clk'+(i<2?'':' mute')+'" onclick="openSubtipo(\''+String(a.label).replace(/'/g,"\\'")+'\')">'
-              +'<div class="bl" title="'+esc(a.label)+'">'+esc(a.label)+(u?'<span class="uni">une '+u+' etiquetas</span>':'')+'</div>'
-              +'<div class="bt"><div class="bf" style="width:'+w+'%;background:#0ea5e9"></div></div>'
-              +'<div class="bv">'+fmt(a.val)+'<span class="pc">'+pc(a.val)+'%</span></div></div>';
-          }).join('');
-
-          if(cola.length){
-            var nc=cola.reduce(function(s,x){return s+x.val;},0);
-            filas+='<div class="bar-row clk mute" onclick="openSubtipo(\'__OTROS__\')">'
-              +'<div class="bl" style="color:var(--muted);font-style:italic">Otros ('+cola.length+' tipos)</div>'
-              +'<div class="bt"><div class="bf" style="width:'+(nc/mx*100)+'%;background:#0ea5e9"></div></div>'
-              +'<div class="bv">'+fmt(nc)+'<span class="pc">'+pc(nc)+'%</span></div></div>';
-          }
-
-          var top4=top.slice(0,4).reduce(function(s,x){return s+x.val;},0);
-          return '<div class="card compacta"><h3>Qué se solicita más</h3>'
-            +'<div class="hint">'+fmt(total)+' tickets · los 4 primeros tipos son '+pc(top4)+'% · clic para ver el detalle.</div>'
-            +'<div class="scroller">'+filas+'</div>'
-            +'</div>';
-        })()
+      +'<div class="card"><h3>Tendencia de tickets</h3><div class="hint">Creados vs cerrados por mes.</div><div class="chart-box"><canvas id="chTend"></canvas></div></div>'
       +'<div class="card"><h3>Tickets por prioridad</h3><div class="hint">Distribución del volumen.</div>'+ (prio.length?prio.map(function(p){var c={'Crítica':'#ef4444','Alta':'#ea580c','Media':'#d4a017','Baja':'#16a34a'}[p.NO_PRIORITY]||'#9aa0a6';return barRow(p.NO_PRIORITY,p.TotalTickets,Math.max.apply(null,prio.map(function(x){return x.TotalTickets;}).concat([1])),c);}).join(''):'<div style="color:var(--muted)">Sin datos</div>') +'</div>'
     +'</div>'
     +'<div class="grid g2">'
@@ -449,6 +354,13 @@ function render(){
     +'</div>';
 
   var pc={'Crítica':'#ef4444','Alta':'#ea580c','Media':'#d4a017','Baja':'#16a34a'};
+  if(charts.chTend)charts.chTend.destroy();
+  charts.chTend=new Chart(document.getElementById('chTend'),{type:'line',
+    data:{labels:tend.map(function(t){return t.MesAnio;}),datasets:[
+      {label:'Creados',data:tend.map(function(t){return t.Creados;}),borderColor:'#2563eb',backgroundColor:'rgba(37,99,235,.10)',fill:true,tension:.35,borderWidth:2,pointRadius:4,pointBackgroundColor:'#2563eb'},
+      {label:'Cerrados',data:tend.map(function(t){return t.Cerrados;}),borderColor:'#16a34a',backgroundColor:'rgba(22,163,74,.10)',fill:true,tension:.35,borderWidth:2,pointRadius:4,pointBackgroundColor:'#16a34a'}
+    ]},
+    options:{plugins:{legend:{position:'bottom',labels:{color:'#6b7280',boxWidth:12,font:{size:11}}}},scales:{x:{grid:{display:false},ticks:{color:'#6b7280'}},y:{grid:{color:'#eef0f3'},ticks:{color:'#6b7280',precision:0}}}}});
 }
 
 function doLogin(){ if(document.getElementById('pass').value===DASH_PASS){try{sessionStorage.setItem('ti_auth','1');}catch(e){}entrar();}else{document.getElementById('loginErr').textContent='Contraseña incorrecta';document.getElementById('pass').value='';} }
