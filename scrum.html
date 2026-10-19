@@ -700,10 +700,10 @@ body.proy .memcard .mc-done{background:#bbf7d0 !important}
 <script>
 const COLS=['Backlog','En progreso','En revisión','Hecho'];
 const PRIORITIES=['Alta','Media','Baja'];
-const MEMBERS=['CS','KB','OM','KP','OR','CL','MH','JH','LP','ST','CG','CB','CA','RT','JS','WR','ME','AC','DG','CH','MG','KA'];
-const COLORS=['#C9A227','#d4a900','#0ea5e9','#16a34a','#e08800','#7c3aed','#C9A227','#C9A227','#C9A227','#C9A227','#C9A227','#C9A227','#C9A227','#7c3aed','#7c3aed','#7c3aed','#e08800'];
-const MEMBER_NAMES=['Carlos Salas','Kelly Barrientos','Omar Muñoz','Keiko Palomino','Owen Rojas','Claudia López','Miguel Hernández','Jaime Halire','Luis Palomino','Saúl Tapia','Cleison Guevara','Claudio Barahona','Carla Arce','Rigoberto Timaná','Jean Sánchez','Wilder Rojas','Mauro Elías','Antony Chilquillo','Daniel Guerrero','Cristian Huaman','Maria Gracia La Torre','Karla Aguilar Chuquipoma'];
-const MEMBER_ROLES=['Coord. Desarrollo SW & Web','Ing. Datos / Arquitectura','Jefe de TI','Jefe de Proyectos','Analista BI','Enc. Desarrollo Web','Prog. ERP','Prog. ERP','Prog. ERP','Prog. ERP','Prog. ERP','Prog. ERP','Prog. ERP','Desarrollador Web','Desarrollador Web','Desarrollador Web','Analista Helpdesk','Adm. Redes y Ciberseguridad','Analista de Soporte','Asistente de Ciberseguridad','Analista BI','Analista QA'];
+const MEMBERS=['CS','KB','OM','KP','OR','CL','MH','JH','LP','ST','CG','CB','CA','RT','JS','WR','ME','AC','DG','CH','MG','KA','AS'];
+const COLORS=['#C9A227','#d4a900','#0ea5e9','#16a34a','#e08800','#7c3aed','#C9A227','#C9A227','#C9A227','#C9A227','#C9A227','#C9A227','#C9A227','#7c3aed','#7c3aed','#7c3aed','#e08800','#C9A227','#C9A227','#C9A227','#C9A227','#C9A227','#7c3aed'];
+const MEMBER_NAMES=['Carlos Salas','Kelly Barrientos','Omar Muñoz','Keiko Palomino','Owen Rojas','Claudia López','Miguel Hernández','Jaime Halire','Luis Palomino','Saúl Tapia','Cleison Guevara','Claudio Barahona','Carla Arce','Rigoberto Timaná','Jean Sánchez','Wilder Rojas','Mauro Elías','Antony Chilquillo','Daniel Guerrero','Cristian Huaman','Maria Gracia La Torre','Karla Aguilar Chuquipoma','Ángel Sandoval'];
+const MEMBER_ROLES=['Coord. Desarrollo SW & Web','Ing. Datos / Arquitectura','Jefe de TI','Jefe de Proyectos','Analista BI','Enc. Desarrollo Web','Prog. ERP','Prog. ERP','Prog. ERP','Prog. ERP','Prog. ERP','Prog. ERP','Prog. ERP','Desarrollador Web','Desarrollador Web','Desarrollador Web','Analista Helpdesk','Adm. Redes y Ciberseguridad','Analista de Soporte','Asistente de Ciberseguridad','Analista BI','Analista QA','Desarrollador Web'];
 
 // Jerarquía: jefe -> miembros de su equipo
 const TEAM_HIERARCHY = {
@@ -2024,7 +2024,7 @@ function renderAreasBI(){
 
   // Definición de áreas con sus miembros y colores
   const AREAS=[
-    {key:'dev-web', label:'Desarrollo Web',       emoji:'🌐', color:'#7c3aed',  bg:'#f5f3ff', members:['CL','RT','JS','WR']},
+    {key:'dev-web', label:'Desarrollo Web',       emoji:'🌐', color:'#7c3aed',  bg:'#f5f3ff', members:['CL','RT','JS','WR','AS']},
     {key:'erp',     label:'Desarrollo ERP',        emoji:'🏭', color:'#16a34a',  bg:'#f0fdf4', members:['CS','MH','JH','LP','ST','JG','CB','CA']},
     {key:'bi',      label:'Analítica / Power BI', emoji:'📈', color:'#0ea5e9',  bg:'#e0f2fe', members:['OR','ME']},
     {key:'qa',      label:'Control de Calidad',    emoji:'🔍', color:'#e08800',  bg:'#fffbeb', members:['KP']},
@@ -2728,7 +2728,7 @@ function buildAssigneeSelector(selected){
     {code:'OM',name:'Omar Muñoz',             role:'Jefe de TI',           color:'#0ea5e9', sub:[]},
     {code:'KP',name:'Keiko Palomino',         role:'Jefe de Proyectos ⭐', color:'#16a34a', sub:[]},
     {code:'OR',name:'Owen Rojas',             role:'Analista BI',          color:'#e08800', sub:['ME']},
-    {code:'CL',name:'Claudia López',          role:'Enc. Desarrollo Web',  color:'#7c3aed', sub:['RT','JS','WR']},
+    {code:'CL',name:'Claudia López',          role:'Enc. Desarrollo Web',  color:'#7c3aed', sub:['RT','JS','WR','AS']},
     {code:'AC',name:'Antony Chilquillo',      role:'Adm. Redes y Ciberseguridad', color:'#0891b2', sub:['DG','CH']},
   ];
   const subData={
@@ -2743,6 +2743,7 @@ function buildAssigneeSelector(selected){
     RT:{name:'Rigoberto Timaná',   role:'Desarrollador Web'},
     JS:{name:'Jean Sánchez',       role:'Desarrollador Web'},
     WR:{name:'Wilder Rojas',       role:'Desarrollador Web'},
+    AS:{name:'Ángel Sandoval',     role:'Desarrollador Web'},
     AC:{name:'Antony Chilquillo',  role:'Adm. Redes y Ciberseguridad'},
     DG:{name:'Daniel Guerrero',    role:'Analista de Soporte'},
     CH:{name:'Cristian Huaman',    role:'Asistente de Ciberseguridad'},
