@@ -458,7 +458,7 @@ body.proy .memcard .mc-done{background:#bbf7d0 !important}
         </div>
       </div>
       <div class="stats-row" id="global-stats"></div>
-      <div style="margin-bottom:16px;background:#eef1f6;border-radius:12px;border-left:4px solid #C9A227;overflow:hidden;border:1px solid #dde1e9"><div onclick="const b=document.getElementById('team-dir-body');const ic=document.getElementById('team-dir-ic');if(b.style.display==='none'){b.style.display='';ic.textContent='▲'}else{b.style.display='none';ic.textContent='▼'}" id="equipo-bar" style="display:flex;justify-content:space-between;align-items:center;padding:14px;cursor:pointer;background:#1e2530;border-radius:10px 10px 0 0"><span style="color:#C9A227;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px">👥 Equipo Scrum — Pioner</span><span id="team-dir-ic" style="color:#C9A227;font-size:12px">▲</span></div><div id="team-dir-body"><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(185px,1fr));gap:10px;padding:0 14px 14px" id="team-dir"></div></div></div><div class="proj-grid" id="proj-grid"></div>
+      <div style="margin-bottom:16px;background:#eef1f6;border-radius:12px;border-left:4px solid #C9A227;overflow:hidden;border:1px solid #dde1e9"><div onclick="const b=document.getElementById('team-dir-body');const ic=document.getElementById('team-dir-ic');if(b.style.display==='none'){b.style.display='';ic.textContent='▲'}else{b.style.display='none';ic.textContent='▼'}" id="equipo-bar" style="display:flex;justify-content:space-between;align-items:center;padding:14px;cursor:pointer;background:#1e2530;border-radius:10px 10px 0 0"><span style="color:#C9A227;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px">👥 Equipo Scrum — Pioner</span><span style="display:flex;align-items:center;gap:10px"><button class="btn sm" style="background:#217346;color:#fff;border-color:#217346;font-weight:700" onclick="event.stopPropagation();exportarRecursosProyectos()" title="Exportar a Excel cuántos proyectos tiene cada recurso">📊 Exportar por recurso</button><span id="team-dir-ic" style="color:#C9A227;font-size:12px">▲</span></span></div><div id="team-dir-body"><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(185px,1fr));gap:10px;padding:0 14px 14px" id="team-dir"></div></div></div><div class="proj-grid" id="proj-grid"></div>
     </div><!-- fin columna derecha -->
     </div><!-- fin grid 2 col -->
     </div><!-- fin tab-projects -->
@@ -5004,6 +5004,136 @@ function exportarProyectosLista(){
   XLSX.utils.book_append_sheet(wb,ws,'Proyectos');
   var fecha=new Date().toISOString().split('T')[0];
   XLSX.writeFile(wb,'Proyectos_Pionier_'+fecha+'.xlsx');
+}
+
+// ─── EXPORTAR POR RECURSO: EN CUÁNTOS PROYECTOS PARTICIPA ───
+// Carga xlsx-js-style (soporta colores/negritas); si falla, usa el SheetJS normal.
+function _getXLSXStyled(cb){
+  if(window._XLSXS){ cb(window._XLSXS,true); return; }
+  var s=document.createElement('script');
+  s.src='https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx-js-style.min.js';
+  s.onload=function(){ window._XLSXS=window.XLSX; cb(window._XLSXS,true); };
+  s.onerror=function(){
+    var x=window.XLSX||window.xlsx;
+    if(x){ cb(x,false); return; }
+    var s2=document.createElement('script');
+    s2.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+    s2.onload=function(){ cb(window.XLSX,false); };
+    document.head.appendChild(s2);
+  };
+  document.head.appendChild(s);
+}
+
+// Clasifica un proyecto: 'entregado' | 'ejecucion' | 'otros'
+function _claseProyecto(p){
+  if(!p) return 'otros';
+  if(getProgress(p.id)>=100) return 'entregado';
+  if(typeof _enEjecucion==='function' && _enEjecucion(p)) return 'ejecucion';
+  return 'otros';
+}
+
+function exportarRecursosProyectos(){
+  _getXLSXStyled(function(XLSX){
+  // ── Estilos ──
+  var BDR={top:{style:'thin',color:{rgb:'E5E7EB'}},bottom:{style:'thin',color:{rgb:'E5E7EB'}},left:{style:'thin',color:{rgb:'E5E7EB'}},right:{style:'thin',color:{rgb:'E5E7EB'}}};
+  var stTitle={fill:{fgColor:{rgb:'F5C400'}},font:{bold:true,sz:14,color:{rgb:'0F0F0F'}},alignment:{horizontal:'left',vertical:'center'}};
+  var stSub={fill:{fgColor:{rgb:'0F0F0F'}},font:{bold:true,sz:10,color:{rgb:'F5C400'}},alignment:{horizontal:'left',vertical:'center'}};
+  var stHead={fill:{fgColor:{rgb:'1E2530'}},font:{bold:true,sz:11,color:{rgb:'FFFFFF'}},alignment:{horizontal:'center',vertical:'center',wrapText:true},border:BDR};
+  function stData(alt,align,color,bold){return {alignment:{horizontal:align||'left',vertical:'center'},border:BDR,fill:{fgColor:{rgb:alt?'F7F8FA':'FFFFFF'}},font:{sz:10,bold:!!bold,color:{rgb:color||'1E2530'}}};}
+  function setStyle(ws,r,c,st){var a=XLSX.utils.encode_cell({r:r,c:c}); if(!ws[a])ws[a]={v:'',t:'s'}; ws[a].s=st;}
+
+  var projById={};
+  state.projects.forEach(function(p){ projById[p.id]=p; });
+
+  var resumen=[], detalle=[];
+  var CLBL={entregado:'Entregado',ejecucion:'En ejecución',otros:'Otros / Pendiente'};
+  var CCOL={entregado:'15803D',ejecucion:'0284C7',otros:'B45309'};
+  var CORD={ejecucion:0,otros:1,entregado:2};
+
+  MEMBERS.forEach(function(code,i){
+    var nombre=MEMBER_NAMES[i]||code, rol=MEMBER_ROLES[i]||'';
+    var tks=state.tickets.filter(function(t){ return (t.assignee===code)||(t.responsable===code); });
+    var porProy={};
+    tks.forEach(function(t){
+      if(!t.projId) return;
+      if(!porProy[t.projId]) porProy[t.projId]={total:0,done:0};
+      porProy[t.projId].total++; if(t.col==='Hecho') porProy[t.projId].done++;
+    });
+    var ids=Object.keys(porProy);
+    if(!ids.length) return; // solo recursos con participación
+    var nEnt=0,nEje=0,nOtr=0, entNames=[];
+    ids.forEach(function(id){
+      var p=projById[id]||{id:id,name:'('+id+')'}; var g=porProy[id];
+      var cls=_claseProyecto(p);
+      if(cls==='entregado'){nEnt++; entNames.push(p.name);}
+      else if(cls==='ejecucion') nEje++; else nOtr++;
+      detalle.push({code:code,nombre:nombre,proy:p.name||('('+id+')'),empresa:p.empresa||'',
+        estado:CLBL[cls],cls:cls,avance:getProgress(p.id),tareas:g.total,hechas:g.done,pend:g.total-g.done});
+    });
+    resumen.push({code:code,nombre:nombre,rol:rol,nProy:ids.length,nEnt:nEnt,nEje:nEje,nOtr:nOtr,
+      nTareas:tks.length, entregados:entNames.sort().join(' · ')});
+  });
+
+  resumen.sort(function(a,b){ return (b.nProy-a.nProy)||(b.nEnt-a.nEnt)||(b.nTareas-a.nTareas); });
+  detalle.sort(function(a,b){ return (a.nombre<b.nombre?-1:a.nombre>b.nombre?1:0)||(CORD[a.cls]-CORD[b.cls])||(a.proy<b.proy?-1:1); });
+
+  var fechaTxt=new Date().toLocaleDateString('es-PE',{day:'2-digit',month:'long',year:'numeric'});
+
+  // ══ HOJA 1: Resumen por recurso ══
+  var H1=['Código','Colaborador','Rol','Total proyectos','Entregados','En ejecución','Otros / Pend.','Total tareas','Proyectos entregados'];
+  var aoa1=[['GRUPO PIONIER · Proyectos por recurso'],['Generado el '+fechaTxt+'  —  Tablero SCRUM TI'],H1];
+  resumen.forEach(function(r){ aoa1.push([r.code,r.nombre,r.rol,r.nProy,r.nEnt,r.nEje,r.nOtr,r.nTareas,r.entregados]); });
+  var ws1=XLSX.utils.aoa_to_sheet(aoa1);
+  ws1['!cols']=[{wch:9},{wch:26},{wch:26},{wch:14},{wch:12},{wch:13},{wch:13},{wch:12},{wch:60}];
+  ws1['!rows']=[{hpt:26},{hpt:18},{hpt:30}];
+  ws1['!merges']=[{s:{r:0,c:0},e:{r:0,c:8}},{s:{r:1,c:0},e:{r:1,c:8}}];
+  ws1['!freeze']={xSplit:0,ySplit:3};
+  ws1['!autofilter']={ref:XLSX.utils.encode_range({s:{r:2,c:0},e:{r:2+resumen.length,c:8}})};
+  setStyle(ws1,0,0,stTitle); setStyle(ws1,1,0,stSub);
+  for(var c=0;c<9;c++){ setStyle(ws1,2,c,stHead); if(c>0){setStyle(ws1,0,c,stTitle);setStyle(ws1,1,c,stSub);} }
+  resumen.forEach(function(r,ri){
+    var row=3+ri, alt=(ri%2===1);
+    setStyle(ws1,row,0,stData(alt,'center'));
+    setStyle(ws1,row,1,stData(alt,'left',null,true));
+    setStyle(ws1,row,2,stData(alt,'left'));
+    setStyle(ws1,row,3,stData(alt,'center','C9A227',true));
+    setStyle(ws1,row,4,stData(alt,'center','15803D',true));
+    setStyle(ws1,row,5,stData(alt,'center','0284C7',true));
+    setStyle(ws1,row,6,stData(alt,'center','B45309',true));
+    setStyle(ws1,row,7,stData(alt,'center'));
+    setStyle(ws1,row,8,stData(alt,'left','15803D'));
+  });
+
+  // ══ HOJA 2: Detalle por proyecto ══
+  var H2=['Código','Colaborador','Proyecto','Empresa','Estado del proyecto','% Avance','Tareas','Hechas','Pendientes'];
+  var aoa2=[['GRUPO PIONIER · Detalle de proyectos por recurso'],['Generado el '+fechaTxt],H2];
+  detalle.forEach(function(d){ aoa2.push([d.code,d.nombre,d.proy,d.empresa,d.estado,d.avance/100,d.tareas,d.hechas,d.pend]); });
+  var ws2=XLSX.utils.aoa_to_sheet(aoa2);
+  ws2['!cols']=[{wch:9},{wch:26},{wch:44},{wch:12},{wch:18},{wch:10},{wch:9},{wch:9},{wch:11}];
+  ws2['!rows']=[{hpt:26},{hpt:18},{hpt:30}];
+  ws2['!merges']=[{s:{r:0,c:0},e:{r:0,c:8}},{s:{r:1,c:0},e:{r:1,c:8}}];
+  ws2['!freeze']={xSplit:0,ySplit:3};
+  ws2['!autofilter']={ref:XLSX.utils.encode_range({s:{r:2,c:0},e:{r:2+detalle.length,c:8}})};
+  setStyle(ws2,0,0,stTitle); setStyle(ws2,1,0,stSub);
+  for(var c2=0;c2<9;c2++){ setStyle(ws2,2,c2,stHead); if(c2>0){setStyle(ws2,0,c2,stTitle);setStyle(ws2,1,c2,stSub);} }
+  detalle.forEach(function(d,di){
+    var row=3+di, alt=(di%2===1);
+    setStyle(ws2,row,0,stData(alt,'center'));
+    setStyle(ws2,row,1,stData(alt,'left'));
+    setStyle(ws2,row,2,stData(alt,'left',null,true));
+    setStyle(ws2,row,3,stData(alt,'center'));
+    setStyle(ws2,row,4,stData(alt,'center',CCOL[d.cls],true));
+    var aAddr=XLSX.utils.encode_cell({r:row,c:5}); if(ws2[aAddr]){ws2[aAddr].t='n';ws2[aAddr].z='0%';ws2[aAddr].s=stData(alt,'center');}
+    setStyle(ws2,row,6,stData(alt,'center'));
+    setStyle(ws2,row,7,stData(alt,'center','15803D'));
+    setStyle(ws2,row,8,stData(alt,'center','B45309'));
+  });
+
+  var wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws1,'Resumen por recurso');
+  XLSX.utils.book_append_sheet(wb,ws2,'Detalle por proyecto');
+  XLSX.writeFile(wb,'Recursos_por_proyecto_Pionier_'+new Date().toISOString().split('T')[0]+'.xlsx');
+  });
 }
 
 function exportarExcelTipo(tipo){
