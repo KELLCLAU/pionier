@@ -6,177 +6,215 @@
 <title>Panel Integral de TI · Gerencia · Pionier</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
-:root{--bg:#f4f5f7;--card:#fff;--line:#e5e7eb;--ink:#1f2430;--muted:#6b7280;--yellow:#F5C400;--navy:#26324f;--green:#16a34a;--blue:#2563eb;--red:#ef4444;--purple:#7c5cbf;--orange:#ea580c}
+:root{
+  --bg:#FAF8F2;--card:#FFFFFF;--line:#ECE8DC;--ink:#1C1C1A;--muted:#6E6A60;--soft:#F4F1E7;
+  --yellow:#F5C400;--yellow-soft:#FFF6CC;--yellow-ink:#8A6D00;
+  --green:#15803D;--green-soft:#E7F5EC;--blue:#1D4ED8;--blue-soft:#E8EEFC;
+  --red:#C2410C;--red-soft:#FDEEE6;--violet:#6D4FB3;--violet-soft:#F0ECF9;--grey:#9A968C
+}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font-family:'Segoe UI',system-ui,-apple-system,sans-serif;font-size:14px}
-.brandbar{background:#0f0f0f;padding:10px 30px;display:flex;align-items:center;gap:14px;border-bottom:3px solid var(--yellow)}
-.brandbar .logo{background:var(--yellow);color:#111;font-weight:900;font-size:14px;padding:5px 6px 5px 10px;border-radius:5px}
-.brandbar .logo .b{background:#111;color:var(--yellow);padding:3px 7px;border-radius:3px;margin-left:3px}
-.brandbar .app{color:#eaeaea;font-size:12px;font-weight:600;letter-spacing:.5px}
-.wrap{padding:24px 30px;max-width:1480px;margin:0 auto}
-.head{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:20px}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Segoe UI',system-ui,-apple-system,sans-serif;font-size:14px;line-height:1.45}
+button{font-family:inherit}
+
+/* ---------- barra de marca ---------- */
+.brandbar{background:#fff;border-bottom:4px solid var(--yellow);padding:12px 32px;display:flex;align-items:center;gap:16px;position:sticky;top:0;z-index:20}
+.logo{display:inline-flex;align-items:center;background:var(--yellow);color:#111;font-weight:900;font-size:13px;letter-spacing:.5px;padding:5px 6px 5px 10px;border-radius:5px}
+.logo .b{background:#111;color:var(--yellow);padding:3px 7px;border-radius:3px;margin-left:4px}
+.brandbar .app{font-size:13px;font-weight:700;color:var(--ink)}
+.brandbar nav{margin-left:auto;display:flex;gap:4px;flex-wrap:wrap}
+.brandbar nav a{font-size:12px;font-weight:700;color:var(--muted);text-decoration:none;padding:6px 10px;border-radius:6px}
+.brandbar nav a:hover{background:var(--yellow-soft);color:var(--ink)}
+
+.wrap{padding:28px 32px 60px;max-width:1360px;margin:0 auto}
+
+/* ---------- avisos ---------- */
+.notice{display:flex;gap:10px;align-items:flex-start;border-radius:10px;padding:11px 16px;font-size:12.5px;margin-bottom:14px;border:1px solid}
+.notice.warn{background:var(--yellow-soft);border-color:#F1DE8A;color:#5C4A00}
+.notice.err{background:var(--red-soft);border-color:#F6CDB6;color:#7A2A07}
+.notice button{margin-left:auto;background:#fff;border:1px solid currentColor;color:inherit;border-radius:6px;padding:4px 10px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap}
+
+/* ---------- hero ---------- */
+.hero{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:28px 32px;margin-bottom:28px;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;left:0;top:0;bottom:0;width:7px;background:var(--yellow)}
 .eyebrow{font-size:11px;font-weight:800;color:var(--muted);letter-spacing:2px;text-transform:uppercase}
-.title{font-size:28px;font-weight:800;margin:3px 0 4px}
-.subtitle{font-size:13px;color:var(--muted)}
-.corte{background:#fff;border:1px solid var(--line);border-radius:8px;padding:8px 16px;font-size:12px;color:var(--muted);white-space:nowrap}
-.corte b{color:var(--ink)}
-.zone{font-size:12px;font-weight:800;color:var(--navy);text-transform:uppercase;letter-spacing:1px;margin:8px 2px 12px;display:flex;align-items:center;gap:8px}
-.zone::before{content:'';width:5px;height:16px;background:var(--yellow);border-radius:3px}
-.kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:14px;margin-bottom:18px}
-.kpi{background:#fff;border:1px solid var(--line);border-top:4px solid var(--navy);border-radius:12px;padding:15px 16px;box-shadow:0 1px 3px rgba(16,24,40,.05)}
-.kpi .l{font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.3px}
-.kpi .v{font-size:29px;font-weight:900;margin:6px 0 2px;line-height:1}
-.kpi .s{font-size:11px;color:var(--muted)}
-.kpi.g .v{color:var(--green)}.kpi.g{border-top-color:var(--green)}
-.kpi.b .v{color:var(--blue)}.kpi.b{border-top-color:var(--blue)}
-.kpi.y .v{color:#b8860b}.kpi.y{border-top-color:var(--yellow)}
-.kpi.p .v{color:var(--purple)}.kpi.p{border-top-color:var(--purple)}
-.kpi.dark{background:#111;border-top-color:var(--yellow)}.kpi.dark .l,.kpi.dark .s{color:#c8c6c4}.kpi.dark .v{color:var(--yellow)}
-.grid{display:grid;gap:18px;margin-bottom:18px}
+.hero h1{font-size:30px;line-height:1.2;font-weight:800;margin:8px 0 10px;max-width:980px}
+.hero h1 em{font-style:normal;background:linear-gradient(transparent 58%,var(--yellow) 58%);padding:0 3px}
+.hero .lead{font-size:15px;color:#3F3C35;max-width:960px;margin:0}
+.hero .meta{display:flex;gap:18px;flex-wrap:wrap;margin-top:16px;font-size:12px;color:var(--muted)}
+.hero .meta b{color:var(--ink)}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:middle}
+
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:22px}
+.kpi{background:var(--soft);border-radius:12px;padding:16px 18px}
+.kpi .l{font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.4px}
+.kpi .v{font-size:32px;font-weight:900;margin:6px 0 4px;line-height:1}
+.kpi .v small{font-size:15px;font-weight:700;color:var(--muted)}
+.kpi .s{font-size:12px;color:#4A473F}
+.kpi.hl{background:var(--yellow-soft)}
+
+/* ---------- capítulos ---------- */
+.chapter{margin:38px 0 0;scroll-margin-top:80px}
+.ch-head{display:flex;gap:16px;align-items:flex-start;margin-bottom:16px}
+.ch-num{flex:none;width:40px;height:40px;border-radius:10px;background:var(--yellow);color:#111;font-weight:900;font-size:18px;display:flex;align-items:center;justify-content:center}
+.ch-kicker{font-size:11px;font-weight:800;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase}
+.ch-title{font-size:22px;font-weight:800;margin:2px 0 4px;line-height:1.25}
+.ch-sub{display:none}
+.card .hint{display:none!important}
+.ask p{display:none}
+
+.grid{display:grid;gap:16px;margin-bottom:16px}
+.grid>*{min-width:0}
 .g2{grid-template-columns:1fr 1fr}
-.card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px 20px;box-shadow:0 1px 3px rgba(16,24,40,.05)}
-.card h3{margin:0 0 3px;font-size:15px;font-weight:800}
-.card .hint{font-size:11px;color:var(--muted);margin-bottom:16px}
-.chart-box{position:relative;height:230px}
-.bar-row{display:flex;align-items:center;gap:12px;margin-bottom:12px}
-.bar-row .bl{width:175px;min-width:175px;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.bar-row .bt{flex:1;height:13px;background:#eef0f3;border-radius:7px;overflow:hidden}
-.bar-row .bf{height:100%;border-radius:7px}
-.bar-row .bv{width:42px;text-align:right;font-weight:800;font-size:13px}
-.signal{border-left:6px solid var(--green)}
-.signal .badge{display:inline-block;padding:5px 14px;border-radius:20px;font-size:13px;font-weight:800;color:#fff;margin-bottom:12px}
-.signal ul{margin:0;padding-left:18px;line-height:1.9;font-size:13px}
-.signal ul b{color:var(--ink)}
-.filters{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 18px;display:flex;gap:20px;flex-wrap:wrap;align-items:end;margin-bottom:18px;box-shadow:0 1px 3px rgba(16,24,40,.05)}
-.filters label{display:block;font-size:11px;color:var(--muted);font-weight:700;margin-bottom:5px}
-.filters select{padding:8px 11px;border:1px solid var(--line);border-radius:8px;background:#fdfdfb;font-size:13px;font-family:inherit;color:var(--ink);cursor:pointer;outline:none;min-width:170px}
+.g3{grid-template-columns:1.4fr 1fr}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px 22px}
+.card h3{margin:0 0 14px;font-size:15px;font-weight:800}
+.card .hint{font-size:12px;color:var(--muted);margin-bottom:16px}
+.chart-box{position:relative;height:250px}
+
+.takeaway{display:flex;gap:10px;align-items:flex-start;background:var(--yellow-soft);border-radius:10px;padding:12px 14px;font-size:13px;margin-top:14px;color:#3F3200}
+.takeaway .i{font-weight:900;flex:none}
+
+/* barras */
+.bar-row{display:flex;align-items:center;gap:12px;margin-bottom:10px;border-radius:6px}
+.bar-row .bl{width:190px;min-width:190px;font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar-row .bt{flex:1;height:12px;background:#F0EDE3;border-radius:6px;overflow:hidden}
+.bar-row .bf{height:100%;border-radius:6px}
+.bar-row .bv{min-width:56px;text-align:right;font-weight:800;font-size:13px}
+.bar-row .bv small{font-weight:600;color:var(--muted);font-size:11px}
+.bar-row.clk{cursor:pointer;padding:3px 6px;margin-left:-6px}
+.bar-row.clk:hover{background:var(--soft)}
+.scroller{max-height:310px;overflow-y:auto;padding-right:6px}
+
+/* embudo de estados */
+.funnel{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+.fstep{border-radius:12px;padding:14px 12px;cursor:pointer;border:1px solid transparent;transition:transform .12s}
+.fstep:hover{transform:translateY(-2px);border-color:var(--line)}
+.fstep .n{font-size:30px;font-weight:900;line-height:1}
+.fstep .t{font-size:12px;font-weight:700;margin-top:6px}
+.fstep .d{font-size:11px;color:var(--muted);margin-top:2px}
+
+/* listas de proyectos */
+.plist{display:flex;flex-direction:column}
+.pitem{display:flex;align-items:center;gap:12px;padding:10px 6px;border-bottom:1px solid var(--line);cursor:pointer;border-radius:6px}
+.pitem:last-child{border-bottom:none}
+.pitem:hover{background:var(--soft)}
+.pitem .nm{flex:1;font-weight:600;font-size:13px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pitem .ar{font-size:11.5px;color:var(--muted);white-space:nowrap}
+.mini{width:110px;display:flex;align-items:center;gap:8px}
+.mini .t{flex:1;height:7px;background:#F0EDE3;border-radius:4px;overflow:hidden}
+.mini .f{height:100%;border-radius:4px}
+.mini span{font-size:12px;font-weight:800;min-width:34px;text-align:right}
+.tg{display:inline-block;font-size:11px;font-weight:700;padding:2px 9px;border-radius:5px;white-space:nowrap}
+
+/* decisiones */
+.asks{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:14px}
+.ask{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px;border-top:5px solid var(--yellow)}
+.ask.red{border-top-color:var(--red)}.ask.violet{border-top-color:var(--violet)}.ask.green{border-top-color:var(--green)}.ask.blue{border-top-color:var(--blue)}
+.ask .k{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--muted)}
+.ask h4{margin:6px 0 6px;font-size:15.5px;line-height:1.3}
+.ask p{margin:0;font-size:13px;color:#4A473F}
+.ask .act{margin-top:12px;font-size:12.5px;font-weight:700;color:var(--ink);background:var(--soft);border-radius:8px;padding:8px 10px}
+.ask .lnk{margin-top:10px;font-size:12px;font-weight:700;color:var(--blue);cursor:pointer;display:inline-block}
+
+/* tabla */
 .ctab{width:100%;border-collapse:collapse;font-size:13px}
-.ctab th{text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);font-weight:700;padding:8px 10px;border-bottom:2px solid var(--line);position:sticky;top:0;background:#fff}
+.ctab th{text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);font-weight:700;padding:8px 10px;border-bottom:2px solid var(--line);position:sticky;top:0;background:#fff}
 .ctab th.c,.ctab td.c{text-align:center}
 .ctab td{padding:9px 10px;border-bottom:1px solid var(--line)}
-.tg{font-size:11px;font-weight:700;padding:2px 9px;border-radius:5px}
-.scroller{max-height:300px;overflow-y:auto;padding-right:4px}
-.bar-row.clk{cursor:pointer;border-radius:6px;padding:3px 5px;margin-left:-5px}
-.bar-row.clk:hover{background:#f5f6f8}
-.tr-clk{cursor:pointer}
-.tr-clk:hover td{background:#f6f7f9}
-.ov{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:flex-start;justify-content:center;z-index:60;padding:30px 16px;overflow:auto}
+.tr-clk{cursor:pointer}.tr-clk:hover td{background:var(--soft)}
+
+/* filtros */
+.filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:0 0 16px}
+.filters .lab{font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-right:4px}
+.chip{border:1px solid var(--line);background:#fff;border-radius:20px;padding:6px 14px;font-size:12px;font-weight:700;color:var(--ink);cursor:pointer}
+.chip.on{background:var(--yellow);border-color:var(--yellow)}
+
+/* modal */
+.ov{position:fixed;inset:0;background:rgba(40,36,25,.35);display:none;align-items:flex-start;justify-content:center;z-index:60;padding:40px 16px;overflow:auto}
 .ov.show{display:flex}
-.modal{background:#fff;border-radius:12px;max-width:840px;width:100%;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.35)}
-.modal-h{background:#111;border-bottom:3px solid var(--yellow);padding:15px 20px;display:flex;justify-content:space-between;align-items:center}
-.modal-h .t{color:#fff;font-size:16px;font-weight:700}
-.modal-h .s{color:#c8c6c4;font-size:11px;margin-top:3px}
-.modal-h .x{background:none;border:none;color:var(--yellow);font-size:22px;cursor:pointer;line-height:1}
-.modal-b{padding:18px 20px;max-height:70vh;overflow:auto}
-.state{background:#fff;border:1px solid var(--line);border-radius:12px;padding:44px;text-align:center;color:var(--muted)}
-@media(max-width:1050px){.kpis{grid-template-columns:1fr 1fr 1fr}.g2{grid-template-columns:1fr}}
-.login{position:fixed;inset:0;z-index:100;background:radial-gradient(circle at 30% 30%,#1a1a1a,#0a0a0a);display:flex;align-items:center;justify-content:center;padding:20px}
-.login-card{background:#fff;border-radius:14px;padding:34px 30px;width:100%;max-width:360px;box-shadow:0 20px 60px rgba(0,0,0,.55);text-align:center}
-.login .logo{background:var(--yellow);color:#111;font-weight:900;font-size:14px;padding:5px 6px 5px 10px;border-radius:5px}
-.login .logo .b{background:#111;color:var(--yellow);padding:3px 6px;border-radius:3px;margin-left:3px}
-.login h2{margin:14px 0 3px;font-size:20px;color:#111}.login p{margin:0 0 22px;font-size:12px;color:#6b7280}
-.login input{width:100%;box-sizing:border-box;padding:12px 14px;border:1px solid #d0d0d0;border-radius:8px;font-size:14px;font-family:inherit;margin-bottom:12px;outline:none}
-.login button{width:100%;padding:12px;background:#111;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit}
-.login .err{color:#dc2626;font-size:12px;min-height:16px;margin-top:8px}
+.modal{background:#fff;border-radius:14px;max-width:860px;width:100%;overflow:hidden;box-shadow:0 20px 60px rgba(40,36,25,.25)}
+.modal-h{background:var(--yellow-soft);border-bottom:3px solid var(--yellow);padding:16px 22px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.modal-h .t{font-size:16px;font-weight:800}
+.modal-h .s{color:var(--muted);font-size:12px;margin-top:3px}
+.modal-h .x{background:#fff;border:1px solid var(--line);border-radius:8px;width:32px;height:32px;font-size:16px;cursor:pointer}
+.modal-b{padding:18px 22px;max-height:70vh;overflow:auto}
+
+.state{background:#fff;border:1px solid var(--line);border-radius:14px;padding:44px;text-align:center;color:var(--muted)}
+.foot{margin-top:40px;font-size:11.5px;color:var(--muted);text-align:center}
+
+/* login */
+.login{position:fixed;inset:0;z-index:100;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:20px}
+.login-card{background:#fff;border:1px solid var(--line);border-top:6px solid var(--yellow);border-radius:14px;padding:34px 30px;width:100%;max-width:360px;box-shadow:0 12px 40px rgba(40,36,25,.12);text-align:center}
+.login h2{margin:16px 0 3px;font-size:20px}.login p{margin:0 0 22px;font-size:12px;color:var(--muted)}
+.login input{width:100%;padding:12px 14px;border:1px solid #D9D4C6;border-radius:8px;font-size:14px;font-family:inherit;margin-bottom:12px;outline:none}
+.login input:focus{border-color:var(--yellow);box-shadow:0 0 0 3px var(--yellow-soft)}
+.login button{width:100%;padding:12px;background:var(--yellow);color:#111;border:none;border-radius:8px;font-size:14px;font-weight:800;cursor:pointer}
+.login .err{color:var(--red);font-size:12px;min-height:16px;margin-top:8px}
+
+@media(max-width:1050px){.kpis{grid-template-columns:1fr 1fr}.g2,.g3{grid-template-columns:1fr}.funnel{grid-template-columns:repeat(3,1fr)}.brandbar nav{display:none}}
+@media(max-width:600px){.wrap{padding:18px 16px 40px}.brandbar{padding:10px 16px}.hero{padding:22px 20px}.hero h1{font-size:23px}.kpis{grid-template-columns:1fr}.funnel{grid-template-columns:1fr 1fr}.bar-row .bl{width:120px;min-width:120px}.pitem .tg:nth-of-type(2){display:none}.mini{width:84px}.asks{grid-template-columns:1fr}}
+@media print{.brandbar{position:static}.brandbar nav,.filters,.notice button{display:none}.chapter{break-inside:avoid}}
 </style>
 </head>
 <body>
 <div class="login" id="login">
   <div class="login-card">
-    <div style="font-size:18px"><span class="logo">GRUPO<span class="b">PIONIER</span></span></div>
-    <h2>Panel Integral de TI</h2><p>Gerencia General</p>
+    <span class="logo">GRUPO<span class="b">PIONIER</span></span>
+    <h2>Panel Integral de TI</h2><p>Reporte para Gerencia</p>
     <input type="password" id="pass" placeholder="Contraseña" onkeydown="if(event.key==='Enter')doLogin()">
-    <button onclick="doLogin()">Iniciar Sesión</button>
+    <button onclick="doLogin()">Ingresar</button>
     <div class="err" id="loginErr"></div>
   </div>
 </div>
-<div class="brandbar"><span class="logo">GRUPO<span class="b">PIONIER</span></span><span class="app">Panel Integral de TI · Proyectos + Mesa de Ayuda</span></div>
-<div class="wrap" id="app"><div class="state">⏳ Cargando datos…</div></div>
-<div class="ov" id="ov" onclick="if(event.target===this)closeProj()"><div class="modal" id="modal"></div></div>
+
+<div class="brandbar">
+  <span class="logo">GRUPO<span class="b">PIONIER</span></span>
+  <span class="app">Panel Integral de TI</span>
+  <nav>
+    <a href="#c1">1 · Operación</a><a href="#c2">2 · Demanda</a><a href="#c3">3 · Proyectos</a><a href="#c4">4 · Decisiones</a>
+  </nav>
+</div>
+<div class="wrap" id="app"><div class="state">Cargando datos…</div></div>
+<div class="ov" id="ov" onclick="if(event.target===this)closeM()"><div class="modal" id="modal"></div></div>
 
 <script>
+/* ================= configuración ================= */
 const SB_URL='https://jsmryefxbjyxviopesgt.supabase.co';
 const SB_KEY='sb_publishable_1sxgjIf_jVz30FKBPjpMrQ_c8T0hyEu';
 const SB_ID='keiko_pionier';
 const DASH_PASS='pioner2026';
+const CACHE_KEY='ti_scrum_cache_v1';
 const MEMBERS=['CS','KB','OM','KP','OR','CL','MH','JH','LP','ST','CG','CB','CA','RT','JS','WR','ME','AC','DG','CH','MG','KA'];
 const MEMBER_NAMES=['Carlos Salas','Kelly Barrientos','Omar Muñoz','Keiko Palomino','Owen Rojas','Claudia López','Miguel Hernández','Jaime Halire','Luis Palomino','Saúl Tapia','Cleison Guevara','Claudio Barahona','Carla Arce','Rigoberto Timaná','Jean Sánchez','Wilder Rojas','Mauro Elías','Antony Chilquillo','Daniel Guerrero','Cristian Huaman','Maria Gracia La Torre','Karla Aguilar'];
-function mName(c){if(!c)return 'Sin asignar';var i=MEMBERS.indexOf(c);return i>=0?MEMBER_NAMES[i]:c;}
-function barRowClk(label,val,max,color,onclick,suf){var w=max>0?(val/max*100):0;return '<div class="bar-row clk" onclick="'+onclick+'"><div class="bl" title="'+esc(label)+'">'+esc(label)+'</div><div class="bt"><div class="bf" style="width:'+w+'%;background:'+color+'"></div></div><div class="bv">'+val+(suf||'')+'</div></div>';}
-function openProj(pid){
-  var p=(ST.projects||[]).find(function(x){return x.id===pid;}); if(!p) return;
-  var ts=(ST.tickets||[]).filter(function(t){return t.projId===pid;});
-  var ec=p.empresa==='MODIPSA'?'#2563eb':'#16a34a';
-  var byCol=['Backlog','En progreso','En revisión','Hecho'].map(function(c){return c+': '+ts.filter(function(t){return t.col===c;}).length;}).join('  ·  ');
-  var rows=ts.map(function(t){
-    var cc={'Backlog':'#8a8886','En progreso':'#0ea5e9','En revisión':'#8b5cf6','Hecho':'#16a34a'}[t.col]||'#8a8886';
-    return '<tr><td style="font-weight:600">'+esc(t.title||'—')+'</td><td>'+esc(mName(t.assignee||t.responsable))+'</td><td class="c"><span class="tg" style="background:'+cc+'22;color:'+cc+'">'+esc(t.col||'—')+'</span></td><td class="c">'+esc(t.prioridad||'Media')+'</td></tr>';
-  }).join('');
-  document.getElementById('modal').innerHTML='<div class="modal-h"><div><div class="t">'+esc(p.name)+'</div><div class="s"><span class="tg" style="background:'+ec+';color:#fff">'+esc(p.empresa||'')+'</span> · '+progress(pid)+'% completado · '+ts.length+' tareas'+(p.area?' · '+esc(p.area):'')+'</div></div><button class="x" onclick="closeProj()">✕</button></div>'
-    +'<div class="modal-b"><div style="font-size:12px;color:var(--muted);margin-bottom:14px">'+byCol+'</div>'
-    +'<table class="ctab"><thead><tr><th>Tarea</th><th>Quién lo realiza</th><th class="c">Estado</th><th class="c">Prioridad</th></tr></thead><tbody>'+(rows||'<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:16px">Sin tareas registradas</td></tr>')+'</tbody></table></div>';
-  document.getElementById('ov').classList.add('show');
-}
-function closeProj(){document.getElementById('ov').classList.remove('show');}
-function openResp(nombre){
-  var lista=((HD&&HD.tickets)||[]).filter(function(t){return (t.responsable||'').toUpperCase()===(nombre||'').toUpperCase();});
-  var body;
-  if(!(HD&&HD.tickets)){
-    body='<div style="color:var(--muted);padding:10px 0;font-size:13px">El detalle de tickets aún no está cargado.<br>Corre el script <b>helpdesk_export.py</b> para traerlo y súbelo con el dashboard.</div>';
-  } else if(!lista.length){
-    body='<div style="color:var(--muted);padding:10px 0">Sin tickets registrados para este colaborador.</div>';
-  } else {
-    lista.sort(function(a,b){return (b.fecha||'').localeCompare(a.fecha||'');});
-    var rows=lista.map(function(t){
-      var ce={'Cerrado':'#16a34a','Cerrado ✓':'#16a34a','Nuevo':'#8a8886','Asignado':'#0ea5e9','En proceso':'#0ea5e9','Rechazado':'#ef4444','Cancelado':'#8a8886','Reabierto':'#ea580c'}[t.estado]||'#6b7280';
-      return '<tr><td style="white-space:nowrap;font-weight:600">'+esc(t.ticket)+'</td><td style="white-space:normal">'+esc(t.titulo||'—')+'</td><td class="c">'+esc(t.area||'—')+'</td><td class="c"><span class="tg" style="background:'+ce+'22;color:'+ce+'">'+esc(t.estado||'—')+'</span></td><td class="c">'+esc(t.prioridad||'—')+'</td><td class="c" style="white-space:nowrap">'+esc(t.fecha||'')+'</td></tr>';
-    }).join('');
-    body='<table class="ctab"><thead><tr><th>Ticket</th><th>Título</th><th class="c">Área</th><th class="c">Estado</th><th class="c">Prioridad</th><th class="c">Fecha</th></tr></thead><tbody>'+rows+'</tbody></table>';
-  }
-  document.getElementById('modal').innerHTML='<div class="modal-h"><div><div class="t">'+esc(cap(nombre))+'</div><div class="s">'+lista.length+' ticket'+(lista.length===1?'':'s')+' atendidos</div></div><button class="x" onclick="closeProj()">✕</button></div><div class="modal-b">'+body+'</div>';
-  document.getElementById('ov').classList.add('show');
-}
-document.addEventListener('keydown',function(e){if(e.key==='Escape')closeProj();});
-function openSubtipo(sub){
-  var lista=((HD&&HD.tickets)||[]).filter(function(t){return normSubtipo(t.subtipo)===sub;});
-  lista.sort(function(a,b){return (b.fecha||'').localeCompare(a.fecha||'');});
-  var rows=lista.length?lista.map(function(t){var ce={'Cerrado':'#16a34a','Nuevo':'#8a8886','Asignado':'#0ea5e9','En proceso':'#0ea5e9','Rechazado':'#ef4444','Cancelado':'#8a8886','Reabierto':'#ea580c'}[t.estado]||'#6b7280';return '<tr><td style="white-space:nowrap;font-weight:600">'+esc(t.ticket)+'</td><td style="white-space:normal">'+esc(t.titulo||'—')+'</td><td>'+esc(t.solicitante||'—')+'</td><td class="c"><span class="tg" style="background:'+ce+'22;color:'+ce+'">'+esc(t.estado||'—')+'</span></td><td class="c" style="white-space:nowrap">'+esc(t.fecha||'')+'</td></tr>';}).join(''):'<div style="color:var(--muted)">Sin tickets.</div>';
-  var content=lista.length?'<table class="ctab"><thead><tr><th>Ticket</th><th>Título</th><th>Solicitante</th><th class="c">Estado</th><th class="c">Fecha</th></tr></thead><tbody>'+rows+'</tbody></table>':rows;
-  document.getElementById('modal').innerHTML='<div class="modal-h"><div><div class="t">'+esc(sub)+'</div><div class="s">'+lista.length+' ticket'+(lista.length===1?'':'s')+' de este tipo</div></div><button class="x" onclick="closeProj()">✕</button></div><div class="modal-b">'+content+'</div>';
-  document.getElementById('ov').classList.add('show');
-}
-function openPersonaProy(cod){
-  var nombre=mName(cod);
-  var pn={}; (ST.projects||[]).forEach(function(p){pn[p.id]=p.name;});
-  var ts=(ST.tickets||[]).filter(function(t){return (t.assignee||t.responsable)===cod;});
-  var content;
-  if(!ts.length){ content='<div style="color:var(--muted);padding:10px 0">Sin tareas registradas.</div>'; }
-  else{
-    var rows=ts.map(function(t){var cc={'Backlog':'#8a8886','En progreso':'#0ea5e9','En revisión':'#8b5cf6','Hecho':'#16a34a'}[t.col]||'#8a8886';return '<tr><td style="white-space:normal;font-weight:600">'+esc(t.title||'—')+'</td><td>'+esc(pn[t.projId]||'—')+'</td><td class="c"><span class="tg" style="background:'+cc+'22;color:'+cc+'">'+esc(t.col||'—')+'</span></td></tr>';}).join('');
-    content='<table class="ctab"><thead><tr><th>Tarea</th><th>Proyecto</th><th class="c">Estado</th></tr></thead><tbody>'+rows+'</tbody></table>';
-  }
-  document.getElementById('modal').innerHTML='<div class="modal-h"><div><div class="t">'+esc(nombre)+'</div><div class="s">'+ts.length+' tarea'+(ts.length===1?'':'s')+' en proyectos</div></div><button class="x" onclick="closeProj()">✕</button></div><div class="modal-b">'+content+'</div>';
-  document.getElementById('ov').classList.add('show');
-}
-function openLista(cat){
-  var ps=projsFiltrados().filter(function(p){return estadoCat(p)===cat;}).sort(function(a,b){return progress(b.id)-progress(a.id);});
-  var rows=ps.length?ps.map(function(p){var ec=p.empresa==='MODIPSA'?'#2563eb':'#16a34a';return '<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--line);font-size:13px"><span class="tg" style="background:'+ec+'22;color:'+ec+'">'+esc(p.empresa||'—')+'</span><span style="flex:1;font-weight:600">'+esc(p.name)+'</span><span style="color:var(--muted);font-size:12px">'+esc(p.area||'')+'</span><span style="font-weight:700;font-size:12px">'+progress(p.id)+'%</span></div>';}).join(''):'<div style="color:var(--muted);padding:12px 0">Sin proyectos.</div>';
-  document.getElementById('modal').innerHTML='<div class="modal-h"><div><div class="t">'+esc(cat)+'</div><div class="s">'+ps.length+' proyecto'+(ps.length===1?'':'s')+'</div></div><button class="x" onclick="closeProj()">✕</button></div><div class="modal-b">'+rows+'</div>';
-  document.getElementById('ov').classList.add('show');
-}
+const ECOL={'Completado':'#15803D','En ejecución':'#1D4ED8','Levantamiento':'#B08900','En espera':'#6D4FB3','Pendiente':'#9A968C'};
+const ESOFT={'Completado':'#E7F5EC','En ejecución':'#E8EEFC','Levantamiento':'#FFF6CC','En espera':'#F0ECF9','Pendiente':'#F4F1E7'};
+const EDESC={'Completado':'entregados al 100%','En ejecución':'con trabajo en curso','Levantamiento':'definiendo alcance','En espera':'esperan al área usuaria','Pendiente':'aún sin iniciar'};
+const ESTADOS=['Completado','En ejecución','Levantamiento','En espera','Pendiente'];
+const MESES=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
 
-let ST=null, HD=null, charts={}, fEmp='todas', fEst='todos';
-function projsFiltrados(){var q=(ST.projects||[]);if(fEmp!=='todas')q=q.filter(function(p){return p.empresa===fEmp;});if(fEst!=='todos')q=q.filter(function(p){return estadoCat(p)===fEst;});return q;}
-function setF(k,v){if(k==='emp')fEmp=v;else fEst=v;render();}
-const fmt=n=>(n==null?0:n).toLocaleString('es-PE');
-const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-const cap=s=>String(s||'').toLowerCase().replace(/\b\w/g,c=>c.toUpperCase());
+/* ================= utilidades ================= */
+const fmt=n=>(n==null?0:Math.round(n)).toLocaleString('es-PE');
+const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const ACR=/^(ti|rrhh|bd|pos|bi|erp|sku|sla|sap|ux|ui|it|qa)$/i;
+const cap=s=>String(s||'').toLowerCase().replace(/(^|[\s·(/-])(\p{L})/gu,(m,a,b)=>a+b.toUpperCase()).replace(/\p{L}+/gu,(w,i)=>ACR.test(w)?w.toUpperCase():(i>0&&/^(de|del|la|las|los|y|e|en|a)$/i.test(w)?w.toLowerCase():w));
+const pct=(a,b)=>b?Math.round(a/b*100):0;
+const js=s=>String(s==null?'':s).replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+function mName(c){if(!c)return 'Sin asignar';var i=MEMBERS.indexOf(c);return i>=0?MEMBER_NAMES[i]:c;}
+function fechaLarga(s){if(!s)return '—';var d=new Date(String(s).length<=10?s+'T00:00:00':s);if(isNaN(d))return esc(s);return d.getDate()+' '+MESES[d.getMonth()]+' '+d.getFullYear();}
+function diasDesde(s){if(!s)return null;var d=new Date(String(s).length<=10?s+'T00:00:00':s);if(isNaN(d))return null;return Math.floor((Date.now()-d.getTime())/86400000);}
+function parseD(s){if(!s)return null;var x=String(s);var d=new Date(x.length<=10?x+'T00:00:00':x);return isNaN(d)?null:d;}
+function grp(arr,fn){var m={};arr.forEach(function(x){var k=(fn(x)||'').toString().trim()||'Sin definir';m[k]=(m[k]||0)+1;});return Object.keys(m).map(function(k){return{label:k,val:m[k]};}).sort((a,b)=>b.val-a.val);}
+function bar(label,val,max,color,opts){opts=opts||{};var w=max>0?Math.max(val/max*100,val>0?2:0):0;
+  return '<div class="bar-row'+(opts.click?' clk':'')+'"'+(opts.click?' onclick="'+opts.click+'"':'')+'><div class="bl" title="'+esc(label)+'">'+esc(label)+'</div><div class="bt"><div class="bf" style="width:'+w+'%;background:'+color+'"></div></div><div class="bv">'+(opts.txt!=null?opts.txt:fmt(val))+'</div></div>';}
+function tag(txt,col,soft){return '<span class="tg" style="background:'+(soft||col+'1f')+';color:'+col+'">'+esc(txt)+'</span>';}
+function mini(v,col){return '<div class="mini"><div class="t"><div class="f" style="width:'+v+'%;background:'+col+'"></div></div><span>'+v+'%</span></div>';}
 function normSubtipo(s){
   var x=(s||'').toString().toLowerCase().trim();
   if(!x) return 'Sin clasificar';
   if(/impresor/.test(x)) return 'Impresoras';
   if(/soporte software/.test(x)) return 'Soporte de software';
-  if(/soporte equipos|pos y lector/.test(x)) return 'Soporte de equipos';
+  if(/soporte equipos|pos y lector/.test(x)) return 'Equipos y POS';
   if(/soporte app/.test(x)) return 'Soporte de app y datos';
   if(/acces|permis/.test(x)) return 'Accesos y permisos';
   if(/correo/.test(x)) return 'Correo corporativo';
@@ -184,14 +222,17 @@ function normSubtipo(s){
   if(/incidencia|inconvenient/.test(x)) return 'Incidencias técnicas';
   if(/desarrollo|\bbd\b|optimizaci|administraci|integraci/.test(x)) return 'Desarrollo / BD';
   if(/mejora|cambio visual/.test(x)) return 'Mejoras / cambios';
-  if(/informaci|consulta|reporte/.test(x)) return 'Información / consultas';
+  if(/informaci|consulta|reporte/.test(x)) return 'Información / reportes';
   if(/capacita/.test(x)) return 'Capacitación';
   if(/help ?desk/.test(x)) return 'Mesa de ayuda';
   return cap(x);
 }
 
-// ---- proyectos (Supabase) ----
-const projs=()=>ST.projects||[];
+/* ================= estado ================= */
+let ST={projects:[],tickets:[],sprints:[]}, HD=null, charts={}, fEmp='todas';
+let SRC={proj:'ok',projFecha:null,projErr:'',hd:'ok'};
+
+/* ================= proyectos (SCRUM) ================= */
 const ticketsOf=id=>(ST.tickets||[]).filter(t=>t.projId===id);
 function progress(id){const ts=ticketsOf(id);return ts.length?Math.round(ts.filter(t=>t.col==='Hecho').length/ts.length*100):0;}
 function enEjec(p){
@@ -206,164 +247,275 @@ function estadoCat(p){
   if(enEjec(p))return 'En ejecución';
   return 'Pendiente';
 }
-function grp(arr,fn){var m={};arr.forEach(function(x){var k=(fn(x)||'').toString().trim()||'Sin definir';m[k]=(m[k]||0)+1;});return Object.keys(m).map(function(k){return{label:k,val:m[k]};}).sort((a,b)=>b.val-a.val);}
-function parseD(s){if(!s)return null;var x=String(s);return new Date(x.length<=10?x+'T00:00:00':x);}
 function taskDates(t){var sp=t.sprintId?(ST.sprints||[]).find(function(s){return s.id===t.sprintId;}):null;return {start:t.fechaInicio||t.start||t.startDate||(sp&&(sp.start||sp.startDate))||null,end:t.fechaFin||t.end||t.endDate||(sp&&(sp.end||sp.endDate))||null};}
+function vencidas(pid){var hoy=new Date(new Date().toDateString()).getTime();return ticketsOf(pid).filter(function(t){var d=taskDates(t),e=parseD(d.end);return e&&t.col!=='Hecho'&&e.getTime()<hoy;});}
+function projsFiltrados(){var q=(ST.projects||[]);if(fEmp!=='todas')q=q.filter(function(p){return p.empresa===fEmp;});return q;}
+function setEmp(v){fEmp=v;render();var c=document.getElementById('c3');if(c)c.scrollIntoView();}
+function empTag(e){return e==='MODIPSA'?tag('MODIPSA','#1D4ED8'):(e==='MASISAC'?tag('MASISAC','#15803D'):tag(e||'—','#6E6A60'));}
 
-async function cargar(){
+/* ================= carga con tolerancia a fallos ================= */
+function fetchT(url,opt,ms){var c=new AbortController();var t=setTimeout(function(){c.abort();},ms||12000);return fetch(url,Object.assign({},opt||{},{signal:c.signal})).finally(function(){clearTimeout(t);});}
+async function cargarProyectos(){
   try{
-    const [rp,rh]=await Promise.all([
-      fetch(SB_URL+'/rest/v1/scrum_state?id=eq.'+SB_ID+'&select=state_json,updated_at',{headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY}}),
-      fetch('helpdesk.json?_='+Date.now())
-    ]);
-    const rows=await rp.json();
+    var r=await fetchT(SB_URL+'/rest/v1/scrum_state?id=eq.'+SB_ID+'&select=state_json,updated_at',{headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY}});
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    var rows=await r.json();
     ST=(rows[0]&&rows[0].state_json)||{projects:[],tickets:[],sprints:[]};
-    HD=rh.ok?await rh.json():null;
-    render();
-  }catch(e){ document.getElementById('app').innerHTML='<div class="state">⚠️ Error al cargar: '+(e.message||e)+'</div>'; }
+    SRC.proj='ok'; SRC.projFecha=(rows[0]&&rows[0].updated_at)||new Date().toISOString();
+    try{localStorage.setItem(CACHE_KEY,JSON.stringify({st:ST,fecha:SRC.projFecha}));}catch(e){}
+  }catch(e){
+    SRC.projErr=(e&&e.name==='AbortError')?'tiempo de espera agotado':(e.message||String(e));
+    var c=null;try{c=JSON.parse(localStorage.getItem(CACHE_KEY)||'null');}catch(_){}
+    if(c&&c.st){ST=c.st;SRC.proj='cache';SRC.projFecha=c.fecha;}
+    else{ST={projects:[],tickets:[],sprints:[]};SRC.proj='fail';}
+  }
 }
-function barRow(label,val,max,color){var w=max>0?(val/max*100):0;return '<div class="bar-row"><div class="bl" title="'+esc(label)+'">'+esc(label)+'</div><div class="bt"><div class="bf" style="width:'+w+'%;background:'+color+'"></div></div><div class="bv">'+fmt(val)+'</div></div>';}
-function donut(id,labels,data,colors){if(charts[id])charts[id].destroy();charts[id]=new Chart(document.getElementById(id),{type:'doughnut',data:{labels:labels,datasets:[{data:data,backgroundColor:colors,borderWidth:2,borderColor:'#fff'}]},options:{plugins:{legend:{position:'bottom',labels:{color:'#6b7280',boxWidth:12,font:{size:11},padding:8}},tooltip:{callbacks:{label:function(c){var t=c.dataset.data.reduce(function(a,b){return a+b;},0)||1;return ' '+c.label+': '+fmt(c.raw)+' ('+Math.round(c.raw/t*100)+'%)';}}}},cutout:'60%'}});}
+async function cargarHelpdesk(){
+  var urls=['helpdesk.json?_='+Date.now(),'https://raw.githubusercontent.com/kellclau/pionier/main/helpdesk.json?_='+Date.now()];
+  for(var i=0;i<urls.length;i++){
+    try{var r=await fetchT(urls[i]);if(!r.ok)throw new Error('HTTP '+r.status);HD=await r.json();SRC.hd='ok';return;}catch(e){}
+  }
+  HD=null;SRC.hd='fail';
+}
+async function cargar(){
+  document.getElementById('app').innerHTML='<div class="state">Cargando datos…</div>';
+  await Promise.all([cargarProyectos(),cargarHelpdesk()]);
+  try{render();}catch(e){document.getElementById('app').innerHTML='<div class="state">No se pudo dibujar el panel: '+esc(e.message||e)+'</div>';console.error(e);}
+}
 
+/* ================= render ================= */
 function render(){
+  /* ----- proyectos ----- */
   var ps=projsFiltrados();
-  var realizados=ps.filter(function(p){return progress(p.id)>=100;}).length;
-  var avance=ps.length?Math.round(ps.reduce(function(a,p){return a+progress(p.id);},0)/ps.length):0;
-  var estP=grp(ps,estadoCat);
-  var ECOL={'Completado':'#16a34a','En ejecución':'#2563eb','En espera':'#7c5cbf','Levantamiento':'#d4a017','Pendiente':'#9aa0a6'};
+  var hayProy=ps.length>0;
+  var porEst={};ESTADOS.forEach(function(e){porEst[e]=0;});ps.forEach(function(p){porEst[estadoCat(p)]++;});
+  var realizados=porEst['Completado'];
+  var activos=ps.filter(function(p){return estadoCat(p)!=='Completado';});
+  var avance=hayProy?Math.round(ps.reduce(function(a,p){return a+progress(p.id);},0)/ps.length):0;
+  var enRiesgo=activos.map(function(p){return{p:p,v:vencidas(p.id)};}).filter(function(x){return x.v.length;}).sort(function(a,b){return b.v.length-a.v.length;});
+  var espera=ps.filter(function(p){return estadoCat(p)==='En espera';});
+  var porCerrar=activos.filter(function(p){var v=progress(p.id);return v>=70&&v<100;}).sort(function(a,b){return progress(b.id)-progress(a.id);});
   var byArea=grp(ps.filter(function(p){return p.area&&p.area!=='Sin definir';}),function(p){return p.area;});
-  var maxArea=Math.max.apply(null,byArea.map(function(a){return a.val;}).concat([1]));
-  var avProy=ps.filter(enEjec).map(function(p){return{n:p.name,v:progress(p.id)};}).sort(function(a,b){return b.v-a.v;}).slice(0,7);
-  var hoyMs=new Date(new Date().toDateString()).getTime();
-  var enRiesgo=ps.filter(function(p){return ticketsOf(p.id).some(function(t){var d=taskDates(t);return d.end&&t.col!=='Hecho'&&parseD(d.end).getTime()<hoyMs;});});
-  var enEjecCount=ps.filter(function(p){return estadoCat(p)==='En ejecución';}).length;
-  var cargaProy={};
-  ps.forEach(function(p){ ticketsOf(p.id).forEach(function(t){ var c=t.assignee||t.responsable; if(c) cargaProy[c]=(cargaProy[c]||0)+1; }); });
-  var cargaProyArr=Object.keys(cargaProy).map(function(c){return {cod:c,val:cargaProy[c]};}).sort(function(a,b){return b.val-a.val;});
-  var maxCP=Math.max.apply(null,cargaProyArr.map(function(x){return x.val;}).concat([1]));
+  var carga={};activos.forEach(function(p){ticketsOf(p.id).forEach(function(t){if(t.col==='Hecho')return;var c=t.assignee||t.responsable;if(c)carga[c]=(carga[c]||0)+1;});});
+  var cargaArr=Object.keys(carga).map(function(c){return{cod:c,val:carga[c]};}).sort(function(a,b){return b.val-a.val;});
+  var tareasAbiertas=cargaArr.reduce(function(a,x){return a+x.val;},0);
 
-  // tickets
+  /* ----- mesa de ayuda ----- */
   var k=(HD&&HD.rs1_kpis&&HD.rs1_kpis[0])||{};
-  var tTotal=k.TotalTickets||0, tCerr=k.Cerrados||0;
-  var tRes=tTotal?Math.round(tCerr/tTotal*100):0;
-  var tConf=k.PctConConformidad||0;
+  var tTotal=k.TotalTickets||0,tCerr=k.Cerrados||0,tAb=k.Abiertos||0,tCrit=k.Criticos||0;
+  var tRes=pct(tCerr,tTotal),tConf=Math.round(k.PctConConformidad||0),horas=k.PromHorasResolucion||0;
+  var reap=tTotal?(k.TotalReaperturas||0)/tTotal*100:0;
   var areasT=((HD&&HD.rs2_area)||[]).slice().sort(function(a,b){return b.TotalTickets-a.TotalTickets;});
   var resp=((HD&&HD.rs4_responsable)||[]).slice().sort(function(a,b){return b.TotalTickets-a.TotalTickets;});
-  var tend=(HD&&HD.rs5_tendencia)||[];
-  var prio=(HD&&HD.rs3_prioridad)||[];
-  var maxR=Math.max.apply(null,resp.map(function(a){return a.TotalTickets;}).concat([1]));
-  var reapPct=tTotal?(k.TotalReaperturas||0)/tTotal*100:0;
-  var areaEf=((HD&&HD.rs2_area)||[]).slice().sort(function(a,b){return (b.PctResolucion||0)-(a.PctResolucion||0);})[0]||null;
-  var topResp=resp[0]||null;
+  var tend=((HD&&HD.rs5_tendencia)||[]).slice().sort(function(a,b){return (a.Anio*100+a.Mes)-(b.Anio*100+b.Mes);});
+  var prio=((HD&&HD.rs3_prioridad)||[]).slice().sort(function(a,b){return (b.CO_PRIORITY||0)-(a.CO_PRIORITY||0);});
+  var hdFecha=(HD&&HD.generado)||'';
+  var hdDias=diasDesde(hdFecha);
+  var meses=tend.length||1;
+  var promMes=tend.length?Math.round(tend.reduce(function(a,t){return a+(t.Creados||0);},0)/meses):0;
+  // último mes parcial si el corte cae en ese mes y antes del día 28
+  var parcial=false;
+  if(tend.length&&hdFecha){var g=parseD(hdFecha),u=tend[tend.length-1];if(g&&u.Anio===g.getFullYear()&&u.Mes===g.getMonth()+1&&g.getDate()<28)parcial=true;}
+  var top2=resp.slice(0,2),top2Sum=top2.reduce(function(a,r){return a+r.TotalTickets;},0),top2Pct=pct(top2Sum,tTotal);
+  var lenta=areasT.filter(function(a){return a.TotalTickets>=20;}).sort(function(a,b){return (b.PromHorasResolucion||0)-(a.PromHorasResolucion||0);})[0]||null;
+  var rapida=areasT.filter(function(a){return a.TotalTickets>=20;}).sort(function(a,b){return (a.PromHorasResolucion||0)-(b.PromHorasResolucion||0);})[0]||null;
+  var tipos=grp((HD&&HD.tickets)||[],function(t){return normSubtipo(t.subtipo);});
+  var tiposTot=tipos.reduce(function(a,t){return a+t.val;},0);
+  var top3TiposPct=pct(tipos.slice(0,3).reduce(function(a,t){return a+t.val;},0),tiposTot);
+  var altaCrit=prio.filter(function(p){return /cr[ií]tica|alta/i.test(p.NO_PRIORITY);}).reduce(function(a,p){return a+p.TotalTickets;},0);
+  var solicitantes=((HD&&HD.rs6_solicitantes)||[]).length;
 
-  // señal integral
-  var sig=(tRes>=90&&avance>=50)?{t:'TI en marcha',c:'#16a34a'}:(tRes>=80?{t:'Operación estable',c:'#d4a017'}:{t:'Requiere atención',c:'#ef4444'});
-  var señal=[];
-  señal.push('TI gestiona <b>'+ps.length+'</b> proyectos (avance promedio <b>'+avance+'%</b>, <b>'+realizados+'</b> completados) y opera la Mesa de Ayuda con <b>'+fmt(tTotal)+'</b> tickets.');
-  señal.push('Resolución de tickets: <b>'+tRes+'%</b> ('+fmt(tCerr)+' cerrados) · Conformidad del servicio: <b>'+tConf.toFixed(0)+'%</b>.');
-  if(resp[0]) señal.push('Mayor carga operativa: <b>'+cap(resp[0].NO_USR_RESPONSABLE)+'</b> con '+fmt(resp[0].TotalTickets)+' tickets.');
-  if(byArea[0]) señal.push('El área que más proyectos solicita es <b>'+esc(byArea[0].label)+'</b> ('+byArea[0].val+').');
+  /* ----- titular principal ----- */
+  var titular;
+  if(HD&&hayProy){
+    titular='<em>'+tRes+'%</em> de solicitudes resueltas y <em>'+activos.length+'</em> proyectos en curso';
+  }else if(HD){
+    titular='<em>'+tRes+'%</em> de solicitudes resueltas';
+  }else if(hayProy){
+    titular='<em>'+activos.length+'</em> proyectos en curso · '+realizados+' entregados';
+  }else{
+    titular='Panel Integral de TI';
+  }
+  var lead='Este reporte cuenta en cuatro pasos cómo trabaja el área: si la operación diaria está bajo control, de dónde viene la demanda, cómo avanza el portafolio de proyectos y qué decisiones necesitamos de gerencia.';
 
-  var fecha=(HD&&HD.generado)||'';
+  /* ----- avisos de fuente ----- */
+  var avisos='';
+  if(SRC.proj==='cache') avisos+='<div class="notice warn"><b>Proyectos:</b>&nbsp;la base de SCRUM no respondió ('+esc(SRC.projErr)+'). Se muestra la última copia guardada del '+fechaLarga(SRC.projFecha)+'.<button onclick="cargar()">Reintentar</button></div>';
+  if(SRC.proj==='fail') avisos+='<div class="notice err"><b>Proyectos:</b>&nbsp;no se pudo conectar con la base de SCRUM ('+esc(SRC.projErr)+'). Si estás en la red de la empresa, puede ser el firewall bloqueando supabase.co.<button onclick="cargar()">Reintentar</button></div>';
+  if(SRC.hd==='fail') avisos+='<div class="notice err"><b>Mesa de ayuda:</b>&nbsp;no se encontró el archivo de tickets (helpdesk.json).<button onclick="cargar()">Reintentar</button></div>';
+  else if(hdDias!=null&&hdDias>7) avisos+='<div class="notice warn"><b>Mesa de ayuda:</b>&nbsp;datos al '+fechaLarga(hdFecha)+'.</div>';
 
-  document.getElementById('app').innerHTML=
-    '<div class="head"><div>'
-      +'<div class="eyebrow">Pionier · Dirección de TI</div>'
-      +'<div class="title">Panel Integral de TI</div>'
-      +'<div class="subtitle">Proyectos y Mesa de Ayuda en una sola vista — desempeño del área de TI</div>'
-      +'</div><div class="corte">Corte de información · <b>'+esc(fecha)+'</b></div></div>'
-
-    +'<div class="filters">'
-      +'<div><label>Empresa (proyectos)</label><select onchange="setF(\'emp\',this.value)">'
-        +['todas','MODIPSA','MASISAC'].map(function(v){return '<option value="'+v+'"'+(v===fEmp?' selected':'')+'>'+(v==='todas'?'Todas':v)+'</option>';}).join('')
-      +'</select></div>'
-      +'<div><label>Estado (proyectos)</label><select onchange="setF(\'est\',this.value)">'
-        +['todos','Completado','En ejecución','Levantamiento','En espera','Pendiente'].map(function(v){return '<option value="'+v+'"'+(v===fEst?' selected':'')+'>'+(v==='todos'?'Todos':v)+'</option>';}).join('')
-      +'</select></div>'
-      +'<div style="color:var(--muted);font-size:12px;padding-bottom:9px">Los filtros aplican a la sección de Proyectos.</div>'
-    +'</div>'
-
+  /* ----- HERO ----- */
+  var h='';
+  h+=avisos;
+  h+='<section class="hero"><div class="eyebrow">Grupo Pionier · Dirección de TI · Reporte ejecutivo</div>'
+    +'<h1>'+titular+'</h1>'
     +'<div class="kpis">'
-      +'<div class="kpi dark"><div class="l">Proyectos</div><div class="v">'+ps.length+'</div><div class="s">en cartera</div></div>'
-      +'<div class="kpi g"><div class="l">Realizados</div><div class="v">'+realizados+'</div><div class="s">al 100%</div></div>'
-      +'<div class="kpi b"><div class="l">Avance proyectos</div><div class="v">'+avance+'%</div><div class="s">promedio</div></div>'
-      +'<div class="kpi y"><div class="l">Tickets</div><div class="v">'+fmt(tTotal)+'</div><div class="s">acumulado</div></div>'
-      +'<div class="kpi g"><div class="l">Resolución</div><div class="v">'+tRes+'%</div><div class="s">'+fmt(tCerr)+' cerrados</div></div>'
-      +'<div class="kpi p"><div class="l">Conformidad</div><div class="v">'+tConf.toFixed(0)+'%</div><div class="s">del servicio</div></div>'
+      +(HD?'<div class="kpi hl"><div class="l">Solicitudes resueltas</div><div class="v">'+tRes+'<small>%</small></div><div class="s">'+fmt(tCerr)+' de '+fmt(tTotal)+' tickets</div></div>'
+      +'<div class="kpi"><div class="l">Satisfacción del usuario</div><div class="v">'+tConf+'<small>%</small></div><div class="s">conformidad</div></div>'
+      :'<div class="kpi"><div class="l">Solicitudes resueltas</div><div class="v">—</div><div class="s">sin datos de mesa de ayuda</div></div><div class="kpi"><div class="l">Satisfacción del usuario</div><div class="v">—</div><div class="s">sin datos de mesa de ayuda</div></div>')
+      +(SRC.proj==='fail'?'<div class="kpi"><div class="l">Proyectos en curso</div><div class="v">—</div><div class="s">sin conexión con SCRUM</div></div><div class="kpi"><div class="l">Requieren atención</div><div class="v">—</div><div class="s">sin conexión con SCRUM</div></div>':'<div class="kpi"><div class="l">Proyectos en curso</div><div class="v">'+activos.length+'</div><div class="s">'+realizados+' entregados</div></div>'
+      +'<div class="kpi'+((enRiesgo.length+espera.length)?' hl':'')+'"><div class="l">Requieren atención</div><div class="v">'+(enRiesgo.length+espera.length)+'</div><div class="s">'+enRiesgo.length+' vencidos · '+espera.length+' en espera</div></div>')
     +'</div>'
+    +'<div class="meta"><span><span class="dot" style="background:'+(SRC.hd==='ok'?'#15803D':'#C2410C')+'"></span>Tickets al <b>'+fechaLarga(hdFecha)+'</b></span>'
+      +'<span><span class="dot" style="background:'+(SRC.proj==='ok'?'#15803D':(SRC.proj==='cache'?'#B08900':'#C2410C'))+'"></span>Proyectos '+(SRC.proj==='ok'?'en vivo':(SRC.proj==='cache'?'copia del':'sin conexión'))+(SRC.projFecha&&SRC.proj!=='fail'?' · <b>'+fechaLarga(SRC.projFecha)+'</b>':'')+'</span>'
+      +'<span>Generado el <b>'+fechaLarga(new Date().toISOString())+'</b></span></div>'
+    +'</section>';
 
-    +'<div style="background:linear-gradient(120deg,#0c0c0c,#242424);border-radius:14px;padding:20px 24px;margin-bottom:20px;box-shadow:0 4px 18px rgba(0,0,0,.15)">'
-      +'<div style="font-size:11px;font-weight:800;color:var(--yellow);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:16px">🔢 Cifras de impacto de TI</div>'
-      +'<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:20px;text-align:center">'
-        +'<div><div style="font-size:32px;font-weight:900;color:#F5C400;line-height:1">'+fmt(tCerr)+'</div><div style="font-size:11px;color:#c8c6c4;margin-top:6px">Tickets resueltos<br><b style="color:#16a34a">'+tRes+'% de resolución</b></div></div>'
-        +'<div><div style="font-size:32px;font-weight:900;color:#fff;line-height:1">'+(k.PromHorasResolucion||0).toFixed(1)+'<span style="font-size:16px"> h</span></div><div style="font-size:11px;color:#c8c6c4;margin-top:6px">Tiempo medio<br>de resolución</div></div>'
-        +'<div><div style="font-size:32px;font-weight:900;color:#F5C400;line-height:1">'+(k.PromPuntajeColaborador||0).toFixed(0)+'<span style="font-size:16px">/300</span></div><div style="font-size:11px;color:#c8c6c4;margin-top:6px">Puntaje de<br>servicio</div></div>'
-        +'<div><div style="font-size:32px;font-weight:900;color:#fff;line-height:1">'+reapPct.toFixed(1)+'%</div><div style="font-size:11px;color:#c8c6c4;margin-top:6px">Reaperturas<br><b style="color:#16a34a">alta calidad</b></div></div>'
+  /* ----- CAPÍTULO 1: operación ----- */
+  var ultimoComp=tend.length?(parcial&&tend.length>1?tend[tend.length-2]:tend[tend.length-1]):null;
+  var t1=HD?(tRes+'% resuelto · '+horas.toFixed(0)+' h promedio')
+          :'Sin datos de mesa de ayuda';
+  var s1=HD?('Entran en promedio <b>'+fmt(promMes)+' solicitudes al mes</b> de '+fmt(solicitantes)+' colaboradores, y el equipo cierra prácticamente lo mismo que recibe. El tiempo medio de atención es de <b>'+horas.toFixed(0)+' horas</b>; quedan <b>'+fmt(tAb)+' tickets abiertos</b>'+(tCrit?', '+tCrit+' de ellos críticos':'')+'.'):'';
+  h+='<section class="chapter" id="c1"><div class="ch-head"><div class="ch-num">1</div><div><div class="ch-kicker">Operación</div><div class="ch-title">'+t1+'</div><div class="ch-sub">'+s1+'</div></div></div>';
+  if(HD){
+    h+='<div class="grid g3">'
+      +'<div class="card"><h3>Recibidos vs. resueltos</h3><div class="hint">Tickets creados y cerrados por mes'+(parcial?' · el último mes está en curso al corte':'')+'.</div><div class="chart-box"><canvas id="chTend"></canvas></div>'
+        +(ultimoComp?'<div class="takeaway"><span class="i">→</span><span>'+esc(ultimoComp.MesAnio.split(' ')[0])+': <b>'+fmt(ultimoComp.Cerrados)+' de '+fmt(ultimoComp.Creados)+'</b> resueltos</span></div>':'')
       +'</div>'
-    +'</div>'
-
-    +'<div class="zone">📁 Proyectos (SCRUM)</div>'
-    +'<div class="grid g2">'
-      +'<div class="card"><h3>Estado del portafolio</h3><div class="hint">Proyectos por estado · clic en el n\u00famero para ver la lista.</div>'+ (estP.length?estP.map(function(e){return '<div class="bar-row clk" onclick="openLista(\''+e.label+'\')"><div class="bl">'+esc(e.label)+'</div><div class="bt"><div class="bf" style="width:'+(e.val/Math.max.apply(null,estP.map(function(x){return x.val;}).concat([1]))*100)+'%;background:'+(ECOL[e.label]||'#9aa0a6')+'"></div></div><div class="bv">'+e.val+'</div></div>';}).join(''):'<div style="color:var(--muted)">Sin datos</div>') +'</div>'
-      +'<div class="card"><h3>Avance por proyecto</h3><div class="hint">Todos los proyectos · clic para ver quién lo realiza y en qué va.</div><div class="scroller">'
-        +(ps.length?ps.slice().sort(function(a,b){return progress(b.id)-progress(a.id);}).map(function(p){var v=progress(p.id);var col=v>=100?'#16a34a':(v>=50?'#d4a017':'#2563eb');return barRowClk(p.name,v,100,col,"openProj('"+p.id+"')",'%');}).join(''):'<div style="color:var(--muted)">Sin proyectos</div>')
-      +'</div></div>'
-    +'</div>'
-    +'<div class="grid g2">'
-      +'<div class="card"><h3>Áreas que más solicitan proyectos</h3><div class="hint">Volumen por área solicitante · desliza para ver todas.</div><div class="scroller">'+ (byArea.length?byArea.map(function(a){return barRow(cap(a.label),a.val,maxArea,'#F5C400');}).join(''):'<div style="color:var(--muted)">Sin datos</div>') +'</div></div>'
-      +'<div class="card"><h3>Resumen de la cartera</h3><div class="hint">Estado general y reparto por empresa.</div>'
-        +'<div style="display:flex;gap:10px;margin-bottom:16px">'
-          +'<div onclick="openLista(\'Completado\')" style="flex:1;text-align:center;background:var(--bg);border-radius:8px;padding:11px 4px;cursor:pointer" title="Ver los proyectos realizados"><div style="font-size:23px;font-weight:800;color:var(--green)">'+realizados+'</div><div style="font-size:10px;color:var(--muted);text-transform:uppercase">Realizados ▾</div></div>'
-          +'<div onclick="openLista(\'En ejecución\')" style="flex:1;text-align:center;background:var(--bg);border-radius:8px;padding:11px 4px;cursor:pointer" title="Ver los proyectos en ejecución"><div style="font-size:23px;font-weight:800;color:var(--blue)">'+enEjecCount+'</div><div style="font-size:10px;color:var(--muted);text-transform:uppercase">En ejecución ▾</div></div>'
-          +'<div onclick="openLista(\'Levantamiento\')" style="flex:1;text-align:center;background:var(--bg);border-radius:8px;padding:11px 4px;cursor:pointer" title="Ver los de levantamiento"><div style="font-size:23px;font-weight:800;color:#b8860b">'+ps.filter(function(p){return estadoCat(p)==='Levantamiento';}).length+'</div><div style="font-size:10px;color:var(--muted);text-transform:uppercase">Levantamiento ▾</div></div>'
-        +'</div>'
-        +'<div style="font-size:11px;font-weight:700;color:var(--ink);margin-bottom:10px">Proyectos por empresa</div>'
-        +barRow('MODIPSA',ps.filter(function(p){return p.empresa==='MODIPSA';}).length,Math.max(ps.filter(function(p){return p.empresa==='MODIPSA';}).length,ps.filter(function(p){return p.empresa==='MASISAC';}).length,1),'#2563eb')
-        +barRow('MASISAC',ps.filter(function(p){return p.empresa==='MASISAC';}).length,Math.max(ps.filter(function(p){return p.empresa==='MODIPSA';}).length,ps.filter(function(p){return p.empresa==='MASISAC';}).length,1),'#16a34a')
-        +'<div style="font-size:11px;font-weight:700;color:var(--ink);margin:18px 0 10px">Quién trabaja en proyectos · clic para ver sus tareas</div>'
-        +'<div class="scroller" style="max-height:220px">'+ (cargaProyArr.length?cargaProyArr.map(function(x){return barRowClk(mName(x.cod),x.val,maxCP,'#7c5cbf',"openPersonaProy('"+x.cod+"')");}).join(''):'<div style="color:var(--muted)">Sin tareas asignadas</div>') +'</div>'
+      +'<div class="card"><h3>Quién atiende</h3><div class="hint">Tickets atendidos por persona · clic para ver el detalle.</div><div class="scroller" style="max-height:250px">'
+        +resp.map(function(r){return bar(cap(r.NO_USR_RESPONSABLE),r.TotalTickets,resp[0].TotalTickets,'#1C1C1A',{click:"openResp('"+js(r.NO_USR_RESPONSABLE)+"')",txt:fmt(r.TotalTickets)});}).join('')
       +'</div>'
-    +'</div>'
-
-    +'<div class="card" style="margin-bottom:18px"><h3>Detalle de proyectos</h3><div class="hint">'+ps.length+' proyecto'+(ps.length===1?'':'s')+(fEmp!=='todas'?' · '+fEmp:'')+(fEst!=='todos'?' · '+fEst:'')+'</div>'
-      +'<div style="max-height:360px;overflow:auto"><table class="ctab"><thead><tr><th>Proyecto</th><th class="c">Empresa</th><th>Área solicitante</th><th class="c">Estado</th><th class="c">Avance</th></tr></thead><tbody>'
-      +(function(){
-        if(!ps.length) return '<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:16px">Sin proyectos para este filtro.</td></tr>';
-        var ord={'En ejecución':0,'Levantamiento':1,'En espera':2,'Completado':3,'Pendiente':4};
-        var arr=ps.slice().sort(function(a,b){var d=(ord[estadoCat(a)]||0)-(ord[estadoCat(b)]||0);return d!==0?d:progress(b.id)-progress(a.id);});
-        return arr.map(function(p){
-          var c=estadoCat(p),col=ECOL[c]||'#9aa0a6',pct=progress(p.id);
-          var ec=p.empresa==='MODIPSA'?'#2563eb':'#16a34a';
-          return '<tr class="tr-clk" onclick="openProj(\''+p.id+'\')"><td style="font-weight:600">'+esc(p.name)+'</td>'
-            +'<td class="c"><span class="tg" style="background:'+ec+'22;color:'+ec+'">'+esc(p.empresa||'—')+'</span></td>'
-            +'<td style="color:var(--muted)">'+esc(p.area||'—')+'</td>'
-            +'<td class="c"><span class="tg" style="background:'+col+'22;color:'+col+'">'+c+'</span></td>'
-            +'<td class="c" style="min-width:120px"><div style="display:flex;align-items:center;gap:8px"><div style="flex:1;height:8px;background:#eef0f3;border-radius:4px;overflow:hidden"><div style="height:100%;width:'+pct+'%;background:'+col+'"></div></div><span style="font-size:12px;font-weight:700">'+pct+'%</span></div></td></tr>';
-        }).join('');
-      })()
-      +'</tbody></table></div></div>'
-
-    +'<div class="zone">🎫 Mesa de Ayuda (Tickets)</div>'
-    +'<div class="grid g2">'
-      +'<div class="card"><h3>Tendencia de tickets</h3><div class="hint">Creados vs cerrados por mes.</div><div class="chart-box"><canvas id="chTend"></canvas></div></div>'
-      +'<div class="card"><h3>Tickets por prioridad</h3><div class="hint">Distribución del volumen.</div>'+ (prio.length?prio.map(function(p){var c={'Crítica':'#ef4444','Alta':'#ea580c','Media':'#d4a017','Baja':'#16a34a'}[p.NO_PRIORITY]||'#9aa0a6';return barRow(p.NO_PRIORITY,p.TotalTickets,Math.max.apply(null,prio.map(function(x){return x.TotalTickets;}).concat([1])),c);}).join(''):'<div style="color:var(--muted)">Sin datos</div>') +'</div>'
-    +'</div>'
-    +'<div class="grid g2">'
-      +'<div class="card"><h3>Quién atiende más tickets</h3><div class="hint">Carga por responsable y su área · clic para ver sus tickets.</div><div class="scroller">'+ (resp.length?resp.map(function(r){return barRowClk(cap(r.NO_USR_RESPONSABLE)+' · '+cap(r.NO_AREA||''),r.TotalTickets,maxR,'#26324f',"openResp('"+String(r.NO_USR_RESPONSABLE||'').replace(/'/g,"\\'")+"')");}).join(''):'<div style="color:var(--muted)">Sin datos</div>') +'</div></div>'
-      +'<div class="card"><h3>Tickets por área de TI</h3><div class="hint">Carga que atiende cada equipo · desliza para ver todas.</div><div class="scroller">'+ (areasT.length?areasT.map(function(a){return barRow(cap(a.NO_AREA),a.TotalTickets,Math.max.apply(null,areasT.map(function(x){return x.TotalTickets;})),'#0ea5e9');}).join(''):'<div style="color:var(--muted)">Sin datos</div>') +'</div></div>'
+        +(top2.length===2?'<div class="takeaway"><span class="i">!</span><span><b>2 personas</b> = '+top2Pct+'% de los tickets</span></div>':'')
+      +'</div>'
     +'</div>';
+  }
+  h+='</section>';
 
-  var pc={'Crítica':'#ef4444','Alta':'#ea580c','Media':'#d4a017','Baja':'#16a34a'};
-  if(charts.chTend)charts.chTend.destroy();
-  charts.chTend=new Chart(document.getElementById('chTend'),{type:'line',
-    data:{labels:tend.map(function(t){return t.MesAnio;}),datasets:[
-      {label:'Creados',data:tend.map(function(t){return t.Creados;}),borderColor:'#2563eb',backgroundColor:'rgba(37,99,235,.10)',fill:true,tension:.35,borderWidth:2,pointRadius:4,pointBackgroundColor:'#2563eb'},
-      {label:'Cerrados',data:tend.map(function(t){return t.Cerrados;}),borderColor:'#16a34a',backgroundColor:'rgba(22,163,74,.10)',fill:true,tension:.35,borderWidth:2,pointRadius:4,pointBackgroundColor:'#16a34a'}
-    ]},
-    options:{plugins:{legend:{position:'bottom',labels:{color:'#6b7280',boxWidth:12,font:{size:11}}}},scales:{x:{grid:{display:false},ticks:{color:'#6b7280'}},y:{grid:{color:'#eef0f3'},ticks:{color:'#6b7280',precision:0}}}}});
+  /* ----- CAPÍTULO 2: demanda ----- */
+  if(HD){
+    var t2=(tipos[0]?'Más pedido: '+tipos[0].label.toLowerCase()+(tipos[1]?' · '+tipos[1].label.toLowerCase():''):'De dónde viene la demanda');
+    var s2='Los tres tipos de solicitud más frecuentes suman el <b>'+top3TiposPct+'%</b> del volumen. '+(altaCrit?'<b>'+pct(altaCrit,tTotal)+'%</b> de los tickets llegan marcados como prioridad alta o crítica, lo que indica que la mayoría de pedidos afectan la operación del negocio. ':'')
+      +(lenta&&rapida?'El tiempo de atención varía mucho entre equipos: <b>'+cap(rapida.NO_AREA)+'</b> resuelve en '+Math.round(rapida.PromHorasResolucion)+' h y <b>'+cap(lenta.NO_AREA)+'</b> en '+Math.round(lenta.PromHorasResolucion)+' h.':'');
+    h+='<section class="chapter" id="c2"><div class="ch-head"><div class="ch-num">2</div><div><div class="ch-kicker">Demanda</div><div class="ch-title">'+t2+'</div><div class="ch-sub">'+s2+'</div></div></div>'
+      +'<div class="grid g2">'
+        +'<div class="card"><h3>Qué piden</h3><div class="hint">Tipo de solicitud · clic para ver los tickets.</div><div class="scroller">'
+          +tipos.slice(0,10).map(function(t,i){return bar(t.label,t.val,tipos[0].val,i<3?'#F5C400':'#D9D4C6',{click:"openTipo('"+js(t.label)+"')",txt:fmt(t.val)+' <small>'+pct(t.val,tiposTot)+'%</small>'});}).join('')
+        +'</div></div>'
+        +'<div class="card"><h3>Horas por equipo</h3><div class="hint">Horas promedio para resolver · entre paréntesis, tickets atendidos.</div>'
+          +areasT.map(function(a){var hrs=Math.round(a.PromHorasResolucion||0);var mx=Math.max.apply(null,areasT.map(function(x){return x.PromHorasResolucion||0;}));var col=hrs<=24?'#15803D':(hrs<=72?'#B08900':'#C2410C');return bar(cap(a.NO_AREA)+' ('+fmt(a.TotalTickets)+')',hrs,mx,col,{txt:hrs+' h'});}).join('')
+          +'<div style="display:flex;gap:16px;font-size:11px;color:var(--muted);margin-top:10px"><span><span class="dot" style="background:#15803D"></span>≤ 1 día</span><span><span class="dot" style="background:#B08900"></span>1 a 3 días</span><span><span class="dot" style="background:#C2410C"></span>más de 3 días</span></div>'
+          +'<div style="margin-top:18px;font-size:12px;font-weight:800;margin-bottom:10px">Por prioridad</div>'
+          +prio.map(function(p){var c={'Crítica':'#C2410C','Alta':'#E07A1F','Media':'#B08900','Baja':'#15803D'}[p.NO_PRIORITY]||'#9A968C';return bar(p.NO_PRIORITY,p.TotalTickets,Math.max.apply(null,prio.map(function(x){return x.TotalTickets;})),c,{txt:fmt(p.TotalTickets)+' <small>'+pct(p.TotalTickets,tTotal)+'%</small>'});}).join('')
+        +'</div>'
+      +'</div></section>';
+  }
+
+  /* ----- CAPÍTULO 3: proyectos ----- */
+  var t3=hayProy?(realizados+' entregados · '+porEst['En ejecución']+' en ejecución'):'Portafolio de proyectos';
+  var s3=hayProy?('De <b>'+ps.length+' proyectos</b> registrados, '+porEst['Levantamiento']+(porEst['Levantamiento']===1?' está':' están')+' definiendo alcance y '+porEst['Pendiente']+(porEst['Pendiente']===1?' aún no inicia. ':' aún no inician. ')
+        +(porCerrar.length?'<b>'+porCerrar.length+'</b> están por encima del 70% y podrían cerrarse pronto. ':'')
+        +(byArea[0]?'El área que más proyectos solicita es <b>'+esc(cap(byArea[0].label))+'</b> ('+byArea[0].val+').':''))
+        :(SRC.proj==='fail'?'No hay conexión con la base de proyectos en este momento.':'No hay proyectos registrados para este filtro.');
+  h+='<section class="chapter" id="c3"><div class="ch-head"><div class="ch-num">3</div><div><div class="ch-kicker">Proyectos</div><div class="ch-title">'+t3+'</div><div class="ch-sub">'+s3+'</div></div></div>'
+    +'<div class="filters"><span class="lab">Empresa</span>'+['todas','MODIPSA','MASISAC'].map(function(v){return '<button class="chip'+(v===fEmp?' on':'')+'" onclick="setEmp(\''+v+'\')">'+(v==='todas'?'Todas':v)+'</button>';}).join('')+'</div>';
+  if(hayProy){
+    h+='<div class="card" style="margin-bottom:16px"><h3>Etapas</h3><div class="hint">Clic en una etapa para ver sus proyectos.</div><div class="funnel">'
+      +ESTADOS.map(function(e){return '<div class="fstep" style="background:'+ESOFT[e]+'" onclick="openLista(\''+e+'\')"><div class="n" style="color:'+ECOL[e]+'">'+porEst[e]+'</div><div class="t">'+e+'</div><div class="d">'+EDESC[e]+'</div></div>';}).join('')
+    +'</div></div>';
+    h+='<div class="grid g2">'
+      +'<div class="card"><h3>Avance</h3><div class="hint">Ordenados por avance · clic para ver tareas y responsables.</div><div class="plist scroller">'
+        +(activos.length?activos.slice().sort(function(a,b){return progress(b.id)-progress(a.id);}).map(function(p){var v=progress(p.id),c=estadoCat(p);return '<div class="pitem" onclick="openProj(\''+js(p.id)+'\')">'+empTag(p.empresa)+'<span class="nm" title="'+esc(p.name)+'">'+esc(p.name)+'</span>'+tag(c,ECOL[c],ESOFT[c])+mini(v,ECOL[c])+'</div>';}).join(''):'<div style="color:var(--muted)">Todos los proyectos están completados.</div>')
+      +'</div></div>'
+      +'<div class="card"><h3>Tareas pendientes</h3><div class="hint">Tareas abiertas en proyectos activos · clic para ver el detalle.</div><div class="scroller" style="max-height:230px">'
+        +(cargaArr.length?cargaArr.map(function(x){return bar(mName(x.cod),x.val,cargaArr[0].val,'#6D4FB3',{click:"openPersona('"+js(x.cod)+"')"});}).join(''):'<div style="color:var(--muted)">Sin tareas asignadas.</div>')
+      +'</div>'
+        +(cargaArr.length>1&&tareasAbiertas?'<div class="takeaway"><span class="i">→</span><span><b>'+esc(mName(cargaArr[0].cod))+'</b> tiene el '+pct(cargaArr[0].val,tareasAbiertas)+'% de las tareas</span></div>':'')
+        +'<div style="margin-top:18px;font-size:12px;font-weight:800;margin-bottom:10px">Áreas que más piden</div>'
+        +(byArea.length?byArea.slice(0,6).map(function(a){return bar(cap(a.label),a.val,byArea[0].val,'#F5C400');}).join(''):'<div style="color:var(--muted)">Sin datos</div>')
+      +'</div>'
+    +'</div>';
+  }
+  h+='</section>';
+
+  /* ----- CAPÍTULO 4: decisiones ----- */
+  var asks=[];
+  if(enRiesgo.length) asks.push({c:'red',k:'Riesgo de plazo',t:enRiesgo.length+' con tareas vencidas',
+     p:'El más afectado es <b>'+esc(enRiesgo[0].p.name)+'</b> con '+enRiesgo[0].v.length+' tarea'+(enRiesgo[0].v.length>1?'s':'')+' fuera de fecha.',
+     a:'Repriorizar o ajustar fechas',lnk:'openRiesgo()',lt:'Ver →'});
+  if(espera.length) asks.push({c:'violet',k:'Depende del negocio',t:espera.length+' esperan al área usuaria',
+     p:'TI no puede avanzar hasta recibir información, validación o aprobación de las áreas solicitantes.',
+     a:'Gerencias destraban pendientes',lnk:"openLista('En espera')",lt:'Ver →'});
+  if(top2.length===2&&top2Pct>=35) asks.push({c:'yellow',k:'Continuidad operativa',t:'2 personas = '+top2Pct+'% de tickets',
+     p:cap(top2[0].NO_USR_RESPONSABLE)+' y '+cap(top2[1].NO_USR_RESPONSABLE)+' atienden el '+top2Pct+'% de los tickets. Una ausencia impacta directamente en el servicio.',
+     a:'Rotar y documentar'});
+  if(lenta&&(lenta.PromHorasResolucion||0)>72) asks.push({c:'blue',k:'Tiempo de respuesta',t:cap(lenta.NO_AREA)+': '+Math.round(lenta.PromHorasResolucion/24)+' días por ticket',
+     p:'Atiende '+fmt(lenta.TotalTickets)+' tickets con un tiempo medio de '+Math.round(lenta.PromHorasResolucion)+' h, frente a '+Math.round((rapida&&rapida.PromHorasResolucion)||0)+' h de '+cap((rapida&&rapida.NO_AREA)||'')+'.',
+     a:'Definir SLA'});
+  if(porCerrar.length) asks.push({c:'green',k:'Entregas próximas',t:porCerrar.length+' por cerrar (+70%)',
+     p:'Superan el 70% de avance: '+porCerrar.slice(0,3).map(function(p){return '<b>'+esc(p.name)+'</b>';}).join(', ')+(porCerrar.length>3?' y otros.':'.'),
+     a:'Validar y pasar a producción'});
+  if(!asks.length) asks.push({c:'green',k:'Sin alertas',t:'Sin alertas',p:'La operación y el portafolio avanzan dentro de lo esperado.',a:'Seguimiento mensual.'});
+  h+='<section class="chapter" id="c4"><div class="ch-head"><div class="ch-num">4</div><div><div class="ch-kicker">Decisiones</div><div class="ch-title">'+asks.length+' tema'+(asks.length>1?'s':'')+' para decidir</div><div class="ch-sub">Lo que el panel identifica automáticamente a partir de los datos y que requiere una decisión o apoyo fuera del área de TI.</div></div></div>'
+    +'<div class="asks">'+asks.map(function(a){return '<div class="ask '+a.c+'"><div class="k">'+a.k+'</div><h4>'+a.t+'</h4><p>'+a.p+'</p><div class="act">'+a.a+'</div>'+(a.lnk?'<span class="lnk" onclick="'+a.lnk+'">'+a.lt+'</span>':'')+'</div>';}).join('')+'</div>'
+  +'</section>';
+
+  /* ----- anexo ----- */
+  if(hayProy){
+    var ord={'En ejecución':0,'Levantamiento':1,'En espera':2,'Pendiente':3,'Completado':4};
+    var arr=ps.slice().sort(function(a,b){var d=ord[estadoCat(a)]-ord[estadoCat(b)];return d!==0?d:progress(b.id)-progress(a.id);});
+    h+='<section class="chapter" id="anexo"><div class="ch-head"><div class="ch-num" style="background:var(--soft)">+</div><div><div class="ch-kicker">Anexo</div><div class="ch-title">Todos los proyectos</div></div></div>'
+      +'<div class="card"><div style="max-height:420px;overflow:auto"><table class="ctab"><thead><tr><th>Proyecto</th><th class="c">Empresa</th><th>Área solicitante</th><th class="c">Etapa</th><th class="c">Avance</th></tr></thead><tbody>'
+      +arr.map(function(p){var c=estadoCat(p),v=progress(p.id);return '<tr class="tr-clk" onclick="openProj(\''+js(p.id)+'\')"><td style="font-weight:600">'+esc(p.name)+'</td><td class="c">'+empTag(p.empresa)+'</td><td style="color:var(--muted)">'+esc(cap(p.area||'—'))+'</td><td class="c">'+tag(c,ECOL[c],ESOFT[c])+'</td><td class="c">'+mini(v,ECOL[c])+'</td></tr>';}).join('')
+      +'</tbody></table></div></div></section>';
+  }
+  h+='<div class="foot">Fuentes: tablero SCRUM de proyectos y sistema de Mesa de Ayuda · Elaborado por Ingeniería de Datos · Grupo Pionier</div>';
+
+  document.getElementById('app').innerHTML=h;
+
+  /* ----- gráfico ----- */
+  if(HD&&document.getElementById('chTend')&&window.Chart){
+    if(charts.t)charts.t.destroy();
+    var lbl=tend.map(function(t,i){var m=(t.MesAnio||'').split(' ')[0];m=m.charAt(0).toUpperCase()+m.slice(1,3).toLowerCase();return m+(parcial&&i===tend.length-1?'*':'');});
+    charts.t=new Chart(document.getElementById('chTend'),{type:'bar',
+      data:{labels:lbl,datasets:[
+        {label:'Creados',data:tend.map(function(t){return t.Creados;}),backgroundColor:'#D9D4C6',borderRadius:6,maxBarThickness:46},
+        {label:'Cerrados',data:tend.map(function(t){return t.Cerrados;}),backgroundColor:'#F5C400',borderRadius:6,maxBarThickness:46}
+      ]},
+      options:{maintainAspectRatio:false,animation:false,plugins:{legend:{position:'bottom',labels:{color:'#6E6A60',boxWidth:12,font:{size:11}}},
+        tooltip:{callbacks:{afterBody:function(items){var t=tend[items[0].dataIndex];return 'Resolución: '+Math.round(t.PctResolucion||pct(t.Cerrados,t.Creados))+'%'+(parcial&&items[0].dataIndex===tend.length-1?' (mes en curso)':'');}}}},
+        scales:{x:{grid:{display:false},ticks:{color:'#6E6A60'}},y:{grid:{color:'#F0EDE3'},ticks:{color:'#6E6A60',precision:0}}}}});
+  }
 }
 
-function doLogin(){ if(document.getElementById('pass').value===DASH_PASS){try{sessionStorage.setItem('ti_auth','1');}catch(e){}entrar();}else{document.getElementById('loginErr').textContent='Contraseña incorrecta';document.getElementById('pass').value='';} }
+/* ================= detalles (modales) ================= */
+function modal(t,s,b){document.getElementById('modal').innerHTML='<div class="modal-h"><div><div class="t">'+t+'</div><div class="s">'+s+'</div></div><button class="x" onclick="closeM()" aria-label="Cerrar">✕</button></div><div class="modal-b">'+b+'</div>';document.getElementById('ov').classList.add('show');}
+function closeM(){document.getElementById('ov').classList.remove('show');}
+document.addEventListener('keydown',function(e){if(e.key==='Escape')closeM();});
+var COLC={'Backlog':'#9A968C','En progreso':'#1D4ED8','En revisión':'#6D4FB3','Hecho':'#15803D'};
+function estTicketCol(e){return {'Cerrado':'#15803D','Rechazado':'#C2410C','Cancelado':'#9A968C','Asignado':'#1D4ED8','En desarrollo':'#1D4ED8','En proceso':'#1D4ED8','Pendiente Aprobación':'#B08900','Pausado':'#6D4FB3'}[e]||'#6E6A60';}
+function openProj(pid){
+  var p=(ST.projects||[]).find(function(x){return x.id===pid;});if(!p)return;
+  var ts=ticketsOf(pid),venc=vencidas(pid).map(function(t){return t.id||t.title;});
+  var resumen=['Backlog','En progreso','En revisión','Hecho'].map(function(c){return c+': <b>'+ts.filter(function(t){return t.col===c;}).length+'</b>';}).join(' · ');
+  var rows=ts.map(function(t){var cc=COLC[t.col]||'#9A968C';var d=taskDates(t);var v=venc.indexOf(t.id||t.title)>=0;
+    return '<tr><td style="font-weight:600">'+esc(t.title||'—')+(v?' '+tag('vencida','#C2410C'):'')+'</td><td>'+esc(mName(t.assignee||t.responsable))+'</td><td class="c">'+tag(t.col||'—',cc)+'</td><td class="c" style="white-space:nowrap">'+(d.end?fechaLarga(d.end):'—')+'</td></tr>';}).join('');
+  modal(esc(p.name),empTag(p.empresa)+' · '+progress(pid)+'% completado · '+ts.length+' tareas'+(p.area?' · '+esc(cap(p.area)):''),
+    '<div style="font-size:12.5px;color:var(--muted);margin-bottom:14px">'+resumen+'</div><table class="ctab"><thead><tr><th>Tarea</th><th>Responsable</th><th class="c">Estado</th><th class="c">Fecha fin</th></tr></thead><tbody>'+(rows||'<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:16px">Sin tareas registradas</td></tr>')+'</tbody></table>');
+}
+function listaProyHTML(ps,extra){return ps.length?ps.map(function(p){var c=estadoCat(p);return '<div class="pitem" onclick="openProj(\''+js(p.id)+'\')">'+empTag(p.empresa)+'<span class="nm">'+esc(p.name)+'</span><span class="ar">'+(extra?extra(p):esc(cap(p.area||'')))+'</span>'+mini(progress(p.id),ECOL[c])+'</div>';}).join(''):'<div style="color:var(--muted);padding:12px 0">Sin proyectos.</div>';}
+function openLista(cat){var ps=projsFiltrados().filter(function(p){return estadoCat(p)===cat;}).sort(function(a,b){return progress(b.id)-progress(a.id);});modal(esc(cat),ps.length+' proyecto'+(ps.length===1?'':'s')+' · '+EDESC[cat],'<div class="plist">'+listaProyHTML(ps)+'</div>');}
+function openRiesgo(){var ps=projsFiltrados().filter(function(p){return estadoCat(p)!=='Completado'&&vencidas(p.id).length;}).sort(function(a,b){return vencidas(b.id).length-vencidas(a.id).length;});modal('Proyectos con tareas vencidas',ps.length+' proyecto'+(ps.length===1?'':'s'),'<div class="plist">'+listaProyHTML(ps,function(p){var n=vencidas(p.id).length;return '<b style="color:#C2410C">'+n+' vencida'+(n>1?'s':'')+'</b>';})+'</div>');}
+function openPersona(cod){
+  var pn={};(ST.projects||[]).forEach(function(p){pn[p.id]=p.name;});
+  var ts=(ST.tickets||[]).filter(function(t){return (t.assignee||t.responsable)===cod&&t.col!=='Hecho';});
+  var rows=ts.map(function(t){return '<tr><td style="font-weight:600">'+esc(t.title||'—')+'</td><td>'+esc(pn[t.projId]||'—')+'</td><td class="c">'+tag(t.col||'—',COLC[t.col]||'#9A968C')+'</td></tr>';}).join('');
+  modal(esc(mName(cod)),ts.length+' tarea'+(ts.length===1?'':'s')+' abiertas en proyectos',ts.length?'<table class="ctab"><thead><tr><th>Tarea</th><th>Proyecto</th><th class="c">Estado</th></tr></thead><tbody>'+rows+'</tbody></table>':'<div style="color:var(--muted)">Sin tareas abiertas.</div>');
+}
+function tablaTickets(lista,colSol){
+  lista=lista.slice().sort(function(a,b){return (b.fecha||'').localeCompare(a.fecha||'');});
+  return '<table class="ctab"><thead><tr><th>Ticket</th><th>Título</th><th>'+(colSol?'Solicitante':'Área')+'</th><th class="c">Estado</th><th class="c">Fecha</th></tr></thead><tbody>'
+    +lista.map(function(t){return '<tr><td style="white-space:nowrap;font-weight:600">'+esc(t.ticket)+'</td><td>'+esc(t.titulo||'—')+'</td><td>'+esc(cap(colSol?t.solicitante:t.area)||'—')+'</td><td class="c">'+tag(t.estado||'—',estTicketCol(t.estado))+'</td><td class="c" style="white-space:nowrap">'+fechaLarga(t.fecha)+'</td></tr>';}).join('')+'</tbody></table>';
+}
+function openResp(nombre){
+  var all=(HD&&HD.tickets)||[];
+  var lista=all.filter(function(t){return (t.responsable||'').toUpperCase()===(nombre||'').toUpperCase();});
+  modal(esc(cap(nombre)),lista.length+' ticket'+(lista.length===1?'':'s')+' en el detalle',lista.length?tablaTickets(lista,true):'<div style="color:var(--muted)">El detalle por ticket no trae responsable para esta persona.</div>');
+}
+function openTipo(sub){var lista=((HD&&HD.tickets)||[]).filter(function(t){return normSubtipo(t.subtipo)===sub;});modal(esc(sub),lista.length+' ticket'+(lista.length===1?'':'s')+' de este tipo',tablaTickets(lista,true));}
+
+/* ================= acceso ================= */
+function doLogin(){if(document.getElementById('pass').value===DASH_PASS){try{sessionStorage.setItem('ti_auth','1');}catch(e){}entrar();}else{document.getElementById('loginErr').textContent='Contraseña incorrecta';document.getElementById('pass').value='';}}
 function entrar(){document.getElementById('login').style.display='none';cargar();}
 (function(){var ok=false;try{ok=sessionStorage.getItem('ti_auth')==='1';}catch(e){}if(ok)entrar();else setTimeout(function(){var p=document.getElementById('pass');if(p)p.focus();},100);})();
 </script>
